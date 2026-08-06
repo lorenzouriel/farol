@@ -1,0 +1,24 @@
+sources:
+  camara:
+    base_url: "https://dadosabertos.camara.leg.br/api/v2"
+    page_size: 100
+  senado:
+    base_url: "https://legis.senado.leg.br/dadosabertos"
+  tse_bulk:
+    base_url: "https://dadosabertos.tse.jus.br"
+    election_years: [2018, 2022, 2026]
+  ceap:
+    base_url: "https://www.camara.leg.br/cotas"
+    years: [2023, 2024, 2025, 2026]
+  datajud:
+    base_url: "https://api-publica.datajud.cnj.jus.br"
+    api_key_env: "DATAJUD_API_KEY"
+
+destination:
+  raw_bucket: "s3://farol-raw"
+  minio_endpoint_env: "MINIO_ENDPOINT"
+
+orchestration:
+  schedule: "@daily"
+  retries: 2
+  retry_delay_minutes: 5

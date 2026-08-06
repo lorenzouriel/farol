@@ -10,7 +10,7 @@
 | **Date** | 2026-08-05 |
 | **Author** | design-agent |
 | **DEFINE** | [DEFINE_FAROL_LAKEHOUSE_ARCHITECTURE.md](./DEFINE_FAROL_LAKEHOUSE_ARCHITECTURE.md) |
-| **Status** | Ready for Build |
+| **Status** | ✅ Complete (Built) |
 
 ---
 
@@ -695,4 +695,4 @@ farol:
 
 ## Next Step
 
-**Ready for:** `/build .claude/sdd/features/DESIGN_FAROL_LAKEHOUSE_ARCHITECTURE.md`
+**Ready for:** `/ship .claude/sdd/features/DEFINE_FAROL_LAKEHOUSE_ARCHITECTURE.md`

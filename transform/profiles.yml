@@ -1,0 +1,19 @@
+farol:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ':memory:'
+      extensions:
+        - httpfs
+        - ducklake
+      attach:
+        - path: "ducklake:postgres:dbname=ducklake_catalog host={{ env_var('POSTGRES_HOST') }} user={{ env_var('POSTGRES_USER') }} password={{ env_var('POSTGRES_PASSWORD') }}"
+          alias: lakehouse
+      settings:
+        s3_endpoint: "{{ env_var('MINIO_ENDPOINT') }}"
+        s3_access_key_id: "{{ env_var('MINIO_ACCESS_KEY') }}"
+        s3_secret_access_key: "{{ env_var('MINIO_SECRET_KEY') }}"
+        s3_use_ssl: false
+        s3_url_style: path
+      schema: lakehouse

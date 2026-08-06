@@ -1,0 +1,29 @@
+version: 2
+
+models:
+  - name: fact_ceap_gastos
+    columns:
+      - name: source_url
+        tests: [not_null]
+      - name: extracted_at
+        tests: [not_null]
+      - name: source_version
+        tests: [not_null]
+    tests:
+      - requires_cutoff_flag:
+          severity: error
+  - name: fact_processos_legais
+    columns:
+      - name: status_processual
+        tests: [not_null]
+      - name: instancia
+        tests: [not_null]
+      - name: source_url
+        tests: [not_null]
+      - name: extracted_at
+        tests: [not_null]
+      - name: source_version
+        tests: [not_null]
+    tests:
+      - requires_legal_qualifiers:
+          severity: error

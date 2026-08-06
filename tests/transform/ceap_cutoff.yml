@@ -1,0 +1,56 @@
+# dbt unit test — DEFINE AT-003 (CEAP 90-day cutoff window).
+#
+# AT-003: CEAP's 90-day reimbursement-submission cutoff window must be
+# applied when aggregating gastos por deputado/mes — a bare SUM() over
+# valor_liquido is not acceptable, because deputados have up to 90 days to
+# submit a comprovante, so any month within the last 90 days is structurally
+# under-reported until the window closes. `fact_ceap_gastos` must expose a
+# `janela_fechada` flag so consumers know which totals are still "open" /
+# subject to change vs. final.
+#
+# KNOWN LOCATION CAVEAT (Autonomous Decision — see task report):
+# dbt Core (v1.8+) only discovers unit-test YAML files that live inside the
+# dbt project's configured `model-paths` (i.e. under transform/models/**),
+# alongside or referencing the model they test — NOT under a project-level
+# `test-paths` directory (that path is for singular/generic *data* tests,
+# not `unit_tests:`). This file is intentionally placed at
+# tests/transform/ceap_cutoff.yml per the DESIGN file manifest; for
+# `dbt test --select test_type:unit` to actually pick it up, it (or a copy/
+# symlink) must be relocated to e.g.
+# transform/models/gold/_fact_ceap_gastos__unit_tests.yml before the test
+# suite is wired into CI.
+#
+# KNOWN LIMITATION — current_date() vs. static fixtures:
+# `janela_fechada` is computed relative to `current_date()` inside
+# fact_ceap_gastos. dbt unit tests do not let you freeze `current_date` from
+# the YAML fixture itself — it resolves against the actual date the suite
+# runs on. The second row below (`data_documento: "2026-08-01"`,
+# `janela_fechada: false`) is only a valid expectation while today's date is
+# within the 90-day window starting 2026-08-01 (i.e. up to ~2026-10-30). Once
+# that window closes, this fixture will start failing even though the model
+# logic is unchanged. A future iteration should inject a fixed reference
+# date via a dbt variable (e.g. `{{ var('reference_date', 'current_date') }}`)
+# instead of calling `current_date()` directly in the model, so unit tests
+# can pin `reference_date` per-test in the YAML and stay deterministic
+# forever.
+
+unit_tests:
+  - name: test_ceap_cutoff_window_applied
+    model: fact_ceap_gastos
+    description: >
+      AT-003: verifies that fact_ceap_gastos applies the 90-day CEAP
+      submission cutoff window (janela_fechada) instead of a bare SUM of
+      valor_liquido per deputado/mes. A month whose window has not yet
+      closed must be flagged janela_fechada: false so it is never presented
+      as a final total.
+    given:
+      - input: ref('stg_ceap__despesas')
+        rows:
+          # Old month (2020-01): well past the 90-day window -> closed/final.
+          - {id_deputado: 1, valor_liquido: 100.00, data_documento: "2020-01-15", _source_url: "https://example.com", _extracted_at: "2020-01-16T00:00:00Z", _source_version: "1.0.0"}
+          # Recent month: still inside the 90-day submission window -> open/provisional.
+          - {id_deputado: 1, valor_liquido: 50.00, data_documento: "2026-08-01", _source_url: "https://example.com", _extracted_at: "2026-08-02T00:00:00Z", _source_version: "1.0.0"}
+    expect:
+      rows:
+        - {id_deputado: 1, ano_mes: "2020-01-01", total_gasto: 100.00, janela_fechada: true}
+        - {id_deputado: 1, ano_mes: "2026-08-01", total_gasto: 50.00, janela_fechada: false}
