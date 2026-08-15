@@ -1,0 +1,14 @@
+[project]
+name = "farol"
+version = "0.1.0"
+description = "Open-source, self-hosted data lakehouse for Brazilian public-sector transparency data"
+requires-python = ">=3.11"
+dependencies = [
+    "dlt[s3,parquet]>=1.4",
+    "dbt-duckdb>=1.9",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]

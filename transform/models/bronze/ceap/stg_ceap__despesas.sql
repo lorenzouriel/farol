@@ -5,14 +5,14 @@ with source as (
 
 renamed as (
     select
-        cast(id_deputado as bigint) as id_deputado,
-        cast(nome_fornecedor as varchar) as nome_fornecedor,
-        cast(cnpj_cpf_fornecedor as varchar) as cnpj_cpf_fornecedor,
-        cast(num_documento as varchar) as num_documento,
-        cast(valor_liquido as decimal(12,2)) as valor_liquido,
-        cast(data_documento as date) as data_documento,
-        cast(ano as integer) as ano,
-        cast(mes as integer) as mes,
+        cast(nu_deputado_id as bigint) as id_deputado,
+        cast(txt_fornecedor as varchar) as nome_fornecedor,
+        cast(txt_cnpjcpf as varchar) as cnpj_cpf_fornecedor,
+        cast(ide_documento as varchar) as num_documento,
+        cast(vlr_liquido as decimal(12,2)) as valor_liquido,
+        cast(dat_emissao as date) as data_documento,
+        cast(num_ano as integer) as ano,
+        cast(num_mes as integer) as mes,
         cast(num_ressarcimento as varchar) as num_ressarcimento,
         _source_url,
         cast(_extracted_at as timestamp) as _extracted_at,

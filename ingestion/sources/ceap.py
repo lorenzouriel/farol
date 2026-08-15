@@ -7,6 +7,7 @@ here; completeness windows are handled downstream in dbt.
 """
 import csv
 import io
+import os
 import tempfile
 import zipfile
 from typing import Any, Iterator
@@ -37,13 +38,17 @@ def despesas(years: list[int] = dlt.config.value):
 
 
 def _rows_from_zip(url: str) -> Iterator[dict[str, Any]]:
-    with tempfile.NamedTemporaryFile(suffix=".zip") as tmp_file:
+    # delete=False + explicit close before reopening: on Windows, a
+    # NamedTemporaryFile holds an exclusive lock while open, so reopening it
+    # via zipfile.ZipFile in the same process raises PermissionError.
+    with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as tmp_file:
+        tmp_path = tmp_file.name
         with requests.get(url, stream=True, timeout=120) as resp:
             resp.raise_for_status()
             for chunk in resp.iter_content(chunk_size=8192):
                 tmp_file.write(chunk)
-        tmp_file.flush()
-        with zipfile.ZipFile(tmp_file.name) as archive:
+    try:
+        with zipfile.ZipFile(tmp_path) as archive:
             for member_name in archive.namelist():
                 if not member_name.lower().endswith(".csv"):
                     continue
@@ -51,3 +56,5 @@ def _rows_from_zip(url: str) -> Iterator[dict[str, Any]]:
                     text_stream = io.TextIOWrapper(member_file, encoding="utf-8")
                     reader = csv.DictReader(text_stream, delimiter=";")
                     yield from reader
+    finally:
+        os.unlink(tmp_path)

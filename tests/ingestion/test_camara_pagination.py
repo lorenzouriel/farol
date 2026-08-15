@@ -10,9 +10,16 @@ library — there is no existing test suite/convention in this repo yet, and
 stdlib `unittest.mock` avoids introducing a new test dependency (e.g.
 pytest-mock) purely for this. `deputados()` is a `@dlt.resource`-decorated
 generator function; iterating it directly (`list(deputados())`) outside of
-a `pipeline.run()` call drives the underlying generator without going
-through dlt's extract/normalize pipeline stages, which is the standard way
-to unit test a dlt resource's own logic in isolation.
+a `pipeline.run()` call still drives the underlying generator through dlt's
+`PipeIterator` extract-stage machinery (just not normalize/load) — which is
+why exceptions raised inside the generator surface wrapped in
+`dlt.extract.exceptions.ResourceExtractionError` rather than as the bare
+exception the generator itself raised. The original exception is preserved
+as `__cause__`.
+
+Every listed deputy triggers one extra detail-endpoint call (for cpf/
+nomeEleitoral enrichment — see camara.py), so pagination-focused tests mock
+one detail response per record in addition to the list-page responses.
 """
 from __future__ import annotations
 
@@ -20,6 +27,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
+from dlt.extract.exceptions import ResourceExtractionError
 
 from ingestion.sources.camara import deputados
 
@@ -34,6 +42,16 @@ def _make_response(dados: list[dict]) -> MagicMock:
     return response
 
 
+def _make_detail_response(cpf: str, nome_eleitoral: str) -> MagicMock:
+    """Build a mock detail-endpoint response (the source of cpf/nomeEleitoral)."""
+    response = MagicMock()
+    response.json.return_value = {
+        "dados": {"cpf": cpf, "ultimoStatus": {"nomeEleitoral": nome_eleitoral}}
+    }
+    response.raise_for_status.return_value = None
+    return response
+
+
 class TestDeputadosPaginationTermination:
     """AT-002: empty `dados: []` page ends the loop cleanly, not as an error."""
 
@@ -42,19 +60,29 @@ class TestDeputadosPaginationTermination:
         """Page 1 has 2 records, page 2 is the empty-page pagination trap."""
         page_1 = _make_response([{"id": 1, "nome": "A"}, {"id": 2, "nome": "B"}])
         page_2 = _make_response([])
-        mock_get.side_effect = [page_1, page_2]
+        mock_get.side_effect = [
+            page_1,
+            _make_detail_response("111", "A Eleitoral"),
+            _make_detail_response("222", "B Eleitoral"),
+            page_2,
+        ]
 
         records = list(deputados())
 
         assert len(records) == 2
-        assert mock_get.call_count == 2
+        assert mock_get.call_count == 4
 
     @patch("ingestion.sources.camara.requests.get")
     def test_yielded_records_carry_provenance(self, mock_get):
         """Every record surviving the pagination loop is provenance-stamped."""
         page_1 = _make_response([{"id": 1, "nome": "A"}, {"id": 2, "nome": "B"}])
         page_2 = _make_response([])
-        mock_get.side_effect = [page_1, page_2]
+        mock_get.side_effect = [
+            page_1,
+            _make_detail_response("111", "A Eleitoral"),
+            _make_detail_response("222", "B Eleitoral"),
+            page_2,
+        ]
 
         records = list(deputados())
 
@@ -71,7 +99,12 @@ class TestDeputadosPaginationTermination:
         """Only the real 2 records from page 1 survive — nothing from the empty page."""
         page_1 = _make_response([{"id": 1, "nome": "A"}, {"id": 2, "nome": "B"}])
         page_2 = _make_response([])
-        mock_get.side_effect = [page_1, page_2]
+        mock_get.side_effect = [
+            page_1,
+            _make_detail_response("111", "A Eleitoral"),
+            _make_detail_response("222", "B Eleitoral"),
+            page_2,
+        ]
 
         records = list(deputados())
 
@@ -87,8 +120,9 @@ class TestDeputadosGenuineErrorsPropagate:
         """A real requests.HTTPError on page 1 is not treated as benign like dados: []."""
         mock_get.side_effect = requests.HTTPError("500 Server Error")
 
-        with pytest.raises(requests.HTTPError):
+        with pytest.raises(ResourceExtractionError) as exc_info:
             list(deputados())
+        assert isinstance(exc_info.value.__cause__, requests.HTTPError)
 
     @patch("ingestion.sources.camara.requests.get")
     def test_http_error_via_raise_for_status_propagates(self, mock_get):
@@ -99,5 +133,6 @@ class TestDeputadosGenuineErrorsPropagate:
         )
         mock_get.return_value = error_response
 
-        with pytest.raises(requests.HTTPError):
+        with pytest.raises(ResourceExtractionError) as exc_info:
             list(deputados())
+        assert isinstance(exc_info.value.__cause__, requests.HTTPError)

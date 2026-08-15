@@ -6,10 +6,10 @@ with source as (
 renamed as (
     select
         cast(sq_candidato as bigint) as sq_candidato,
-        cast(cpf as varchar) as cpf,
-        cast(nome as varchar) as nome,
-        cast(cargo as varchar) as cargo,
-        cast(situacao as varchar) as situacao,
+        cast(nr_cpf_candidato as varchar) as cpf,
+        cast(nm_candidato as varchar) as nome,
+        cast(ds_cargo as varchar) as cargo,
+        cast(ds_situacao_candidatura as varchar) as situacao,
         cast(ano_eleicao as integer) as ano_eleicao,
         _source_url,
         cast(_extracted_at as timestamp) as _extracted_at,

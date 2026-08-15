@@ -1,0 +1,11 @@
+[sources.camara.proposicoes]
+ano = 2026
+
+[sources.ceap.despesas]
+years = [2023, 2024, 2025, 2026]
+
+[sources.tse_bulk.candidatos]
+election_years = [2018, 2022, 2026]
+
+[sources.datajud.processos]
+filter_year = 2026

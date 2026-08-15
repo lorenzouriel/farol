@@ -7,11 +7,11 @@ renamed as (
     select
         cast(id as bigint) as id_deputado,
         cast(nome as varchar) as nome_civil,
-        cast(ultimoStatus.nomeEleitoral as varchar) as nome_eleitoral,
+        cast(nome_eleitoral as varchar) as nome_eleitoral,
         cast(cpf as varchar) as cpf,
-        cast(siglaPartido as varchar) as sigla_partido,
-        cast(siglaUf as varchar) as sigla_uf,
-        cast(idLegislatura as bigint) as id_legislatura,
+        cast(sigla_partido as varchar) as sigla_partido,
+        cast(sigla_uf as varchar) as sigla_uf,
+        cast(id_legislatura as bigint) as id_legislatura,
         _source_url,
         cast(_extracted_at as timestamp) as _extracted_at,
         _source_version
