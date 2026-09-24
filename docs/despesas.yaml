@@ -1,0 +1,2092 @@
+catalog: 'mcp-brasil — v1 scope: despesas públicas (public expenses)'
+version: v1
+derived_from: mcp_brasil_sources.yaml
+scope:
+  definition: 'Execução da despesa pública (empenho → liquidação → pagamento) e gastos diretos atribuíveis: cota parlamentar, cartão corporativo, viagens a serviço, emendas, relatórios fiscais de execução
+    (RREO/RGF/DCA) e índices de aplicação mínima (MDE/ASPS).'
+  includes:
+  - despesa por órgão / função / favorecido
+  - documentos e itens de empenho
+  - cartão de pagamento (suprimento de fundos)
+  - viagens a serviço
+  - emendas parlamentares (execução)
+  - CEAP de deputados
+  - execução orçamentária de estados/municípios (SICONFI)
+  - despesas municipais via TCEs (SP, PE, PI, RN, CE, RS)
+  - empenhos e faturas de contratos federais
+  excludes: receitas, contratos/licitações como objeto principal, transferências a terceiros não federais, folha de pagamento individual, benefícios sociais, renúncia fiscal, contas de campanha
+totals:
+  sources: 10
+  tools: 42
+  core_tools: 27
+  lookup_or_support_tools: 15
+  keys_required:
+  - TRANSPARENCIA_API_KEY
+  note: Só o Portal da Transparência exige chave no v1; todas as demais fontes são abertas.
+question_router:
+- question: Quanto o órgão X gastou no ano Y?
+  level: federal
+  tools:
+  - transparencia.listar_orgaos
+  - transparencia.consultar_despesas_orgao
+- question: Quanto a União gastou com saúde/educação (função) em Y?
+  level: federal
+  tools:
+  - transparencia.consultar_despesas_funcional
+- question: Quais pagamentos o fornecedor (CNPJ/CPF) recebeu?
+  level: federal
+  tools:
+  - transparencia.consultar_despesas
+  - transparencia.buscar_documentos_despesa
+  - transparencia.buscar_itens_empenho
+- question: O que foi empenhado numa licitação / num contrato?
+  level: federal
+  tools:
+  - transparencia.buscar_empenhos_licitacao
+  - compras.contratosgovbr_listar_contratos_unidade
+  - compras.contratosgovbr_consultar_empenhos_contrato
+  - compras.contratosgovbr_consultar_faturas_contrato
+- question: Gastos com cartão corporativo de um órgão
+  level: federal
+  tools:
+  - transparencia.buscar_cartoes_pagamento
+- question: Viagens a serviço (diárias e passagens) de um órgão ou servidor
+  level: federal
+  tools:
+  - transparencia.buscar_viagens_orgao
+  - transparencia.consultar_viagens
+  - transparencia.detalhar_viagem
+- question: 'Emendas do parlamentar X: quanto foi empenhado/pago?'
+  level: federal
+  tools:
+  - transparencia.buscar_emendas
+  - transparencia.buscar_documentos_emenda
+- question: Despesas da cota parlamentar (CEAP) do deputado X
+  level: federal_legislativo
+  tools:
+  - camara.listar_deputados
+  - camara.despesas_deputado
+- question: Gastos COVID-19
+  level: federal
+  tools:
+  - transparencia.consultar_coronavirus_despesas
+- question: Despesa por função / limite de pessoal de um estado ou município (qualquer UF)
+  level: estadual_municipal
+  tools:
+  - siconfi.listar_entes
+  - siconfi.anexos_populares
+  - siconfi.consultar_rreo
+  - siconfi.consultar_rgf
+  - siconfi.consultar_dca
+- question: Despesas do município X em SP/PE/PI/RN/CE
+  level: municipal
+  tools:
+  - tce_sp.consultar_despesas_sp
+  - tce_pe.buscar_despesas_pe
+  - tce_pi.consultar_despesas_pi
+  - tce_rn.buscar_despesas_rn
+  - tce_ce.buscar_empenhos_ce
+  routing_hint: Rotear pela UF; fora dessas UFs, cair para SICONFI.
+- question: Município do RS aplicou o mínimo em educação/saúde? Gasto LRF?
+  level: municipal_RS
+  tools:
+  - tce_rs.buscar_indices_educacao_rs
+  - tce_rs.buscar_indices_saude_rs
+  - tce_rs.buscar_gestao_fiscal_rs
+known_gaps:
+- gap: 'Senado: CEAPS (cota dos senadores) não implementado'
+  impact: Pergunta 'gastos do senador X' não tem resposta no v1
+  fix: Nova tool sobre os dados abertos administrativos do Senado (CEAPS) — endpoint a validar
+- gap: 'TCEs sem endpoint de despesa: RJ, ES, SC, TO, PA'
+  impact: Municípios desses estados só via SICONFI (agregado, sem nível de empenho)
+- gap: Nenhum teste de contrato contra upstream
+  impact: Mudança de payload quebra silenciosamente
+  fix: Smoke test diário em 1 chamada por tool core
+- gap: returned_fields de TCEs vêm de modelos Pydantic parciais
+  impact: Campos de valor (empenhado/liquidado/pago) variam por TCE; normalizar num modelo canônico de despesa
+deferred_to_v2:
+- id: transferegov
+  tools: emendas PIX
+  reason: Transferência especial ao ente; a despesa final ocorre no município
+- id: transparencia
+  tools: buscar_convenios, detalhar_convenio, consultar_coronavirus_transferencias
+  reason: Transferências voluntárias — despesa da União, mas execução no convenente
+- id: transparencia
+  tools: buscar_remuneracoes_servidores, detalhar_servidor
+  reason: Despesa de pessoal, porém PII individual; tratar à parte com LGPD
+- id: transparencia
+  tools: consultar_bolsa_familia, consultar_beneficio_social, seguro_defeso, garantia_safra, peti
+  reason: Benefícios sociais — outro domínio
+- id: transparencia
+  tools: buscar_renuncias_fiscais
+  reason: Gasto tributário (receita não arrecadada), não desembolso
+- id: transparencia
+  tools: buscar_notas_fiscais, buscar_nota_fiscal_chave
+  reason: Documento fiscal; útil para drill-down de v2
+- id: compras / tce_* contratos e licitações
+  reason: Compromisso contratual, não execução
+- id: tse, tse_fefc
+  reason: Contas de campanha e fundo eleitoral — domínio eleitoral, risco legal alto
+- id: tce_rj.buscar_prestacao_contas
+  reason: Metadados de processo de contas, sem valores de despesa
+- id: fnde
+  reason: Retorna quantitativos (alunos/livros), não valores repassados
+sources:
+- id: transparencia
+  name: Portal da Transparência
+  publisher: CGU
+  government_level: federal
+  base_url: https://api.portaldatransparencia.gov.br/api-de-dados
+  protocol: rest
+  response_format: json
+  auth:
+    required: true
+    type: header
+    header: chave-api-dados
+    env_var: TRANSPARENCIA_API_KEY
+    signup_url: https://portaldatransparencia.gov.br/api-de-dados/cadastrar-email
+    cost: free
+  client_rate_limit: 80/60s
+  license: open data; atribuição
+  legal_risk: baixo
+  tests:
+    status: passing
+    test_count: 148
+    line_coverage_pct: 65.7
+  tools_in_scope: 14
+  tools_total: 54
+  tools:
+  - name: consultar_despesas_orgao
+    role: core
+    description: Consulta despesas públicas por órgão.
+    inputs:
+    - name: codigo_orgao
+      type: string
+      required: true
+    - name: ano
+      type: integer|null
+      required: false
+    - name: pagina
+      type: integer
+      required: false
+      default: 1
+    client_functions:
+    - transparencia.client.consultar_despesas_orgao
+    endpoints:
+    - https://api.portaldatransparencia.gov.br/api-de-dados/despesas/por-orgao
+    returned_fields:
+    - model: DespesaOrgao
+      fields:
+      - name: orgao_codigo
+        type: str | null
+        required: false
+      - name: orgao_nome
+        type: str | null
+        required: false
+      - name: empenhado
+        type: float | null
+        required: false
+      - name: liquidado
+        type: float | null
+        required: false
+      - name: pago
+        type: float | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+      - name: mes
+        type: int | null
+        required: false
+  - name: consultar_despesas_funcional
+    role: core
+    description: Consulta despesas por classificação funcional-programática.
+    inputs:
+    - name: ano
+      type: integer
+      required: true
+    - name: codigo_funcao
+      type: string|null
+      required: false
+    - name: codigo_orgao
+      type: string|null
+      required: false
+    - name: pagina
+      type: integer
+      required: false
+      default: 1
+    client_functions:
+    - transparencia.client.consultar_despesas_funcional
+    endpoints:
+    - https://api.portaldatransparencia.gov.br/api-de-dados/despesas/por-funcional-programatica
+    returned_fields:
+    - model: DespesaFuncional
+      fields:
+      - name: funcao
+        type: str | null
+        required: false
+      - name: subfuncao
+        type: str | null
+        required: false
+      - name: programa
+        type: str | null
+        required: false
+      - name: acao
+        type: str | null
+        required: false
+      - name: empenhado
+        type: float | null
+        required: false
+      - name: liquidado
+        type: float | null
+        required: false
+      - name: pago
+        type: float | null
+        required: false
+  - name: buscar_documentos_despesa
+    role: core
+    description: Busca documentos de despesa (empenhos, liquidações, pagamentos).
+    inputs:
+    - name: codigo_orgao
+      type: string|null
+      required: false
+    - name: ano
+      type: integer|null
+      required: false
+    - name: codigo_favorecido
+      type: string|null
+      required: false
+    - name: pagina
+      type: integer
+      required: false
+      default: 1
+    client_functions:
+    - transparencia.client.buscar_documentos_despesa
+    endpoints:
+    - https://api.portaldatransparencia.gov.br/api-de-dados/despesas/documentos
+    - https://api.portaldatransparencia.gov.br/api-de-dados/despesas/documentos-por-favorecido
+    returned_fields:
+    - model: DocumentoDespesa
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: data
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: favorecido
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+  - name: buscar_itens_empenho
+    role: core
+    description: Busca itens de um empenho de despesa.
+    inputs:
+    - name: codigo_documento
+      type: string
+      required: true
+    - name: pagina
+      type: integer
+      required: false
+      default: 1
+    client_functions:
+    - transparencia.client.buscar_itens_empenho
+    endpoints:
+    - https://api.portaldatransparencia.gov.br/api-de-dados/despesas/itens-de-empenho
+    returned_fields:
+    - model: ItemEmpenho
+      fields:
+      - name: descricao
+        type: str | null
+        required: false
+      - name: quantidade
+        type: int | null
+        required: false
+      - name: valor_unitario
+        type: float | null
+        required: false
+      - name: valor_total
+        type: float | null
+        required: false
+  - name: consultar_despesas
+    role: core
+    description: Consulta despesas e recursos recebidos por favorecido.
+    inputs:
+    - name: mes_ano_inicio
+      type: string
+      required: true
+    - name: mes_ano_fim
+      type: string
+      required: true
+    - name: codigo_favorecido
+      type: string|null
+      required: false
+    - name: pagina
+      type: integer
+      required: false
+      default: 1
+    client_functions:
+    - transparencia.client.consultar_despesas
+    endpoints:
+    - https://api.portaldatransparencia.gov.br/api-de-dados/despesas/recursos-recebidos
+    returned_fields:
+    - model: RecursoRecebido
+      fields:
+      - name: ano
+        type: int | null
+        required: false
+      - name: mes
+        type: int | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: favorecido_nome
+        type: str | null
+        required: false
+      - name: orgao_nome
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+  - name: buscar_empenhos_licitacao
+    role: core
+    description: Busca empenhos vinculados a uma licitação.
+    inputs:
+    - name: id_licitacao
+      type: integer
+      required: true
+    - name: pagina
+      type: integer
+      required: false
+      default: 1
+    client_functions:
+    - transparencia.client.buscar_empenhos_licitacao
+    endpoints:
+    - https://api.portaldatransparencia.gov.br/api-de-dados/licitacoes/empenhos
+    returned_fields:
+    - model: DocumentoDespesa
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: data
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: favorecido
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+  - name: buscar_cartoes_pagamento
+    role: core
+    description: Busca pagamentos com cartão corporativo (suprimento de fundos).
+    inputs:
+    - name: cpf_portador
+      type: string|null
+      required: false
+    - name: codigo_orgao
+      type: string|null
+      required: false
+    - name: mes_ano_inicio
+      type: string|null
+      required: false
+    - name: mes_ano_fim
+      type: string|null
+      required: false
+    - name: pagina
+      type: integer
+      required: false
+      default: 1
+    client_functions:
+    - transparencia.client.buscar_cartoes_pagamento
+    endpoints:
+    - https://api.portaldatransparencia.gov.br/api-de-dados/cartoes
+    returned_fields:
+    - model: CartaoPagamento
+      fields:
+      - name: portador
+        type: str | null
+        required: false
+      - name: cpf
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: data
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: estabelecimento
+        type: str | null
+        required: false
+  - name: consultar_viagens
+    role: core
+    description: Consulta viagens a serviço de servidor federal por CPF.
+    inputs:
+    - name: cpf
+      type: string
+      required: true
+    - name: pagina
+      type: integer
+      required: false
+      default: 1
+    client_functions:
+    - transparencia.client.consultar_viagens
+    endpoints:
+    - https://api.portaldatransparencia.gov.br/api-de-dados/viagens-por-cpf
+    returned_fields:
+    - model: Viagem
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: cpf
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: cargo
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: destino
+        type: str | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+      - name: valor_passagens
+        type: float | null
+        required: false
+      - name: valor_diarias
+        type: float | null
+        required: false
+  - name: buscar_viagens_orgao
+    role: core
+    description: Busca viagens a serviço por período e órgão.
+    inputs:
+    - name: codigo_orgao
+      type: string|null
+      required: false
+    - name: data_ida_de
+      type: string|null
+      required: false
+    - name: data_ida_ate
+      type: string|null
+      required: false
+    - name: pagina
+      type: integer
+      required: false
+      default: 1
+    client_functions:
+    - transparencia.client.buscar_viagens_orgao
+    endpoints:
+    - https://api.portaldatransparencia.gov.br/api-de-dados/viagens
+    returned_fields:
+    - model: Viagem
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: cpf
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: cargo
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: destino
+        type: str | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+      - name: valor_passagens
+        type: float | null
+        required: false
+      - name: valor_diarias
+        type: float | null
+        required: false
+  - name: detalhar_viagem
+    role: core
+    description: Detalha uma viagem a serviço por ID.
+    inputs:
+    - name: id_viagem
+      type: integer
+      required: true
+    client_functions:
+    - transparencia.client.detalhar_viagem
+    endpoints:
+    - https://api.portaldatransparencia.gov.br/api-de-dados/viagens
+    returned_fields:
+    - model: Viagem
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: cpf
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: cargo
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: destino
+        type: str | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+      - name: valor_passagens
+        type: float | null
+        required: false
+      - name: valor_diarias
+        type: float | null
+        required: false
+  - name: consultar_coronavirus_despesas
+    role: core
+    description: Consulta despesas públicas relacionadas à COVID-19.
+    inputs:
+    - name: mes_ano
+      type: string
+      required: true
+    - name: pagina
+      type: integer
+      required: false
+      default: 1
+    client_functions:
+    - transparencia.client.consultar_coronavirus_despesas
+    endpoints:
+    - https://api.portaldatransparencia.gov.br/api-de-dados/coronavirus/movimento-liquido-despesa
+    returned_fields:
+    - model: CoronavirusDespesa
+      fields:
+      - name: funcao
+        type: str | null
+        required: false
+      - name: acao
+        type: str | null
+        required: false
+      - name: programa
+        type: str | null
+        required: false
+      - name: grupo_despesa
+        type: str | null
+        required: false
+      - name: empenhado
+        type: float | null
+        required: false
+      - name: liquidado
+        type: float | null
+        required: false
+      - name: pago
+        type: float | null
+        required: false
+  - name: buscar_emendas
+    role: core
+    description: Busca emendas parlamentares por ano e/ou autor.
+    inputs:
+    - name: ano
+      type: integer|null
+      required: false
+    - name: nome_autor
+      type: string|null
+      required: false
+    - name: pagina
+      type: integer
+      required: false
+      default: 1
+    client_functions:
+    - transparencia.client.buscar_emendas
+    endpoints:
+    - https://api.portaldatransparencia.gov.br/api-de-dados/emendas
+    returned_fields:
+    - model: Emenda
+      fields:
+      - name: numero
+        type: str | null
+        required: false
+      - name: autor
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: localidade
+        type: str | null
+        required: false
+      - name: valor_empenhado
+        type: float | null
+        required: false
+      - name: valor_pago
+        type: float | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+  - name: buscar_documentos_emenda
+    role: core
+    description: Busca documentos relacionados a uma emenda parlamentar.
+    inputs:
+    - name: codigo_emenda
+      type: string
+      required: true
+    client_functions:
+    - transparencia.client.buscar_documentos_emenda
+    endpoints:
+    - https://api.portaldatransparencia.gov.br/api-de-dados/emendas/documentos
+    returned_fields:
+    - model: DocumentoEmenda
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: data
+        type: str | null
+        required: false
+  - name: listar_orgaos
+    role: lookup
+    description: Lista órgãos do governo federal cadastrados no SIAPE ou SIAFI.
+    inputs:
+    - name: tipo
+      type: string
+      required: false
+      default: siape
+    - name: pagina
+      type: integer
+      required: false
+      default: 1
+    client_functions:
+    - transparencia.client.listar_orgaos
+    endpoints:
+    - https://api.portaldatransparencia.gov.br/api-de-dados/orgaos-siafi
+    - https://api.portaldatransparencia.gov.br/api-de-dados/orgaos-siape
+    returned_fields:
+    - model: Orgao
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+- id: camara
+  name: Câmara dos Deputados
+  publisher: Câmara dos Deputados
+  government_level: federal_legislativo
+  base_url: https://dadosabertos.camara.leg.br/api/v2
+  protocol: rest
+  response_format: json
+  auth:
+    required: false
+    type: none
+    env_var: null
+  client_rate_limit: 60/60s
+  license: open data; atribuição
+  legal_risk: baixo
+  tests:
+    status: passing
+    test_count: 90
+    line_coverage_pct: 95.3
+  tools_in_scope: 3
+  tools_total: 11
+  tools:
+  - name: despesas_deputado
+    role: core
+    description: Consulta despesas de cota parlamentar (CEAP) de um deputado.
+    inputs:
+    - name: deputado_id
+      type: integer
+      required: true
+    - name: ano
+      type: integer|null
+      required: false
+    - name: mes
+      type: integer|null
+      required: false
+    - name: pagina
+      type: integer
+      required: false
+      default: 1
+    client_functions:
+    - camara.client.listar_despesas
+    endpoints:
+    - https://dadosabertos.camara.leg.br/api/v2/deputados
+    returned_fields:
+    - model: DespesaDeputado
+      fields:
+      - name: deputado_id
+        type: int | null
+        required: false
+      - name: deputado_nome
+        type: str | null
+        required: false
+      - name: tipo_despesa
+        type: str | null
+        required: false
+      - name: fornecedor
+        type: str | null
+        required: false
+      - name: cnpj_cpf
+        type: str | null
+        required: false
+      - name: valor_documento
+        type: float | null
+        required: false
+      - name: valor_liquido
+        type: float | null
+        required: false
+      - name: data_documento
+        type: str | null
+        required: false
+      - name: mes
+        type: int | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+  - name: listar_deputados
+    role: lookup
+    description: Lista deputados federais em exercício com filtros opcionais.
+    inputs:
+    - name: nome
+      type: string|null
+      required: false
+    - name: sigla_partido
+      type: string|null
+      required: false
+    - name: sigla_uf
+      type: string|null
+      required: false
+    - name: legislatura
+      type: integer|null
+      required: false
+    - name: pagina
+      type: integer
+      required: false
+      default: 1
+    client_functions:
+    - camara.client.listar_deputados
+    endpoints:
+    - https://dadosabertos.camara.leg.br/api/v2/deputados
+    returned_fields:
+    - model: Deputado
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: sigla_partido
+        type: str | null
+        required: false
+      - name: sigla_uf
+        type: str | null
+        required: false
+      - name: email
+        type: str | null
+        required: false
+      - name: foto
+        type: str | null
+        required: false
+      - name: legislatura
+        type: int | null
+        required: false
+  - name: buscar_deputado
+    role: lookup
+    description: Busca detalhes de um deputado federal pelo ID.
+    inputs:
+    - name: deputado_id
+      type: integer
+      required: true
+    client_functions:
+    - camara.client.obter_deputado
+    endpoints:
+    - https://dadosabertos.camara.leg.br/api/v2/deputados
+    returned_fields:
+    - model: Deputado
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: sigla_partido
+        type: str | null
+        required: false
+      - name: sigla_uf
+        type: str | null
+        required: false
+      - name: email
+        type: str | null
+        required: false
+      - name: foto
+        type: str | null
+        required: false
+      - name: legislatura
+        type: int | null
+        required: false
+- id: siconfi
+  name: Finanças públicas subnacionais
+  publisher: Tesouro Nacional
+  government_level: federal_estadual_municipal
+  base_url: https://apidatalake.tesouro.gov.br/ords/siconfi/tt
+  protocol: rest
+  response_format: json
+  auth:
+    required: false
+    type: none
+    env_var: null
+  license: open data; atribuição
+  legal_risk: baixo
+  tests:
+    status: passing
+    test_count: 15
+    line_coverage_pct: 90.2
+  tools_in_scope: 7
+  tools_total: 7
+  tools:
+  - name: consultar_rreo
+    role: core
+    description: Consulta RREO (Relatório Resumido da Execução Orçamentária) de um ente.
+    inputs:
+    - name: exercicio
+      type: integer
+      required: true
+    - name: periodo
+      type: integer
+      required: true
+    - name: ente_id
+      type: integer
+      required: true
+    - name: anexo
+      type: string|null
+      required: false
+    - name: simplificado
+      type: boolean
+      required: false
+      default: false
+    - name: esfera
+      type: string|null
+      required: false
+    client_functions:
+    - siconfi.client.consultar_rreo
+    endpoints:
+    - https://apidatalake.tesouro.gov.br/ords/siconfi/tt/rreo
+    returned_fields:
+    - model: ItemDeclaracao
+      fields:
+      - name: exercicio
+        type: int | null
+        required: false
+      - name: periodo
+        type: int | null
+        required: false
+      - name: periodicidade
+        type: str | null
+        required: false
+      - name: instituicao
+        type: str | null
+        required: false
+      - name: cod_ibge
+        type: int | null
+        required: false
+      - name: populacao
+        type: int | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: rotulo
+        type: str | null
+        required: false
+      - name: conta
+        type: str | null
+        required: false
+      - name: cod_conta
+        type: str | null
+        required: false
+      - name: coluna
+        type: str | null
+        required: false
+      - name: anexo
+        type: str | null
+        required: false
+      - name: esfera
+        type: str | null
+        required: false
+      - name: poder
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+  - name: consultar_rgf
+    role: core
+    description: Consulta RGF (Relatório de Gestão Fiscal — LRF) de um ente.
+    inputs:
+    - name: exercicio
+      type: integer
+      required: true
+    - name: periodo
+      type: integer
+      required: true
+    - name: ente_id
+      type: integer
+      required: true
+    - name: poder
+      type: string
+      required: false
+      default: E
+    - name: periodicidade
+      type: string
+      required: false
+      default: Q
+    - name: anexo
+      type: string|null
+      required: false
+    - name: simplificado
+      type: boolean
+      required: false
+      default: false
+    - name: esfera
+      type: string|null
+      required: false
+    client_functions:
+    - siconfi.client.consultar_rgf
+    endpoints:
+    - https://apidatalake.tesouro.gov.br/ords/siconfi/tt/rgf
+    returned_fields:
+    - model: ItemDeclaracao
+      fields:
+      - name: exercicio
+        type: int | null
+        required: false
+      - name: periodo
+        type: int | null
+        required: false
+      - name: periodicidade
+        type: str | null
+        required: false
+      - name: instituicao
+        type: str | null
+        required: false
+      - name: cod_ibge
+        type: int | null
+        required: false
+      - name: populacao
+        type: int | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: rotulo
+        type: str | null
+        required: false
+      - name: conta
+        type: str | null
+        required: false
+      - name: cod_conta
+        type: str | null
+        required: false
+      - name: coluna
+        type: str | null
+        required: false
+      - name: anexo
+        type: str | null
+        required: false
+      - name: esfera
+        type: str | null
+        required: false
+      - name: poder
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+  - name: consultar_dca
+    role: core
+    description: Consulta DCA (Declaração de Contas Anuais) de um ente.
+    inputs:
+    - name: exercicio
+      type: integer
+      required: true
+    - name: ente_id
+      type: integer
+      required: true
+    - name: anexo
+      type: string|null
+      required: false
+    client_functions:
+    - siconfi.client.consultar_dca
+    endpoints:
+    - https://apidatalake.tesouro.gov.br/ords/siconfi/tt/dca
+    returned_fields:
+    - model: ItemDeclaracao
+      fields:
+      - name: exercicio
+        type: int | null
+        required: false
+      - name: periodo
+        type: int | null
+        required: false
+      - name: periodicidade
+        type: str | null
+        required: false
+      - name: instituicao
+        type: str | null
+        required: false
+      - name: cod_ibge
+        type: int | null
+        required: false
+      - name: populacao
+        type: int | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: rotulo
+        type: str | null
+        required: false
+      - name: conta
+        type: str | null
+        required: false
+      - name: cod_conta
+        type: str | null
+        required: false
+      - name: coluna
+        type: str | null
+        required: false
+      - name: anexo
+        type: str | null
+        required: false
+      - name: esfera
+        type: str | null
+        required: false
+      - name: poder
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+  - name: extrato_entregas
+    role: support
+    description: Lista situação das entregas declaratórias (RREO, RGF, DCA) de um ente no ano.
+    inputs:
+    - name: ente_id
+      type: integer
+      required: true
+    - name: ano
+      type: integer
+      required: true
+    client_functions:
+    - siconfi.client.consultar_extrato_entregas
+    endpoints:
+    - https://apidatalake.tesouro.gov.br/ords/siconfi/tt/extrato_entregas
+    returned_fields:
+    - model: ItemDeclaracao
+      fields:
+      - name: exercicio
+        type: int | null
+        required: false
+      - name: periodo
+        type: int | null
+        required: false
+      - name: periodicidade
+        type: str | null
+        required: false
+      - name: instituicao
+        type: str | null
+        required: false
+      - name: cod_ibge
+        type: int | null
+        required: false
+      - name: populacao
+        type: int | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: rotulo
+        type: str | null
+        required: false
+      - name: conta
+        type: str | null
+        required: false
+      - name: cod_conta
+        type: str | null
+        required: false
+      - name: coluna
+        type: str | null
+        required: false
+      - name: anexo
+        type: str | null
+        required: false
+      - name: esfera
+        type: str | null
+        required: false
+      - name: poder
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+  - name: listar_anexos_relatorios
+    role: support
+    description: Catálogo de anexos disponíveis (RREO/RGF/DCA) por esfera — referência.
+    inputs: []
+    client_functions:
+    - siconfi.client.listar_anexos
+    endpoints:
+    - https://apidatalake.tesouro.gov.br/ords/siconfi/tt/anexos-relatorios
+    returned_fields:
+    - model: AnexoRelatorio
+      fields:
+      - name: esfera
+        type: str
+        required: true
+      - name: co_tipo_demonstrativo
+        type: str
+        required: true
+      - name: no_anexo
+        type: str
+        required: true
+      - name: de_anexo
+        type: str | null
+        required: false
+  - name: anexos_populares
+    role: support
+    description: Lista os anexos RREO e RGF mais consultados (referência rápida, offline).
+    inputs: []
+    notes: 'Offline: catálogo estático, sem chamada HTTP.'
+  - name: listar_entes
+    role: lookup
+    description: Lista entes federados declarantes do SICONFI (União, estados, DF, municípios).
+    inputs:
+    - name: uf
+      type: string|null
+      required: false
+    - name: tipo
+      type: string|null
+      required: false
+    client_functions:
+    - siconfi.client.listar_entes
+    endpoints:
+    - https://apidatalake.tesouro.gov.br/ords/siconfi/tt/entes
+    returned_fields:
+    - model: Ente
+      fields:
+      - name: cod_ibge
+        type: int | null
+        required: false
+      - name: ente
+        type: str | null
+        required: false
+      - name: capital
+        type: int | null
+        required: false
+      - name: regiao
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: esfera
+        type: str | null
+        required: false
+      - name: exercicio
+        type: int | null
+        required: false
+      - name: populacao
+        type: int | null
+        required: false
+      - name: cnpj
+        type: str | null
+        required: false
+- id: compras
+  name: PNCP + ComprasNet/SIASG + Contratos.gov.br
+  publisher: MGI / PNCP / SIASG
+  government_level: federal
+  base_url: https://pncp.gov.br/api/consulta
+  protocol: rest
+  response_format: json
+  auth:
+    required: false
+    type: none
+    env_var: null
+  license: Lei 14.133/2021 (publicidade obrigatória)
+  legal_risk: baixo
+  tests:
+    status: passing
+    test_count: 127
+    line_coverage_pct: 85.0
+  tools_in_scope: 3
+  tools_total: 29
+  tools:
+  - name: contratosgovbr_consultar_empenhos_contrato
+    role: core
+    description: Lista empenhos (compromissos orçamentários) de um contrato.
+    inputs:
+    - name: contrato_id
+      type: integer
+      required: true
+    client_functions:
+    - compras.contratosgovbr.client.listar_empenhos
+    endpoints:
+    - https://contratos.comprasnet.gov.br/api/contrato
+    returned_fields:
+    - model: Empenho
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: credor
+        type: str | null
+        required: false
+      - name: fonte_recurso
+        type: str | null
+        required: false
+      - name: programa_trabalho
+        type: str | null
+        required: false
+      - name: naturezadespesa
+        type: str | null
+        required: false
+      - name: empenhado
+        type: str | null
+        required: false
+      - name: liquidado
+        type: str | null
+        required: false
+      - name: pago
+        type: str | null
+        required: false
+  - name: contratosgovbr_consultar_faturas_contrato
+    role: core
+    description: Lista faturas (notas fiscais) de um contrato.
+    inputs:
+    - name: contrato_id
+      type: integer
+      required: true
+    client_functions:
+    - compras.contratosgovbr.client.listar_faturas
+    endpoints:
+    - https://contratos.comprasnet.gov.br/api/contrato
+    returned_fields:
+    - model: Fatura
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: emissao
+        type: str | null
+        required: false
+      - name: vencimento
+        type: str | null
+        required: false
+      - name: valor
+        type: str | null
+        required: false
+      - name: juros
+        type: str | null
+        required: false
+      - name: multa
+        type: str | null
+        required: false
+      - name: glosa
+        type: str | null
+        required: false
+      - name: valorliquido
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+  - name: contratosgovbr_listar_contratos_unidade
+    role: lookup
+    description: Lista contratos ativos de uma Unidade Gestora (UG) no Contratos.gov.br.
+    inputs:
+    - name: unidade_codigo
+      type: integer
+      required: true
+    client_functions:
+    - compras.contratosgovbr.client.listar_contratos_ug
+    endpoints:
+    - https://contratos.comprasnet.gov.br/api/contrato/ug
+    returned_fields:
+    - model: ContratoResumo
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: receita_despesa
+        type: str | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: orgao_codigo
+        type: str | null
+        required: false
+      - name: orgao_nome
+        type: str | null
+        required: false
+      - name: unidade_codigo
+        type: str | null
+        required: false
+      - name: unidade_nome
+        type: str | null
+        required: false
+      - name: fornecedor_tipo
+        type: str | null
+        required: false
+      - name: fornecedor_cnpj_cpf
+        type: str | null
+        required: false
+      - name: fornecedor_nome
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: categoria
+        type: str | null
+        required: false
+      - name: processo
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: fundamento_legal
+        type: str | null
+        required: false
+      - name: modalidade
+        type: str | null
+        required: false
+      - name: data_assinatura
+        type: str | null
+        required: false
+      - name: data_publicacao
+        type: str | null
+        required: false
+      - name: vigencia_inicio
+        type: str | null
+        required: false
+      - name: vigencia_fim
+        type: str | null
+        required: false
+      - name: valor_inicial
+        type: str | null
+        required: false
+      - name: valor_global
+        type: str | null
+        required: false
+      - name: valor_parcela
+        type: str | null
+        required: false
+      - name: valor_acumulado
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+- id: tce_sp
+  name: TCE-SP
+  publisher: TCE-SP
+  government_level: municipal_SP
+  base_url: https://transparencia.tce.sp.gov.br/api
+  protocol: rest
+  response_format: json
+  auth:
+    required: false
+    type: none
+    env_var: null
+  license: open data; atribuição
+  legal_risk: baixo
+  tests:
+    status: passing
+    test_count: 25
+    line_coverage_pct: 95.0
+  tools_in_scope: 2
+  tools_total: 3
+  tools:
+  - name: consultar_despesas_sp
+    role: core
+    description: Consulta despesas de um município paulista em um mês específico.
+    inputs:
+    - name: municipio
+      type: string
+      required: true
+    - name: exercicio
+      type: integer
+      required: true
+    - name: mes
+      type: integer
+      required: true
+    client_functions:
+    - tce_sp.client.buscar_despesas
+    endpoints:
+    - https://transparencia.tce.sp.gov.br/api/json/despesas
+    returned_fields:
+    - model: Despesa
+      fields:
+      - name: orgao
+        type: str | null
+        required: false
+      - name: mes
+        type: str | null
+        required: false
+      - name: evento
+        type: str | null
+        required: false
+      - name: nr_empenho
+        type: str | null
+        required: false
+      - name: id_fornecedor
+        type: str | null
+        required: false
+      - name: nm_fornecedor
+        type: str | null
+        required: false
+      - name: dt_emissao_despesa
+        type: str | null
+        required: false
+      - name: vl_despesa
+        type: float | null
+        required: false
+  - name: listar_municipios_sp
+    role: lookup
+    description: Lista os 645 municípios paulistas sob jurisdição do TCE-SP.
+    inputs: []
+    client_functions:
+    - tce_sp.client.listar_municipios
+    endpoints:
+    - https://transparencia.tce.sp.gov.br/api/json/municipios
+    returned_fields:
+    - model: Municipio
+      fields:
+      - name: municipio
+        type: str
+        required: true
+      - name: municipio_extenso
+        type: str
+        required: true
+- id: tce_pe
+  name: TCE-PE
+  publisher: TCE-PE
+  government_level: municipal_PE
+  base_url: https://sistemas.tce.pe.gov.br/DadosAbertos
+  protocol: rest
+  response_format: json
+  auth:
+    required: false
+    type: none
+    env_var: null
+  license: open data; atribuição
+  legal_risk: baixo
+  tests:
+    status: passing
+    test_count: 30
+    line_coverage_pct: 92.9
+  tools_in_scope: 2
+  tools_total: 5
+  tools:
+  - name: buscar_despesas_pe
+    role: core
+    description: Busca despesas municipais de Pernambuco registradas no TCE-PE.
+    inputs:
+    - name: ano
+      type: integer
+      required: true
+    - name: mes
+      type: integer|null
+      required: false
+    - name: municipio
+      type: string|null
+      required: false
+    - name: codigo_municipio
+      type: string|null
+      required: false
+    client_functions:
+    - tce_pe.client.buscar_despesas
+    endpoints:
+    - https://sistemas.tce.pe.gov.br/DadosAbertos/DespesasMunicipais!json
+    returned_fields:
+    - model: Despesa
+      fields:
+      - name: numero_empenho
+        type: str | null
+        required: false
+      - name: ano_referencia
+        type: int | null
+        required: false
+      - name: mes_referencia
+        type: int | null
+        required: false
+      - name: fornecedor
+        type: str | null
+        required: false
+      - name: cpf_cnpj
+        type: str | null
+        required: false
+      - name: historico
+        type: str | null
+        required: false
+      - name: valor_empenhado
+        type: float | null
+        required: false
+      - name: valor_liquidado
+        type: float | null
+        required: false
+      - name: valor_pago
+        type: float | null
+        required: false
+      - name: funcao
+        type: str | null
+        required: false
+      - name: elemento_despesa
+        type: str | null
+        required: false
+      - name: unidade_gestora
+        type: str | null
+        required: false
+      - name: codigo_municipio
+        type: str | null
+        required: false
+  - name: buscar_unidades_pe
+    role: lookup
+    description: Busca unidades jurisdicionadas do TCE-PE (prefeituras, câmaras, etc.).
+    inputs:
+    - name: natureza
+      type: string
+      required: false
+      default: prefeitura
+    - name: municipio
+      type: string|null
+      required: false
+    client_functions:
+    - tce_pe.client.buscar_unidades
+    endpoints:
+    - https://sistemas.tce.pe.gov.br/DadosAbertos/UnidadesJurisdicionadas!json
+    returned_fields:
+    - model: UnidadeJurisdicionada
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: natureza
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: codigo_municipio
+        type: str | null
+        required: false
+  notes: Padrão de URL {API_BASE}/{Entidade}!json?{params}.
+- id: tce_pi
+  name: TCE-PI
+  publisher: TCE-PI
+  government_level: municipal_estadual_PI
+  base_url: https://sistemas.tce.pi.gov.br/api/portaldacidadania
+  protocol: rest
+  response_format: json
+  auth:
+    required: false
+    type: none
+    env_var: null
+  license: open data; atribuição
+  legal_risk: baixo
+  tests:
+    status: passing
+    test_count: 29
+    line_coverage_pct: 97.4
+  tools_in_scope: 3
+  tools_total: 5
+  tools:
+  - name: consultar_despesas_pi
+    role: core
+    description: Consulta despesas de um município do Piauí.
+    inputs:
+    - name: id_prefeitura
+      type: integer
+      required: true
+    - name: exercicio
+      type: integer|null
+      required: false
+    client_functions:
+    - tce_pi.client.consultar_despesas
+    - tce_pi.client.consultar_despesas_por_funcao
+    endpoints:
+    - https://sistemas.tce.pi.gov.br/api/portaldacidadania/despesas
+    returned_fields:
+    - model: DespesaAnual
+      fields:
+      - name: exercicio
+        type: int
+        required: true
+      - name: empenhada
+        type: float
+        required: false
+      - name: liquidada
+        type: float
+        required: false
+      - name: paga
+        type: float
+        required: false
+    - model: DespesaFuncao
+      fields:
+      - name: funcao
+        type: str
+        required: true
+      - name: paga
+        type: float
+        required: false
+  - name: buscar_prefeitura_pi
+    role: lookup
+    description: Busca prefeituras do Piauí por nome.
+    inputs:
+    - name: nome
+      type: string
+      required: true
+    client_functions:
+    - tce_pi.client.buscar_prefeitura
+    - tce_pi.client.consultar_gestor
+    endpoints:
+    - https://sistemas.tce.pi.gov.br/api/portaldacidadania/prefeituras
+    returned_fields:
+    - model: Gestor
+      fields:
+      - name: nome
+        type: str
+        required: true
+      - name: inicio_gestao
+        type: str | null
+        required: false
+    - model: Prefeitura
+      fields:
+      - name: id
+        type: int
+        required: true
+      - name: nome
+        type: str
+        required: true
+      - name: codIBGE
+        type: str | null
+        required: false
+      - name: urlPrefeitura
+        type: str | null
+        required: false
+      - name: urlCamara
+        type: str | null
+        required: false
+  - name: listar_prefeituras_pi
+    role: lookup
+    description: Lista todas as prefeituras (municípios) do estado do Piauí.
+    inputs: []
+    client_functions:
+    - tce_pi.client.listar_prefeituras
+    endpoints:
+    - https://sistemas.tce.pi.gov.br/api/portaldacidadania/prefeituras
+    returned_fields:
+    - model: Prefeitura
+      fields:
+      - name: id
+        type: int
+        required: true
+      - name: nome
+        type: str
+        required: true
+      - name: codIBGE
+        type: str | null
+        required: false
+      - name: urlPrefeitura
+        type: str | null
+        required: false
+      - name: urlCamara
+        type: str | null
+        required: false
+- id: tce_rn
+  name: TCE-RN
+  publisher: TCE-RN
+  government_level: estadual_municipal_RN
+  base_url: https://apidadosabertos.tce.rn.gov.br
+  protocol: rest
+  response_format: json
+  auth:
+    required: false
+    type: none
+    env_var: null
+  license: open data; atribuição
+  legal_risk: baixo
+  tests:
+    status: passing
+    test_count: 24
+    line_coverage_pct: 95.3
+  tools_in_scope: 2
+  tools_total: 5
+  tools:
+  - name: buscar_despesas_rn
+    role: core
+    description: Busca despesas orçamentárias de uma unidade no TCE-RN.
+    inputs:
+    - name: ano
+      type: integer
+      required: true
+    - name: bimestre
+      type: integer
+      required: true
+    - name: id_unidade
+      type: integer
+      required: true
+    client_functions:
+    - tce_rn.client.buscar_despesas
+    endpoints:
+    - https://apidadosabertos.tce.rn.gov.br/api/BalancoOrcamentarioApi/Despesa/Json
+    returned_fields:
+    - model: Despesa
+      fields:
+      - name: descricao_categoria_economica
+        type: str | null
+        required: false
+      - name: descricao_grupo_despesa
+        type: str | null
+        required: false
+      - name: descricao_elemento_despesa
+        type: str | null
+        required: false
+      - name: valor_dotacao_inicial
+        type: float | null
+        required: false
+      - name: valor_dotacao_atualizada
+        type: float | null
+        required: false
+      - name: valor_empenho_ate_periodo
+        type: float | null
+        required: false
+      - name: valor_liquidacao_ate_periodo
+        type: float | null
+        required: false
+      - name: valor_pago_ate_periodo
+        type: float | null
+        required: false
+  - name: listar_jurisdicionados_rn
+    role: lookup
+    description: Lista entidades jurisdicionadas pelo TCE-RN.
+    inputs: []
+    client_functions:
+    - tce_rn.client.listar_jurisdicionados
+    endpoints:
+    - https://apidadosabertos.tce.rn.gov.br/api/InformacoesBasicasApi/JurisdicionadosTCE/Json
+    returned_fields:
+    - model: Jurisdicionado
+      fields:
+      - name: identificador_unidade
+        type: int | null
+        required: false
+      - name: codigo_orgao
+        type: str | null
+        required: false
+      - name: nome_orgao
+        type: str | null
+        required: false
+      - name: cnpj
+        type: str | null
+        required: false
+- id: tce_ce
+  name: TCE-CE
+  publisher: TCE-CE
+  government_level: municipal_CE
+  base_url: https://api-dados-abertos.tce.ce.gov.br
+  protocol: rest
+  response_format: json
+  auth:
+    required: false
+    type: none
+    env_var: null
+  license: open data; atribuição
+  legal_risk: baixo
+  tests:
+    status: passing
+    test_count: 31
+    line_coverage_pct: 98.4
+  tools_in_scope: 2
+  tools_total: 4
+  tools:
+  - name: buscar_empenhos_ce
+    role: core
+    description: Busca notas de empenho de um município cearense.
+    inputs:
+    - name: codigo_municipio
+      type: integer
+      required: true
+    - name: data_referencia
+      type: integer
+      required: true
+    - name: codigo_orgao
+      type: string
+      required: false
+      default: '02'
+    - name: deslocamento
+      type: integer
+      required: false
+      default: 0
+    client_functions:
+    - tce_ce.client.buscar_empenhos
+    endpoints:
+    - https://api-dados-abertos.tce.ce.gov.br/notas_empenhos
+    returned_fields:
+    - model: EmpenhoResultado
+      fields:
+      - name: empenhos
+        type: list[Empenho]
+        required: false
+      - name: total
+        type: int
+        required: false
+  - name: listar_municipios_ce
+    role: lookup
+    description: Lista os municípios cearenses sob jurisdição do TCE-CE.
+    inputs: []
+    client_functions:
+    - tce_ce.client.listar_municipios
+    endpoints:
+    - https://api-dados-abertos.tce.ce.gov.br/municipios
+    returned_fields:
+    - model: Municipio
+      fields:
+      - name: codigo_municipio
+        type: str | null
+        required: false
+      - name: nome_municipio
+        type: str | null
+        required: false
+- id: tce_rs
+  name: TCE-RS
+  publisher: TCE-RS
+  government_level: municipal_RS
+  base_url: https://dados.tce.rs.gov.br
+  protocol: rest+ckan_action_api
+  response_format: json
+  auth:
+    required: false
+    type: none
+    env_var: null
+  license: open data; atribuição
+  legal_risk: baixo
+  tests:
+    status: passing
+    test_count: 40
+    line_coverage_pct: 99.0
+  tools_in_scope: 4
+  tools_total: 5
+  tools:
+  - name: buscar_gestao_fiscal_rs
+    role: core
+    description: Busca dados de gestão fiscal (LRF) dos municípios do RS.
+    inputs:
+    - name: ano
+      type: integer
+      required: true
+    - name: municipio
+      type: string|null
+      required: false
+    client_functions:
+    - tce_rs.client.buscar_gestao_fiscal
+    endpoints:
+    - https://dados.tce.rs.gov.br/dados/municipal/gastos-lrf-mde-asps
+    returned_fields:
+    - model: GestaoFiscal
+      fields:
+      - name: ano
+        type: int | null
+        required: false
+      - name: codigo_orgao
+        type: int | null
+        required: false
+      - name: nome_orgao
+        type: str | null
+        required: false
+      - name: receita_corrente_liquida
+        type: float | null
+        required: false
+      - name: despesa_pessoal
+        type: float | null
+        required: false
+      - name: divida_consolidada
+        type: float | null
+        required: false
+      - name: operacoes_credito
+        type: float | null
+        required: false
+      - name: receita_mde
+        type: float | null
+        required: false
+      - name: despesa_mde
+        type: float | null
+        required: false
+      - name: receita_asps
+        type: float | null
+        required: false
+      - name: despesa_asps
+        type: float | null
+        required: false
+  - name: buscar_indices_educacao_rs
+    role: core
+    description: Busca índices de aplicação em educação dos municípios do RS.
+    inputs:
+    - name: ano
+      type: integer
+      required: true
+    - name: municipio
+      type: string|null
+      required: false
+    client_functions:
+    - tce_rs.client.buscar_indices_educacao
+    endpoints:
+    - https://dados.tce.rs.gov.br/dados/municipal/educacao-indice
+    returned_fields:
+    - model: IndiceEducacao
+      fields:
+      - name: ano
+        type: int | null
+        required: false
+      - name: codigo_orgao
+        type: int | null
+        required: false
+      - name: nome_orgao
+        type: str | null
+        required: false
+      - name: valor_despesa
+        type: float | null
+        required: false
+      - name: valor_receita
+        type: float | null
+        required: false
+      - name: indice
+        type: float | null
+        required: false
+  - name: buscar_indices_saude_rs
+    role: core
+    description: Busca índices de aplicação em saúde dos municípios do RS.
+    inputs:
+    - name: ano
+      type: integer
+      required: true
+    - name: municipio
+      type: string|null
+      required: false
+    client_functions:
+    - tce_rs.client.buscar_indices_saude
+    endpoints:
+    - https://dados.tce.rs.gov.br/dados/municipal/saude-indice
+    returned_fields:
+    - model: IndiceSaude
+      fields:
+      - name: ano
+        type: int | null
+        required: false
+      - name: codigo_orgao
+        type: int | null
+        required: false
+      - name: nome_orgao
+        type: str | null
+        required: false
+      - name: valor_despesa
+        type: float | null
+        required: false
+      - name: valor_receita
+        type: float | null
+        required: false
+      - name: indice
+        type: float | null
+        required: false
+  - name: listar_municipios_rs
+    role: lookup
+    description: Lista os municípios do Rio Grande do Sul registrados no TCE-RS.
+    inputs: []
+    client_functions:
+    - tce_rs.client.listar_municipios
+    endpoints:
+    - https://dados.tce.rs.gov.br/dados/auxiliar/municipios.json
+    returned_fields:
+    - model: Municipio
+      fields:
+      - name: codigo
+        type: int | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: codigo_ibge
+        type: int | null
+        required: false
