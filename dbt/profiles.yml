@@ -1,0 +1,12 @@
+farol:
+  target: local
+  outputs:
+    local:
+      type: trino
+      method: none
+      user: farol
+      host: "{{ env_var('TRINO_HOST', '127.0.0.1') }}"
+      port: "{{ env_var('TRINO_PORT', '18080') | int }}"
+      database: lake
+      schema: gold
+      threads: 2
