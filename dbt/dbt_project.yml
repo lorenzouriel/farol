@@ -1,8 +1,0 @@
-name: farol
-version: '1.0.0'
-config-version: 2
-profile: farol
-model-paths: [models]
-models:
-  farol:
-    +materialized: table

@@ -1,11 +1,1 @@
-.env
-.env.*
-!.env.example
-.venv/
-__pycache__/
-*.pyc
-.pytest_cache/
-*.egg-info/
-dbt/target/
-dbt/logs/
-dbt/dbt_packages/
+company/

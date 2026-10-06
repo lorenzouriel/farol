@@ -1,1 +1,0 @@
-"""Farol lakehouse infrastructure."""

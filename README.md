@@ -1,74 +1,68 @@
-# Farol local lakehouse
+# Farol
 
-Based on `lab-lakehouse-oss`: SeaweedFS 3.97 (S3), Nessie 0.104.2,
-Iceberg 1.9.2, Spark Connect 3.5.6, Trino 476, Airflow 3.1.0,
-PostgreSQL 17 metadata, dbt and Superset 5.0.0. Versions match the reference.
+Farol is an open research repository for understanding countries through reproducible studies of their economies, institutions, industries, and societies.
 
-```mermaid
-flowchart LR
-  A[Airflow] --> S[Spark Connect]
-  S --> N[Nessie catalog]
-  S --> O[SeaweedFS / Iceberg files]
-  D[dbt] --> T[Trino]
-  T --> N
-  T --> O
-  U[Superset] --> T
-  A --> P[PostgreSQL metadata]
-  U --> P
+Each study brings together a question, sources, methods, and findings that people and AI can inspect, challenge, reproduce, and extend. The name means **lighthouse** in Portuguese: a study illuminates part of a country without claiming to describe everything about it.
+
+## The study is the unit of work
+
+Start with a bounded question. A topic such as `porn-industry` can contain a study asking, “What can available evidence tell us about the industry's economic footprint in Brazil?” A study can cover one country or compare several.
+
+Farol supports live research with AI: discovering sources, investigating discrepancies, running calculations, comparing countries, and revising conclusions. Findings are published as dated reports that remain readable without a running agent or service.
+
+The repository starts with files and small scripts. Add tools only when an actual study needs them; there is no required application stack, database, orchestration service, or dashboard.
+
+## Repository structure
+
+```text
+farol/
+├── README.md
+├── AGENTS.md
+├── studies/
+│   └── README.md                 # Index of actual studies
+└── template/                     # Copy to start a study
+    ├── README.md                 # Question, scope, status, reproduction
+    ├── sources/
+    │   └── sources.yaml          # References and provenance
+    ├── data/
+    │   └── README.md             # Input and derived data conventions
+    ├── scripts/
+    │   └── README.md             # Collection, analysis, report commands
+    ├── docs/
+    │   └── methodology.md        # Definitions, assumptions, limitations
+    ├── ANALYSIS.md               # Editable findings and citations
+    └── ANALYSIS.html             # Readable report snapshot
 ```
 
-The Compose project, network, images and volumes are separate from the reference lab.
-Its synthetic source databases and business models are excluded. External API ingestion
-is not implemented by this infrastructure setup. API keys stay in the existing `.env`
-and are not passed to services until a source integration needs them.
+Use `studies/<study-slug>/` for a standalone study. When several studies share a topic, group them under `studies/<topic>/<study-slug>/`, for example `studies/porn-industry/brazil-economic-footprint/`. Use lowercase names separated by hyphens. Record countries in each study and the index; add country indexes when useful.
 
-## Start on Windows
+The structure is flexible. Qualitative studies may not need `data/` or `scripts/`. Keep only what the question requires.
 
-Start Docker Desktop with Linux containers. Allow about 10 GB RAM for Docker
-(service limits total approximately 7.5 GiB, plus build/runtime overhead).
-Run these commands from this repository in PowerShell:
+## Start a study
 
-```powershell
-# Keep your existing .env. Only copy the example for a new checkout without one.
-if (!(Test-Path .env)) { Copy-Item .env.example .env }
-docker compose config --quiet
-docker compose up -d --build --wait --wait-timeout 600
-docker compose exec airflow python -m farol.bootstrap
-docker compose exec airflow /opt/airflow/dbt-venv/bin/dbt debug --project-dir /opt/lakehouse/dbt --profiles-dir /opt/lakehouse/dbt
-docker compose exec airflow /opt/airflow/dbt-venv/bin/dbt run --project-dir /opt/lakehouse/dbt --profiles-dir /opt/lakehouse/dbt
-```
+1. Copy `template/` into a new directory under `studies/`.
+2. Fill in its README: question, countries, period, scope, and status. Remove unused template sections and folders.
+3. Record sources in `sources/sources.yaml`, including retrieval dates and coverage.
+4. Document definitions and methods, then collect evidence and perform the analysis.
+5. Write findings in `ANALYSIS.md`, linking claims to evidence and calculations.
+6. Update `ANALYSIS.html` from the reviewed findings. Record the rendering method or manual update procedure in the study README.
+7. Verify the report and add the study to the [study index](studies/README.md).
 
-The bootstrap creates bronze/silver/gold namespaces and writes a temporary Iceberg
-table through Spark, reads it through Trino, then drops it. dbt creates the synthetic
-`lake.gold.local_stack_check` table. Models materialize as tables because Trino's
-Nessie connector does not support creating views. Neither command ingests government data.
-The same smoke check is available as the manually triggered `farol_local` Airflow DAG.
+The template contains placeholders, not research results. No shared report generator or runtime is required. Each study documents its own dependencies and commands when needed.
 
-| Service | Local address | Access |
-|---|---|---|
-| Airflow | http://127.0.0.1:18081 | Local SimpleAuth all-admin mode |
-| Superset | http://127.0.0.1:18088 | admin / `SUPERSET_ADMIN_PASSWORD` (default admin) |
-| Trino | http://127.0.0.1:18080 | User farol; no password |
-| Nessie | http://127.0.0.1:29120/api/v2 | Catalog API |
-| S3 | http://127.0.0.1:18333 | Credentials in `.env.example` / Compose defaults |
-| Spark Connect | sc://127.0.0.1:25002 | Spark client |
+## Research principles
 
-Superset automatically registers the `Farol` Trino connection using `trino://farol@trino:8080/lake`.
-After dbt runs, add the `gold.local_stack_check` dataset to verify SQL connectivity.
-No expense dashboards or production authentication are configured. Services bind to
-loopback; these development defaults are intended only for your local machine.
+- Support important factual claims with traceable evidence; prefer primary sources.
+- Make quantitative findings traceable to inputs, transformations, and calculations.
+- Distinguish observations, estimates, and interpretations. Explain uncertainty and conflicting evidence.
+- State the period covered and the last verification date. A recent retrieval does not make old data current.
+- Treat missing evidence and inconclusive results as valid outcomes.
+- Store source material only when redistribution is permitted. Reference large or restricted datasets and document how to obtain them.
 
-Host ports can be changed in `.env`; containers use internal service names and ports.
-Keep infrastructure passwords URL-safe because metadata connection URIs embed them.
-The reference's dbt environment and Great Expectations tooling are installed in Airflow;
-business models and quality rules still need to be implemented for Farol.
+## Working with AI
 
-```powershell
-docker compose ps
-docker compose logs --tail 100
-docker compose down  # stops Farol, keeps persisted data
-```
+Read [AGENTS.md](AGENTS.md) for the repository's research and editing conventions. A useful task might be:
 
-Avoid `down -v` unless you intend to erase Farol's persisted storage and metadata.
-Optional host Python development: `uv sync` (Python 3.11+); Docker provides the Python
-runtime needed for the commands above. The API audit scripts remain in `scripts/`.
+> Refresh this study's sources, investigate the discrepancy between the two estimates, and show whether the conclusion changes.
+
+An update should leave reviewable changes to sources, methods, calculations, and findings. AI output is a research aid, not evidence in itself. Keep Markdown and HTML consistent and explain material revisions in the study's change history.
