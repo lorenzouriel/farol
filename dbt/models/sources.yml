@@ -1,0 +1,10 @@
+version: 2
+sources:
+  - name: bronze
+    database: lake
+    schema: bronze
+    tables:
+      - name: expense_observation
+      - name: complete_batch
+      - name: ingestion_runs
+      - name: capability_registry

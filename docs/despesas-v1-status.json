@@ -1,0 +1,571 @@
+﻿{
+  "resources": [
+    {
+      "resource": "camara_deputados",
+      "source": "camara",
+      "status": "complete",
+      "record_count": 513,
+      "projected_count": 513,
+      "error": null,
+      "started_at": "2026-10-06 13:40:52.949328+00:00"
+    },
+    {
+      "resource": "camara_despesas",
+      "source": "camara",
+      "status": "quarantined",
+      "record_count": null,
+      "projected_count": null,
+      "error": "No financial records for configured scope; empty coverage is unverified",
+      "started_at": "2026-10-06 13:41:03.889459+00:00"
+    },
+    {
+      "resource": "cgu_emendas",
+      "source": "transparencia",
+      "status": "complete",
+      "record_count": 1,
+      "projected_count": 1,
+      "error": null,
+      "started_at": "2026-10-06 13:43:23.865677+00:00"
+    },
+    {
+      "resource": "cgu_execucao_orgao",
+      "source": "transparencia",
+      "status": "complete",
+      "record_count": 117,
+      "projected_count": 117,
+      "error": null,
+      "started_at": "2026-10-06 13:41:05.164366+00:00"
+    },
+    {
+      "resource": "cgu_funcional",
+      "source": "transparencia",
+      "status": "complete",
+      "record_count": 2,
+      "projected_count": 2,
+      "error": null,
+      "started_at": "2026-10-06 13:41:50.687594+00:00"
+    },
+    {
+      "resource": "cgu_orgaos",
+      "source": "transparencia",
+      "status": "blocked",
+      "record_count": null,
+      "projected_count": null,
+      "error": "Full lookup pagination deferred; pilot organization was validated by expense response.",
+      "started_at": "2026-10-06 13:41:17.686934+00:00"
+    },
+    {
+      "resource": "compras_empenhos",
+      "source": "compras",
+      "status": "complete",
+      "record_count": 1,
+      "projected_count": 1,
+      "error": null,
+      "started_at": "2026-10-06 13:41:46.191144+00:00"
+    },
+    {
+      "resource": "compras_execucao",
+      "source": "compras",
+      "status": "complete",
+      "record_count": 26,
+      "projected_count": 26,
+      "error": null,
+      "started_at": "2026-10-06 13:41:43.259478+00:00"
+    },
+    {
+      "resource": "compras_faturas",
+      "source": "compras",
+      "status": "complete",
+      "record_count": 5,
+      "projected_count": 5,
+      "error": null,
+      "started_at": "2026-10-06 13:41:48.405147+00:00"
+    },
+    {
+      "resource": "siconfi_dca",
+      "source": "siconfi",
+      "status": "complete",
+      "record_count": 3197,
+      "projected_count": 286,
+      "error": null,
+      "started_at": "2026-10-06 13:41:32.790895+00:00"
+    },
+    {
+      "resource": "siconfi_rgf",
+      "source": "siconfi",
+      "status": "complete",
+      "record_count": 301,
+      "projected_count": 10,
+      "error": null,
+      "started_at": "2026-10-06 13:41:30.485790+00:00"
+    },
+    {
+      "resource": "siconfi_rreo",
+      "source": "siconfi",
+      "status": "complete",
+      "record_count": 3006,
+      "projected_count": 91,
+      "error": null,
+      "started_at": "2026-10-06 13:41:24.186326+00:00"
+    },
+    {
+      "resource": "tce_ce_despesas",
+      "source": "tce_ce",
+      "status": "blocked",
+      "record_count": null,
+      "projected_count": null,
+      "error": "Catalog routes returned HTTP 404; replacement upstream contract required.",
+      "started_at": "2026-10-06 13:41:40.977180+00:00"
+    },
+    {
+      "resource": "tce_pe_despesas",
+      "source": "tce_pe",
+      "status": "blocked",
+      "record_count": null,
+      "projected_count": null,
+      "error": "Pilot timed out; parameter names and pagination require a verified contract.",
+      "started_at": "2026-10-06 13:41:40.960300+00:00"
+    },
+    {
+      "resource": "tce_pe_unidades",
+      "source": "tce_pe",
+      "status": "complete",
+      "record_count": 1817,
+      "projected_count": 1817,
+      "error": null,
+      "started_at": "2026-10-06 13:41:37.642562+00:00"
+    },
+    {
+      "resource": "tce_pi_prefeituras",
+      "source": "tce_pi",
+      "status": "complete",
+      "record_count": 224,
+      "projected_count": 224,
+      "error": null,
+      "started_at": "2026-10-06 13:41:35.486206+00:00"
+    },
+    {
+      "resource": "tce_pi_totais",
+      "source": "tce_pi",
+      "status": "complete",
+      "record_count": 17,
+      "projected_count": 1,
+      "error": null,
+      "started_at": "2026-10-06 13:41:28.119081+00:00"
+    },
+    {
+      "resource": "tce_rn_despesas",
+      "source": "tce_rn",
+      "status": "blocked",
+      "record_count": null,
+      "projected_count": null,
+      "error": "Parameterized route returned an empty array; jurisdiction and financial grain unverified.",
+      "started_at": "2026-10-06 13:41:40.968992+00:00"
+    },
+    {
+      "resource": "tce_rs_educacao",
+      "source": "tce_rs",
+      "status": "complete",
+      "record_count": 476,
+      "projected_count": 476,
+      "error": null,
+      "started_at": "2026-10-06 13:41:40.985955+00:00"
+    },
+    {
+      "resource": "tce_sp_despesas",
+      "source": "tce_sp",
+      "status": "complete",
+      "record_count": 4136,
+      "projected_count": 4136,
+      "error": null,
+      "started_at": "2026-10-06 13:43:21.174045+00:00"
+    },
+    {
+      "resource": "tce_sp_municipios",
+      "source": "tce_sp",
+      "status": "complete",
+      "record_count": 644,
+      "projected_count": 644,
+      "error": null,
+      "started_at": "2026-10-06 13:41:21.783847+00:00"
+    }
+  ],
+  "raw_load": [
+    {
+      "saved_pages": 35,
+      "response_body_bytes": "5783135"
+    }
+  ],
+  "releases": [
+    {
+      "release_id": "gold_r57b8792b679145c8",
+      "status": "published",
+      "detail": "{\"dashboard_path\": \"/superset/dashboard/2/\", \"dashboard_id\": 2}",
+      "created_at": "2026-10-06 13:45:15.782324+00:00"
+    },
+    {
+      "release_id": "gold_rc1534092007e4dba",
+      "status": "ready",
+      "detail": "dbt models and tests passed; awaiting dashboard publication",
+      "created_at": "2026-10-06 13:43:45.963684+00:00"
+    },
+    {
+      "release_id": "gold_r3d9cf2a679f14a15",
+      "status": "published",
+      "detail": "{\"dashboard_path\": \"/superset/dashboard/1/\", \"dashboard_id\": 1}",
+      "created_at": "2026-10-06 13:42:00.709273+00:00"
+    }
+  ],
+  "capabilities": [
+    {
+      "source": "camara",
+      "capability": "buscar_deputado",
+      "role": "lookup",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "camara",
+      "capability": "despesas_deputado",
+      "role": "core",
+      "status": "quarantined",
+      "reason": "No financial records for configured scope; empty coverage is unverified",
+      "resources": "camara_despesas"
+    },
+    {
+      "source": "camara",
+      "capability": "listar_deputados",
+      "role": "lookup",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "camara_deputados"
+    },
+    {
+      "source": "compras",
+      "capability": "contratosgovbr_consultar_empenhos_contrato",
+      "role": "core",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "compras_empenhos"
+    },
+    {
+      "source": "compras",
+      "capability": "contratosgovbr_consultar_faturas_contrato",
+      "role": "core",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "compras_faturas"
+    },
+    {
+      "source": "compras",
+      "capability": "contratosgovbr_listar_contratos_unidade",
+      "role": "lookup",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "compras_execucao"
+    },
+    {
+      "source": "siconfi",
+      "capability": "anexos_populares",
+      "role": "support",
+      "status": "offline_support",
+      "reason": "Static annex selection; not an upstream financial dataset.",
+      "resources": ""
+    },
+    {
+      "source": "siconfi",
+      "capability": "consultar_dca",
+      "role": "core",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "siconfi_dca"
+    },
+    {
+      "source": "siconfi",
+      "capability": "consultar_rgf",
+      "role": "core",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "siconfi_rgf"
+    },
+    {
+      "source": "siconfi",
+      "capability": "consultar_rreo",
+      "role": "core",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "siconfi_rreo"
+    },
+    {
+      "source": "siconfi",
+      "capability": "extrato_entregas",
+      "role": "support",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "siconfi",
+      "capability": "listar_anexos_relatorios",
+      "role": "support",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "siconfi",
+      "capability": "listar_entes",
+      "role": "lookup",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "tce_ce",
+      "capability": "buscar_empenhos_ce",
+      "role": "core",
+      "status": "blocked",
+      "reason": "Catalog routes returned HTTP 404; replacement upstream contract required.",
+      "resources": "tce_ce_despesas"
+    },
+    {
+      "source": "tce_ce",
+      "capability": "listar_municipios_ce",
+      "role": "lookup",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "tce_pe",
+      "capability": "buscar_despesas_pe",
+      "role": "core",
+      "status": "blocked",
+      "reason": "Pilot timed out; parameter names and pagination require a verified contract.",
+      "resources": "tce_pe_despesas"
+    },
+    {
+      "source": "tce_pe",
+      "capability": "buscar_unidades_pe",
+      "role": "lookup",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "tce_pe_unidades"
+    },
+    {
+      "source": "tce_pi",
+      "capability": "buscar_prefeitura_pi",
+      "role": "lookup",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "tce_pi",
+      "capability": "consultar_despesas_pi",
+      "role": "core",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "tce_pi",
+      "capability": "listar_prefeituras_pi",
+      "role": "lookup",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "tce_pi_prefeituras"
+    },
+    {
+      "source": "tce_rn",
+      "capability": "buscar_despesas_rn",
+      "role": "core",
+      "status": "blocked",
+      "reason": "Parameterized route returned an empty array; jurisdiction and financial grain unverified.",
+      "resources": "tce_rn_despesas"
+    },
+    {
+      "source": "tce_rn",
+      "capability": "listar_jurisdicionados_rn",
+      "role": "lookup",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "tce_rs",
+      "capability": "buscar_gestao_fiscal_rs",
+      "role": "core",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "tce_rs",
+      "capability": "buscar_indices_educacao_rs",
+      "role": "core",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "tce_rs_educacao"
+    },
+    {
+      "source": "tce_rs",
+      "capability": "buscar_indices_saude_rs",
+      "role": "core",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "tce_rs",
+      "capability": "listar_municipios_rs",
+      "role": "lookup",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "tce_sp",
+      "capability": "consultar_despesas_sp",
+      "role": "core",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "tce_sp_despesas"
+    },
+    {
+      "source": "tce_sp",
+      "capability": "listar_municipios_sp",
+      "role": "lookup",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "tce_sp_municipios"
+    },
+    {
+      "source": "transparencia",
+      "capability": "buscar_cartoes_pagamento",
+      "role": "core",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "transparencia",
+      "capability": "buscar_documentos_despesa",
+      "role": "core",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "transparencia",
+      "capability": "buscar_documentos_emenda",
+      "role": "core",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "transparencia",
+      "capability": "buscar_emendas",
+      "role": "core",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "cgu_emendas"
+    },
+    {
+      "source": "transparencia",
+      "capability": "buscar_empenhos_licitacao",
+      "role": "core",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "transparencia",
+      "capability": "buscar_itens_empenho",
+      "role": "core",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "transparencia",
+      "capability": "buscar_viagens_orgao",
+      "role": "core",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "transparencia",
+      "capability": "consultar_coronavirus_despesas",
+      "role": "core",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "transparencia",
+      "capability": "consultar_despesas",
+      "role": "core",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "transparencia",
+      "capability": "consultar_despesas_funcional",
+      "role": "core",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "cgu_funcional"
+    },
+    {
+      "source": "transparencia",
+      "capability": "consultar_despesas_orgao",
+      "role": "core",
+      "status": "pilot_loaded",
+      "reason": "Only the explicitly configured partitions are covered; not full source coverage.",
+      "resources": "cgu_execucao_orgao"
+    },
+    {
+      "source": "transparencia",
+      "capability": "consultar_viagens",
+      "role": "core",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "transparencia",
+      "capability": "detalhar_viagem",
+      "role": "core",
+      "status": "contract_pending",
+      "reason": "Verified route, required IDs, grain and pagination contract not yet implemented.",
+      "resources": ""
+    },
+    {
+      "source": "transparencia",
+      "capability": "listar_orgaos",
+      "role": "lookup",
+      "status": "blocked",
+      "reason": "Full lookup pagination deferred; pilot organization was validated by expense response.",
+      "resources": "cgu_orgaos"
+    }
+  ],
+  "silver_record_counts": {
+    "current_observation": 8350,
+    "fct_ceap_reembolso": 0,
+    "fct_contrato_empenho": 1,
+    "fct_contrato_fatura": 5,
+    "fct_demonstrativo_fiscal": 387,
+    "fct_emenda_execucao": 1,
+    "fct_execucao_funcional": 2,
+    "fct_execucao_municipal": 4136,
+    "fct_execucao_orgao": 117,
+    "fct_execucao_pi_anual": 1,
+    "fct_indicador_fiscal": 476
+  },
+  "provenance_pages": 3
+}

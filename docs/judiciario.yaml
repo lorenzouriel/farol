@@ -1,0 +1,414 @@
+catalog: mcp-brasil — judiciario
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio judiciario no catálogo original.
+  includes:
+  - datajud
+  - jurisprudencia
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 2
+  tools: 18
+  keys_required:
+  - DATAJUD_API_KEY
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: datajud
+  name: DataJud (CNJ)
+  description: 'DataJud (CNJ): processos judiciais, movimentações e assuntos de tribunais'
+  domain: judiciario
+  publisher: CNJ
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://api-publica.datajud.cnj.jus.br
+  protocol: elasticsearch
+  response_format: json
+  http_methods:
+  - POST
+  auth:
+    required: true
+    type: header
+    header: 'Authorization: APIKey <key>'
+    env_var: DATAJUD_API_KEY
+    signup_url: https://datajud-wiki.cnj.jus.br/api-publica/acesso
+    cost: free
+  endpoints:
+    DATAJUD_API_BASE: https://api-publica.datajud.cnj.jus.br/api_publica_
+  client_rate_limit: 30/60s
+  tools_count: 12
+  license: Res. CNJ 331/2020 e 446/2022 (redistribuição vedada)
+  legal_risk: alto
+  lgpd_notes: partes processuais
+  tags:
+  - judiciario
+  - processos
+  - cnj
+  - tribunais
+  - datajud
+  tests:
+    path: tests/data/datajud
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_mpu_client.py
+    - test_mpu_integration.py
+    - test_mpu_tools.py
+    - test_tools.py
+    test_count: 81
+    passed: 81
+    failed: 0
+    skipped: 0
+    duration_s: 0.69
+    test_types:
+    - client_unit
+    - mcp_integration
+    - test_mpu_client
+    - test_mpu_integration
+    - test_mpu_tools
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 90.8
+    run_command: make test-feature F=datajud
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: MPUEstatisticas
+      returned_by:
+      - datajud.client.estatisticas_mpu
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: tribunal
+        type: str | null
+        required: false
+      - name: periodo
+        type: str | null
+        required: false
+      - name: por_decisao
+        type: dict[str, int] | null
+        required: false
+      - name: por_classe
+        type: dict[str, int] | null
+        required: false
+    - model: MPUProcesso
+      returned_by:
+      - datajud.client.buscar_medidas_protetivas
+      - datajud.client.buscar_mpu_concedidas
+      - datajud.client.buscar_mpu_por_tipo
+      fields:
+      - name: numero
+        type: str | null
+        required: false
+      - name: classe_codigo
+        type: int | null
+        required: false
+      - name: classe_nome
+        type: str | null
+        required: false
+      - name: tribunal
+        type: str | null
+        required: false
+      - name: orgao_julgador
+        type: str | null
+        required: false
+      - name: data_ajuizamento
+        type: str | null
+        required: false
+      - name: movimentos
+        type: list[Movimentacao] | null
+        required: false
+    - model: Movimentacao
+      returned_by:
+      - datajud.client.consultar_movimentacoes
+      - datajud.client.timeline_mpu
+      fields:
+      - name: data
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: codigo
+        type: int | null
+        required: false
+      - name: complemento
+        type: str | null
+        required: false
+      nested_in:
+      - MPUProcesso
+      - ProcessoDetalhe
+    - model: Processo
+      returned_by:
+      - datajud.client.buscar_processos
+      - datajud.client.buscar_processos_avancado
+      - datajud.client.buscar_processos_por_assunto
+      - datajud.client.buscar_processos_por_classe
+      - datajud.client.buscar_processos_por_orgao
+      fields:
+      - name: numero
+        type: str | null
+        required: false
+      - name: classe
+        type: str | null
+        required: false
+      - name: assunto
+        type: str | null
+        required: false
+      - name: tribunal
+        type: str | null
+        required: false
+      - name: orgao_julgador
+        type: str | null
+        required: false
+      - name: data_ajuizamento
+        type: str | null
+        required: false
+      - name: data_ultima_atualizacao
+        type: str | null
+        required: false
+      - name: grau
+        type: str | null
+        required: false
+      - name: nivel_sigilo
+        type: int | null
+        required: false
+      - name: formato_numero
+        type: str | null
+        required: false
+    - model: ProcessoDetalhe
+      returned_by:
+      - datajud.client.buscar_processo_por_numero
+      fields:
+      - name: numero
+        type: str | null
+        required: false
+      - name: classe
+        type: str | null
+        required: false
+      - name: assuntos
+        type: list[Assunto] | null
+        required: false
+      - name: tribunal
+        type: str | null
+        required: false
+      - name: orgao_julgador
+        type: str | null
+        required: false
+      - name: data_ajuizamento
+        type: str | null
+        required: false
+      - name: data_ultima_atualizacao
+        type: str | null
+        required: false
+      - name: grau
+        type: str | null
+        required: false
+      - name: partes
+        type: list[Parte] | null
+        required: false
+      - name: movimentacoes
+        type: list[Movimentacao] | null
+        required: false
+      - name: nivel_sigilo
+        type: int | null
+        required: false
+    - model: Assunto
+      fields:
+      - name: codigo
+        type: int | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      nested_in:
+      - ProcessoDetalhe
+    - model: Parte
+      fields:
+      - name: nome
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: polo
+        type: str | null
+        required: false
+      - name: documento
+        type: str | null
+        required: false
+      nested_in:
+      - ProcessoDetalhe
+  notes: 'Paginação via search_after (sort token); endpoint por tribunal: api_publica_{tribunal}/_search.'
+  repo_path: src/mcp_brasil/data/datajud
+- id: jurisprudencia
+  name: STF / STJ / TST jurisprudência
+  description: 'Jurisprudência: busca de acórdãos, súmulas e decisões no STF, STJ e TST'
+  domain: judiciario
+  publisher: STF / STJ / TST
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://jurisprudencia.stf.jus.br
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    STF_API_BASE: https://jurisprudencia.stf.jus.br/api/search/pesquisar
+    STJ_API_BASE: https://scon.stj.jus.br/SCON/pesquisar.jsp
+    TST_API_BASE: https://jurisprudencia-backend.tst.jus.br/rest/documentos
+  client_rate_limit: 20/60s
+  tools_count: 6
+  license: LAI; marcas dos tribunais
+  legal_risk: alto
+  tags:
+  - judiciario
+  - jurisprudencia
+  - stf
+  - stj
+  - tst
+  - sumulas
+  tests:
+    path: tests/data/jurisprudencia
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 31
+    passed: 31
+    failed: 0
+    skipped: 0
+    duration_s: 7.41
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 83.4
+    run_command: make test-feature F=jurisprudencia
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Jurisprudencia
+      returned_by:
+      - jurisprudencia.client.buscar_stf
+      - jurisprudencia.client.buscar_stj
+      - jurisprudencia.client.buscar_tst
+      fields:
+      - name: tribunal
+        type: str | null
+        required: false
+      - name: ementa
+        type: str | null
+        required: false
+      - name: relator
+        type: str | null
+        required: false
+      - name: numero_processo
+        type: str | null
+        required: false
+      - name: classe
+        type: str | null
+        required: false
+      - name: data_julgamento
+        type: str | null
+        required: false
+      - name: data_publicacao
+        type: str | null
+        required: false
+      - name: orgao_julgador
+        type: str | null
+        required: false
+      - name: decisao
+        type: str | null
+        required: false
+      - name: url
+        type: str | null
+        required: false
+    - model: RepercussaoGeral
+      returned_by:
+      - jurisprudencia.client.buscar_repercussao_geral
+      fields:
+      - name: numero_tema
+        type: int | null
+        required: false
+      - name: titulo
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: relator
+        type: str | null
+        required: false
+      - name: leading_case
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: data_reconhecimento
+        type: str | null
+        required: false
+      - name: tese
+        type: str | null
+        required: false
+    - model: Sumula
+      returned_by:
+      - jurisprudencia.client.buscar_sumulas_stf
+      fields:
+      - name: tribunal
+        type: str | null
+        required: false
+      - name: numero
+        type: int | null
+        required: false
+      - name: enunciado
+        type: str | null
+        required: false
+      - name: referencia_legislativa
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: data_aprovacao
+        type: str | null
+        required: false
+      - name: vinculante
+        type: bool | null
+        required: false
+  repo_path: src/mcp_brasil/data/jurisprudencia

@@ -1,0 +1,299 @@
+catalog: mcp-brasil — mercado_financeiro_noticias
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio mercado_financeiro_noticias no catálogo original.
+  includes:
+  - b3
+  - noticias
+  - cvm_fundos
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 3
+  tools: 16
+  keys_required: []
+  keys_conditional:
+  - BRAPI_TOKEN
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: b3
+  name: B3/bolsa brasileira
+  description: B3/bolsa brasileira — cotações real-time de ações, FIIs, BDRs, criptomoedas via brapi.dev
+  domain: mercado_financeiro_noticias
+  publisher: brapi.dev (terceiro, dados B3)
+  official_source: false
+  modality: rest_passthrough
+  base_url: https://brapi.dev/api
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: partial
+    type: query_param
+    param: token
+    env_var: BRAPI_TOKEN
+    signup_url: https://brapi.dev/dashboard
+    cost: free tier; histórico pago
+  endpoints:
+    BRAPI_BASE: https://brapi.dev/api
+  tools_count: 6
+  license: brapi.dev ToS
+  legal_risk: medio
+  tags:
+  - b3
+  - bolsa
+  - acoes
+  - fiis
+  - bdr
+  - cotacoes
+  - mercado
+  - investimentos
+  tests:
+    path: tests/data/b3
+    files:
+    - test_integration.py
+    test_count: 3
+    passed: 3
+    failed: 0
+    skipped: 0
+    duration_s: 0.05
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - respx
+    hits_live_upstream: false
+    line_coverage_pct: 51.5
+    run_command: make test-feature F=b3
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred dict keys (untyped client, returns dict[str, Any])
+    complete: false
+    fields:
+    - name: change
+      type: Any
+    - name: close
+      type: Any
+    - name: date
+      type: Any
+    - name: high
+      type: Any
+    - name: historicalDataPrice
+      type: Any
+    - name: low
+      type: Any
+    - name: name
+      type: Any
+    - name: open
+      type: Any
+    - name: regularMarketChangePercent
+      type: Any
+    - name: regularMarketPrice
+      type: Any
+    - name: regularMarketVolume
+      type: Any
+    - name: results
+      type: Any
+    - name: stock
+      type: Any
+    - name: stocks
+      type: Any
+    - name: symbol
+      type: Any
+    - name: volume
+      type: Any
+    note: 'Sem modelo Pydantic: campos são as chaves que client/tools leem do payload upstream. Tipos não declarados no código.'
+  notes: Cotações simples são públicas; índices (^BVSP) e histórico exigem token (token query param). Histórico é endpoint
+    pago.
+  repo_path: src/mcp_brasil/data/b3
+- id: noticias
+  name: RSS agregado
+  description: Notícias via RSS — Câmara, Senado, Agência Brasil, BCB (política, economia, governo)
+  domain: mercado_financeiro_noticias
+  publisher: Câmara / Senado / EBC / BCB (RSS)
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://agenciabrasil.ebc.com.br
+  protocol: rss
+  response_format: xml
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    FEEDS_POLITICA[camara_ultimas]: https://www.camara.leg.br/noticias/rss/ultimas-noticias
+    FEEDS_POLITICA[senado_ultimas]: https://www12.senado.leg.br/noticias/rss.xml
+    FEEDS_POLITICA[agencia_brasil_politica]: https://agenciabrasil.ebc.com.br/rss/politica/feed.xml
+    FEEDS_POLITICA[agencia_brasil_geral]: https://agenciabrasil.ebc.com.br/rss/geral/feed.xml
+    FEEDS_POLITICA[agencia_brasil_justica]: https://agenciabrasil.ebc.com.br/rss/justica/feed.xml
+    FEEDS_ECONOMIA[agencia_brasil_economia]: https://agenciabrasil.ebc.com.br/rss/economia/feed.xml
+    FEEDS_ECONOMIA[bcb_noticias]: https://www.bcb.gov.br/api/feed/app/conteudo/ultimasnoticias/pt-br
+    FEEDS_TEMAS_CAMARA[eleicoes]: https://www.camara.leg.br/noticias/rss/dinamico/ELEICOES
+    FEEDS_TEMAS_CAMARA[administracao_publica]: https://www.camara.leg.br/noticias/rss/dinamico/ADMINISTRACAO-PUBLICA
+    FEEDS_TEMAS_CAMARA[economia]: https://www.camara.leg.br/noticias/rss/dinamico/ECONOMIA
+    FEEDS_TEMAS_CAMARA[educacao]: https://www.camara.leg.br/noticias/rss/dinamico/EDUCACAO-CULTURA-E-ESPORTES
+    FEEDS_TEMAS_CAMARA[seguranca]: https://www.camara.leg.br/noticias/rss/dinamico/SEGURANCA
+    FEEDS_TEMAS_CAMARA[saude]: https://www.camara.leg.br/noticias/rss/dinamico/SAUDE
+    FEEDS_TEMAS_CAMARA[meio_ambiente]: https://www.camara.leg.br/noticias/rss/dinamico/MEIO-AMBIENTE
+    TODAS_FONTES[camara_ultimas]: https://www.camara.leg.br/noticias/rss/ultimas-noticias
+    TODAS_FONTES[senado_ultimas]: https://www12.senado.leg.br/noticias/rss.xml
+    TODAS_FONTES[agencia_brasil_politica]: https://agenciabrasil.ebc.com.br/rss/politica/feed.xml
+    TODAS_FONTES[agencia_brasil_geral]: https://agenciabrasil.ebc.com.br/rss/geral/feed.xml
+    TODAS_FONTES[agencia_brasil_justica]: https://agenciabrasil.ebc.com.br/rss/justica/feed.xml
+    TODAS_FONTES[agencia_brasil_economia]: https://agenciabrasil.ebc.com.br/rss/economia/feed.xml
+    TODAS_FONTES[bcb_noticias]: https://www.bcb.gov.br/api/feed/app/conteudo/ultimasnoticias/pt-br
+    TODAS_FONTES[eleicoes]: https://www.camara.leg.br/noticias/rss/dinamico/ELEICOES
+    TODAS_FONTES[administracao_publica]: https://www.camara.leg.br/noticias/rss/dinamico/ADMINISTRACAO-PUBLICA
+    TODAS_FONTES[economia]: https://www.camara.leg.br/noticias/rss/dinamico/ECONOMIA
+    TODAS_FONTES[educacao]: https://www.camara.leg.br/noticias/rss/dinamico/EDUCACAO-CULTURA-E-ESPORTES
+    TODAS_FONTES[seguranca]: https://www.camara.leg.br/noticias/rss/dinamico/SEGURANCA
+    TODAS_FONTES[saude]: https://www.camara.leg.br/noticias/rss/dinamico/SAUDE
+    TODAS_FONTES[meio_ambiente]: https://www.camara.leg.br/noticias/rss/dinamico/MEIO-AMBIENTE
+  tools_count: 4
+  license: open data / fair use RSS
+  legal_risk: baixo
+  tags:
+  - noticias
+  - rss
+  - politica
+  - economia
+  - camara
+  - senado
+  - agencia-brasil
+  tests:
+    path: tests/data/noticias
+    files:
+    - test_integration.py
+    test_count: 6
+    passed: 6
+    failed: 0
+    skipped: 0
+    duration_s: 0.11
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - respx
+    hits_live_upstream: false
+    line_coverage_pct: 76.1
+    run_command: make test-feature F=noticias
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred dict keys (untyped client, returns dict[str, Any])
+    complete: false
+    fields:
+    - name: description
+      type: Any
+    - name: href
+      type: Any
+    - name: link
+      type: Any
+    - name: pubDate
+      type: Any
+    - name: title
+      type: Any
+    note: 'Sem modelo Pydantic: campos são as chaves que client/tools leem do payload upstream. Tipos não declarados no código.'
+  repo_path: src/mcp_brasil/data/noticias
+- id: cvm_fundos
+  name: CVM
+  description: 'CVM — cadastro de fundos de investimento (~40k fundos, todos registrados na CVM). Consulta SQL via DuckDB.
+    Opt-in: MCP_BRASIL_DATASETS=cvm_fundos.'
+  domain: mercado_financeiro_noticias
+  publisher: CVM
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://dados.cvm.gov.br
+  protocol: file_download
+  response_format: csv
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=cvm_fundos
+    table: cad_fi
+    ttl_days: 7
+    approx_size_mb: 60
+    source_encoding: cp1252
+    delimiter: ;
+    zip_member: null
+    null_markers:
+    - ''
+    - ' '
+    all_varchar: false
+    pii_columns: []
+    partitioning: single table
+    sources:
+    - url: https://dados.cvm.gov.br/dados/FI/CAD/DADOS/cad_fi.csv
+      zip_member: null
+      partition: null
+  tools_count: 6
+  license: LC 6.385/76; atribuição
+  legal_risk: baixo
+  tags:
+  - cvm
+  - fundos
+  - investimento
+  - cadastro
+  - dataset
+  - duckdb
+  tests:
+    path: tests/datasets/cvm_fundos
+    files:
+    - test_integration.py
+    test_count: 6
+    passed: 6
+    failed: 0
+    skipped: 0
+    duration_s: 0.43
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 87.0
+    run_command: uv run pytest tests/datasets/cvm_fundos
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred from SQL in tools.py (sqlglot)
+    table: cad_fi
+    complete: false
+    fields:
+    - name: ADMIN
+      type: inferred by read_csv_auto
+    - name: CLASSE
+      type: inferred by read_csv_auto
+    - name: CNPJ_FUNDO
+      type: inferred by read_csv_auto
+    - name: DENOM_SOCIAL
+      type: inferred by read_csv_auto
+    - name: GESTOR
+      type: inferred by read_csv_auto
+    - name: SIT
+      type: inferred by read_csv_auto
+    - name: VL_PATRIM_LIQ
+      type: inferred by read_csv_auto
+    note: Sem schema documentado no código; apenas colunas referenciadas pelas tools. Rode DESCRIBE após o primeiro load.
+  repo_path: src/mcp_brasil/datasets/cvm_fundos

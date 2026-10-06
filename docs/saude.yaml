@@ -1,0 +1,1272 @@
+catalog: mcp-brasil — saude
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio saude no catálogo original.
+  includes:
+  - anvisa
+  - bps
+  - denasus
+  - farmacia_popular
+  - imunizacao
+  - opendatasus
+  - rename
+  - saude
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 8
+  tools: 63
+  keys_required: []
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: anvisa
+  name: ANVISA
+  description: 'ANVISA: busca de medicamentos no Bulário Eletrônico, consulta de bulas, categorias (genérico, similar, referência),
+    princípios ativos, preços CMED e registros de medicamentos.'
+  domain: saude
+  publisher: ANVISA
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://consultas.anvisa.gov.br/api/consulta
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    BULARIO_API_BASE: https://consultas.anvisa.gov.br/api/consulta
+    BULARIO_BUSCA_URL: https://consultas.anvisa.gov.br/api/consulta/bulario
+    BULARIO_MEDICAMENTO_URL: https://consultas.anvisa.gov.br/api/consulta/bulario/medicamento
+  tools_count: 10
+  license: LAI; parte CKAN open license
+  legal_risk: critico
+  tags:
+  - saude
+  - anvisa
+  - medicamentos
+  - bulas
+  - bulario
+  tests:
+    path: tests/data/anvisa
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 42
+    passed: 42
+    failed: 0
+    skipped: 0
+    duration_s: 0.48
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 94.0
+    run_command: make test-feature F=anvisa
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: BulaMedicamento
+      returned_by:
+      - anvisa.client.consultar_bula
+      fields:
+      - name: id_bula
+        type: str | null
+        required: false
+      - name: id_produto
+        type: str | null
+        required: false
+      - name: nome_produto
+        type: str | null
+        required: false
+      - name: empresa
+        type: str | null
+        required: false
+      - name: tipo_bula
+        type: str | null
+        required: false
+      - name: data_publicacao
+        type: str | null
+        required: false
+      - name: url_bula
+        type: str | null
+        required: false
+    - model: CategoriaMedicamento
+      returned_by:
+      - anvisa.client.listar_categorias
+      fields:
+      - name: codigo
+        type: str
+        required: true
+      - name: descricao
+        type: str
+        required: true
+    - model: MedicamentoBulario
+      returned_by:
+      - anvisa.client.buscar_generico
+      - anvisa.client.buscar_medicamento
+      - anvisa.client.buscar_por_categoria
+      - anvisa.client.buscar_por_principio_ativo
+      fields:
+      - name: id_produto
+        type: str | null
+        required: false
+      - name: nome_produto
+        type: str | null
+        required: false
+      - name: razao_social
+        type: str | null
+        required: false
+      - name: cnpj
+        type: str | null
+        required: false
+      - name: numero_registro
+        type: str | null
+        required: false
+      - name: data_vencimento_registro
+        type: str | null
+        required: false
+      - name: principio_ativo
+        type: str | null
+        required: false
+      - name: categoria_regulatoria
+        type: str | null
+        required: false
+      - name: numero_processo
+        type: str | null
+        required: false
+  repo_path: src/mcp_brasil/data/anvisa
+- id: bps
+  name: Banco de Preços em Saúde (BPS)
+  description: 'Banco de Preços em Saúde (BPS): preços de medicamentos e dispositivos médicos comprados pelo governo em todas
+    as esferas.'
+  domain: saude
+  publisher: Ministério da Saúde
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://apidadosabertos.saude.gov.br/economia-da-saude/bps
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    BPS_URL: https://apidadosabertos.saude.gov.br/economia-da-saude/bps
+  tools_count: 3
+  license: open data CGU
+  legal_risk: critico
+  tags:
+  - saude
+  - medicamentos
+  - precos
+  - bps
+  - catmat
+  tests:
+    path: tests/data/bps
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 13
+    passed: 13
+    failed: 0
+    skipped: 0
+    duration_s: 0.23
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 96.2
+    run_command: make test-feature F=bps
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: BPSResultado
+      returned_by:
+      - bps.client.buscar_por_catmat
+      - bps.client.buscar_por_descricao
+      - bps.client.consultar_precos
+      fields:
+      - name: total_retornado
+        type: int
+        required: false
+      - name: registros
+        type: list[ComprasBPS]
+        required: false
+    - model: ComprasBPS
+      fields:
+      - name: ano_da_compra
+        type: str | null
+        required: false
+      - name: data_da_compra
+        type: str | null
+        required: false
+      - name: nome_da_instituicao
+        type: str | null
+        required: false
+      - name: cnpj_da_instituicao
+        type: str | null
+        required: false
+      - name: municipio_da_instituicao
+        type: str | null
+        required: false
+      - name: uf_da_instituicao
+        type: str | null
+        required: false
+      - name: codigo_br
+        type: str | null
+        required: false
+      - name: descricao_catmat
+        type: str | null
+        required: false
+      - name: unidade_de_fornecimento
+        type: str | null
+        required: false
+      - name: generico
+        type: str | null
+        required: false
+      - name: anvisa
+        type: str | null
+        required: false
+      - name: modalidade_da_compra
+        type: str | null
+        required: false
+      - name: tipo_da_compra
+        type: str | null
+        required: false
+      - name: fornecedor
+        type: str | null
+        required: false
+      - name: cnpj_do_fornecedor
+        type: str | null
+        required: false
+      - name: fabricante
+        type: str | null
+        required: false
+      - name: quantidade_itens_comprados
+        type: float | null
+        required: false
+      - name: preco_unitario
+        type: float | null
+        required: false
+      - name: preco_total
+        type: float | null
+        required: false
+      nested_in:
+      - BPSResultado
+  repo_path: src/mcp_brasil/data/bps
+- id: denasus
+  name: DENASUS
+  description: 'DENASUS: Departamento Nacional de Auditoria do SUS. Atividades de auditoria, relatórios anuais e planos de
+    auditoria interna do Sistema Nacional de Auditoria.'
+  domain: saude
+  publisher: Ministério da Saúde (DENASUS)
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://www.gov.br/saude/pt-br/composicao/denasus
+  protocol: html_scrape
+  response_format: html
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    BASE_URL: https://www.gov.br/saude/pt-br/composicao/denasus
+    ATIVIDADES_URL: https://www.gov.br/saude/pt-br/composicao/denasus/criacao-de-atividades-de-auditoria
+    RELATORIOS_URL: https://www.gov.br/saude/pt-br/composicao/denasus/relatorio-anual-de-auditoria
+    PLANOS_URL: https://www.gov.br/saude/pt-br/composicao/denasus/planos-anuais-de-auditoria-interna
+    CONSULTA_AUDITORIA_URL: https://consultaauditoria.saude.gov.br
+    INFO_SNA[portal]: https://www.gov.br/saude/pt-br/composicao/denasus
+  tools_count: 5
+  license: LAI
+  legal_risk: critico
+  tags:
+  - saude
+  - sus
+  - auditoria
+  - denasus
+  - transparencia
+  tests:
+    path: tests/data/denasus
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_prompts.py
+    - test_resources.py
+    - test_tools.py
+    test_count: 45
+    passed: 45
+    failed: 0
+    skipped: 0
+    duration_s: 0.16
+    test_types:
+    - client_unit
+    - mcp_integration
+    - prompts
+    - resources
+    - tool_unit
+    http_mocking:
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 87.1
+    run_command: make test-feature F=denasus
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: AtividadeAuditoria
+      returned_by:
+      - denasus.client.listar_atividades_auditoria
+      fields:
+      - name: titulo
+        type: str
+        required: true
+      - name: data
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: resumo
+        type: str | null
+        required: false
+      - name: url_detalhe
+        type: str | null
+        required: false
+    - model: PlanoAuditoria
+      returned_by:
+      - denasus.client.listar_planos_auditoria
+      fields:
+      - name: ano
+        type: int | null
+        required: false
+      - name: titulo
+        type: str
+        required: true
+      - name: url_pdf
+        type: str | null
+        required: false
+    - model: RelatorioAnual
+      returned_by:
+      - denasus.client.listar_relatorios_anuais
+      fields:
+      - name: ano
+        type: int | null
+        required: false
+      - name: titulo
+        type: str
+        required: true
+      - name: url_pdf
+        type: str | null
+        required: false
+      - name: resumo
+        type: str | null
+        required: false
+  notes: Scraping de páginas gov.br — frágil a mudanças de layout.
+  repo_path: src/mcp_brasil/data/denasus
+- id: farmacia_popular
+  name: Farmácia Popular do Brasil
+  description: 'Farmácia Popular do Brasil: consulta de medicamentos gratuitos, farmácias credenciadas por município/UF, busca
+    por indicação terapêutica e informações de elegibilidade do programa.'
+  domain: saude
+  publisher: Ministério da Saúde
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://apidadosabertos.saude.gov.br/cnes
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    CNES_API_BASE: https://apidadosabertos.saude.gov.br/cnes
+    ESTABELECIMENTOS_URL: https://apidadosabertos.saude.gov.br/cnes/estabelecimentos
+  tools_count: 8
+  license: open data CGU
+  legal_risk: critico
+  tags:
+  - saude
+  - farmacia
+  - medicamentos
+  - sus
+  - farmacia-popular
+  tests:
+    path: tests/data/farmacia_popular
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_prompts.py
+    - test_resources.py
+    - test_tools.py
+    test_count: 45
+    passed: 45
+    failed: 0
+    skipped: 0
+    duration_s: 0.31
+    test_types:
+    - client_unit
+    - mcp_integration
+    - prompts
+    - resources
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 97.1
+    run_command: make test-feature F=farmacia_popular
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: EstatisticasPrograma
+      returned_by:
+      - farmacia_popular.client.obter_estatisticas
+      fields:
+      - name: total_medicamentos
+        type: int
+        required: true
+      - name: total_indicacoes
+        type: int
+        required: true
+      - name: todos_gratuitos
+        type: bool
+        required: false
+      - name: indicacoes
+        type: list[str]
+        required: true
+      - name: medicamentos_por_indicacao
+        type: dict[str, int]
+        required: true
+    - model: FarmaciaEstabelecimento
+      returned_by:
+      - farmacia_popular.client.buscar_farmacias
+      fields:
+      - name: codigo_cnes
+        type: str | null
+        required: false
+      - name: nome_fantasia
+        type: str | null
+        required: false
+      - name: nome_razao_social
+        type: str | null
+        required: false
+      - name: tipo_gestao
+        type: str | null
+        required: false
+      - name: codigo_municipio
+        type: str | null
+        required: false
+      - name: codigo_uf
+        type: str | null
+        required: false
+      - name: endereco
+        type: str | null
+        required: false
+    - model: Medicamento
+      returned_by:
+      - farmacia_popular.client.buscar_medicamento_por_nome
+      - farmacia_popular.client.buscar_por_indicacao
+      - farmacia_popular.client.listar_medicamentos
+      fields:
+      - name: nome
+        type: str
+        required: true
+      - name: principio_ativo
+        type: str
+        required: true
+      - name: apresentacao
+        type: str
+        required: true
+      - name: indicacao
+        type: str
+        required: true
+      - name: gratuito
+        type: bool
+        required: false
+  repo_path: src/mcp_brasil/data/farmacia_popular
+- id: imunizacao
+  name: SI-PNI / Programa Nacional de Imunizações
+  description: 'SI-PNI / Programa Nacional de Imunizações: registros de vacinação, calendário nacional, vacinas do SUS, metas
+    de cobertura vacinal. Dados do OpenDataSUS (CKAN) e Elasticsearch público.'
+  domain: saude
+  publisher: Ministério da Saúde (SI-PNI)
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://opendatasus.saude.gov.br/api/3/action
+  protocol: ckan_action_api+elasticsearch
+  response_format: json
+  http_methods:
+  - GET
+  - POST
+  auth:
+    required: false
+    type: basic_public
+    header: 'Authorization: Basic (credencial pública hardcoded)'
+    env_var: null
+    cost: free
+  endpoints:
+    CKAN_API_BASE: https://opendatasus.saude.gov.br/api/3/action
+    CKAN_PACKAGE_SEARCH_URL: https://opendatasus.saude.gov.br/api/3/action/package_search
+    CKAN_PACKAGE_SHOW_URL: https://opendatasus.saude.gov.br/api/3/action/package_show
+    CKAN_DATASTORE_SEARCH_URL: https://opendatasus.saude.gov.br/api/3/action/datastore_search
+    ES_BASE_URL: https://imunizacao.saude.gov.br
+    ES_SEARCH_URL: https://imunizacao.saude.gov.br/desc-imunizacao/_search
+  tools_count: 10
+  license: CC BY-ND 3.0
+  legal_risk: critico
+  lgpd_notes: dado sensível (LGPD art. 11 §4) — vedado uso comercial com identificação
+  tags:
+  - saude
+  - vacinacao
+  - pni
+  - imunizacao
+  - cobertura
+  - sus
+  tests:
+    path: tests/data/imunizacao
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_prompts.py
+    - test_resources.py
+    - test_tools.py
+    test_count: 56
+    passed: 56
+    failed: 0
+    skipped: 0
+    duration_s: 0.26
+    test_types:
+    - client_unit
+    - mcp_integration
+    - prompts
+    - resources
+    - tool_unit
+    http_mocking:
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 98.1
+    run_command: make test-feature F=imunizacao
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: AgregacaoVacinacao
+      returned_by:
+      - imunizacao.client.agregar_vacinacao_es
+      fields:
+      - name: nome
+        type: str
+        required: true
+      - name: total
+        type: int
+        required: true
+    - model: DatasetPNI
+      returned_by:
+      - imunizacao.client.buscar_datasets_pni
+      - imunizacao.client.detalhar_dataset_pni
+      fields:
+      - name: id
+        type: str
+        required: true
+      - name: nome
+        type: str
+        required: true
+      - name: titulo
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: organizacao
+        type: str | null
+        required: false
+      - name: total_recursos
+        type: int
+        required: false
+      - name: data_atualizacao
+        type: str | null
+        required: false
+    - model: RecursoPNI
+      returned_by:
+      - imunizacao.client.detalhar_dataset_pni
+      fields:
+      - name: id
+        type: str
+        required: true
+      - name: nome
+        type: str | null
+        required: false
+      - name: formato
+        type: str | null
+        required: false
+      - name: url
+        type: str | null
+        required: false
+    - model: RegistroVacinacao
+      returned_by:
+      - imunizacao.client.buscar_vacinacao_es
+      fields:
+      - name: municipio
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: vacina_nome
+        type: str | null
+        required: false
+      - name: dose
+        type: str | null
+        required: false
+      - name: fabricante
+        type: str | null
+        required: false
+      - name: faixa_etaria
+        type: str | null
+        required: false
+      - name: sexo
+        type: str | null
+        required: false
+      - name: data_aplicacao
+        type: str | null
+        required: false
+      - name: estabelecimento
+        type: str | null
+        required: false
+      - name: grupo_atendimento
+        type: str | null
+        required: false
+    - model: MetaCobertura
+      fields:
+      - name: vacina
+        type: str
+        required: true
+      - name: meta_pct
+        type: float
+        required: true
+    - model: VacinaSUS
+      fields:
+      - name: sigla
+        type: str
+        required: true
+      - name: nome
+        type: str
+        required: true
+      - name: doses
+        type: int
+        required: true
+      - name: idade
+        type: str
+        required: true
+      - name: doencas
+        type: list[str]
+        required: false
+      - name: via
+        type: str | null
+        required: false
+      - name: grupo
+        type: str | null
+        required: false
+  notes: Elasticsearch público usa Basic auth com credenciais públicas hardcoded (imunizacao_public) em constants.py.
+  repo_path: src/mcp_brasil/data/imunizacao
+- id: opendatasus
+  name: OpenDataSUS
+  description: 'OpenDataSUS: portal de dados abertos do SUS (CKAN API). Busca e consulta de datasets de saúde pública — hospitais,
+    leitos, vacinação, SRAG, qualidade da água e agravos de notificação.'
+  domain: saude
+  publisher: Ministério da Saúde
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://opendatasus.saude.gov.br/api/3/action
+  protocol: ckan_action_api
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    API_BASE: https://opendatasus.saude.gov.br/api/3/action
+    PACKAGE_LIST_URL: https://opendatasus.saude.gov.br/api/3/action/package_list
+    PACKAGE_SEARCH_URL: https://opendatasus.saude.gov.br/api/3/action/package_search
+    PACKAGE_SHOW_URL: https://opendatasus.saude.gov.br/api/3/action/package_show
+    DATASTORE_SEARCH_URL: https://opendatasus.saude.gov.br/api/3/action/datastore_search
+  tools_count: 7
+  license: CC BY-ND 3.0
+  legal_risk: critico
+  tags:
+  - saude
+  - sus
+  - datasus
+  - opendatasus
+  - ckan
+  - dados-abertos
+  tests:
+    path: tests/data/opendatasus
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_prompts.py
+    - test_resources.py
+    - test_tools.py
+    test_count: 43
+    passed: 43
+    failed: 0
+    skipped: 0
+    duration_s: 0.41
+    test_types:
+    - client_unit
+    - mcp_integration
+    - prompts
+    - resources
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 95.2
+    run_command: make test-feature F=opendatasus
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: DatasetOpenDataSUS
+      returned_by:
+      - opendatasus.client.buscar_datasets
+      - opendatasus.client.detalhar_dataset
+      fields:
+      - name: id
+        type: str
+        required: true
+      - name: nome
+        type: str
+        required: true
+      - name: titulo
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: organizacao
+        type: str | null
+        required: false
+      - name: tags
+        type: list[str]
+        required: false
+      - name: recursos
+        type: list[RecursoDataset]
+        required: false
+      - name: total_recursos
+        type: int
+        required: false
+      - name: data_criacao
+        type: str | null
+        required: false
+      - name: data_atualizacao
+        type: str | null
+        required: false
+    - model: RegistroDataStore
+      returned_by:
+      - opendatasus.client.consultar_datastore
+      fields:
+      - name: campos
+        type: dict[str, str | int | float | bool | null]
+        required: true
+    - model: RecursoDataset
+      fields:
+      - name: id
+        type: str
+        required: true
+      - name: nome
+        type: str | null
+        required: false
+      - name: formato
+        type: str | null
+        required: false
+      - name: url
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      nested_in:
+      - DatasetOpenDataSUS
+  repo_path: src/mcp_brasil/data/opendatasus
+- id: rename
+  name: RENAME
+  description: 'RENAME: Relação Nacional de Medicamentos Essenciais do SUS. Consulta de medicamentos disponíveis no SUS por
+    nome, princípio ativo ou grupo terapêutico, com informações de apresentação e posologia.'
+  domain: saude
+  publisher: Ministério da Saúde
+  official_source: true
+  modality: static_embedded
+  protocol: static_embedded
+  response_format: n/a
+  auth:
+    required: false
+    type: none
+    env_var: null
+  tools_count: 5
+  license: open data CGU
+  legal_risk: critico
+  tags:
+  - saude
+  - sus
+  - medicamentos
+  - rename
+  - essenciais
+  tests:
+    path: tests/data/rename
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_prompts.py
+    - test_resources.py
+    - test_tools.py
+    test_count: 42
+    passed: 42
+    failed: 0
+    skipped: 0
+    duration_s: 0.14
+    test_types:
+    - client_unit
+    - mcp_integration
+    - prompts
+    - resources
+    - tool_unit
+    http_mocking:
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 100.0
+    run_command: make test-feature F=rename
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: MedicamentoRename
+      returned_by:
+      - rename.client.buscar_medicamento
+      - rename.client.listar_por_grupo
+      - rename.client.listar_todos
+      - rename.client.verificar_disponibilidade_sus
+      fields:
+      - name: nome
+        type: str
+        required: true
+      - name: principio_ativo
+        type: str
+        required: true
+      - name: apresentacao
+        type: str
+        required: true
+      - name: grupo
+        type: str
+        required: true
+      - name: via
+        type: str
+        required: true
+      - name: disponivel_ubs
+        type: bool
+        required: false
+  notes: Subconjunto curado da RENAME 2024 embutido em constants.py; sem chamada HTTP. Staleness depende de release do pacote.
+  repo_path: src/mcp_brasil/data/rename
+- id: saude
+  name: CNES/DataSUS + InfoDengue + InfoGripe
+  description: 'CNES/DataSUS: estabelecimentos de saúde, profissionais, leitos, urgências, resumo de rede municipal e comparação.
+    Epidemiologia: alertas InfoDengue (dengue/chikungunya/zika), InfoGripe (SRAG), catálogo DATASUS, doenças SINAN e geocódigos
+    de municípios.'
+  domain: saude
+  publisher: Ministério da Saúde / Fiocruz (InfoDengue, InfoGripe)
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://apidadosabertos.saude.gov.br/cnes
+  protocol: rest+file_download
+  response_format: json|csv
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    SAUDE_API_BASE: https://apidadosabertos.saude.gov.br
+    CNES_API_BASE: https://apidadosabertos.saude.gov.br/cnes
+    ESTABELECIMENTOS_URL: https://apidadosabertos.saude.gov.br/cnes/estabelecimentos
+    TIPOS_URL: https://apidadosabertos.saude.gov.br/cnes/tipounidades
+    LEITOS_URL: https://apidadosabertos.saude.gov.br/assistencia-a-saude/hospitais-e-leitos
+    INFODENGUE_API_BASE: https://info.dengue.mat.br/api/alertcity
+    INFOGRIPE_ALERTA_URL: https://gitlab.procc.fiocruz.br/mave/repo/-/raw/master/Dados/InfoGripe/atual_SRAG_hosp_se.csv
+  tools_count: 15
+  license: LAI (Lei 12.527/11)
+  legal_risk: critico
+  lgpd_notes: PII de profissionais (nome, CRM)
+  tags:
+  - saude
+  - sus
+  - cnes
+  - hospitais
+  - leitos
+  - epidemiologia
+  - dengue
+  - arbovirose
+  - gripe
+  - sinan
+  - datasus
+  tests:
+    path: tests/data/saude
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 108
+    passed: 108
+    failed: 0
+    skipped: 0
+    duration_s: 1.2
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 92.8
+    run_command: make test-feature F=saude
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: AlertaDengue
+      returned_by:
+      - saude.client.buscar_alertas_dengue
+      fields:
+      - name: semana_epidemiologica
+        type: int | null
+        required: false
+      - name: data_inicio_se
+        type: str | null
+        required: false
+      - name: casos_estimados
+        type: float | null
+        required: false
+      - name: casos_notificados
+        type: int | null
+        required: false
+      - name: nivel
+        type: int | null
+        required: false
+      - name: nivel_descricao
+        type: str | null
+        required: false
+      - name: incidencia_100k
+        type: float | null
+        required: false
+      - name: rt
+        type: float | null
+        required: false
+      - name: populacao
+        type: float | null
+        required: false
+      - name: receptividade
+        type: int | null
+        required: false
+      - name: transmissao
+        type: int | null
+        required: false
+    - model: AlertaGripe
+      returned_by:
+      - saude.client.buscar_situacao_gripe
+      fields:
+      - name: uf
+        type: str | null
+        required: false
+      - name: semana_epidemiologica
+        type: int | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: nivel
+        type: str | null
+        required: false
+      - name: casos_estimados
+        type: float | null
+        required: false
+      - name: casos_notificados
+        type: int | null
+        required: false
+      - name: limite_inferior
+        type: float | null
+        required: false
+      - name: limite_superior
+        type: float | null
+        required: false
+    - model: BaseDATASUS
+      returned_by:
+      - saude.client.listar_bases_datasus
+      fields:
+      - name: sigla
+        type: str
+        required: true
+      - name: nome
+        type: str
+        required: true
+      - name: descricao
+        type: str
+        required: true
+      - name: cobertura
+        type: str
+        required: true
+      - name: dimensoes
+        type: str
+        required: true
+    - model: DoencaNotificavel
+      returned_by:
+      - saude.client.listar_doencas_notificaveis
+      fields:
+      - name: codigo
+        type: str
+        required: true
+      - name: nome
+        type: str
+        required: true
+      - name: categoria
+        type: str
+        required: true
+    - model: Estabelecimento
+      returned_by:
+      - saude.client.buscar_estabelecimentos
+      - saude.client.buscar_estabelecimentos_por_tipo
+      fields:
+      - name: codigo_cnes
+        type: str | null
+        required: false
+      - name: nome_fantasia
+        type: str | null
+        required: false
+      - name: nome_razao_social
+        type: str | null
+        required: false
+      - name: natureza_organizacao
+        type: str | null
+        required: false
+      - name: tipo_gestao
+        type: str | null
+        required: false
+      - name: codigo_tipo
+        type: str | null
+        required: false
+      - name: descricao_tipo
+        type: str | null
+        required: false
+      - name: codigo_municipio
+        type: str | null
+        required: false
+      - name: codigo_uf
+        type: str | null
+        required: false
+      - name: endereco
+        type: str | null
+        required: false
+    - model: EstabelecimentoDetalhe
+      returned_by:
+      - saude.client.buscar_estabelecimento_por_cnes
+      fields:
+      - name: codigo_cnes
+        type: str | null
+        required: false
+      - name: nome_fantasia
+        type: str | null
+        required: false
+      - name: nome_razao_social
+        type: str | null
+        required: false
+      - name: natureza_organizacao
+        type: str | null
+        required: false
+      - name: tipo_gestao
+        type: str | null
+        required: false
+      - name: codigo_tipo
+        type: str | null
+        required: false
+      - name: descricao_tipo
+        type: str | null
+        required: false
+      - name: codigo_municipio
+        type: str | null
+        required: false
+      - name: codigo_uf
+        type: str | null
+        required: false
+      - name: endereco
+        type: str | null
+        required: false
+      - name: bairro
+        type: str | null
+        required: false
+      - name: cep
+        type: str | null
+        required: false
+      - name: telefone
+        type: str | null
+        required: false
+      - name: latitude
+        type: float | null
+        required: false
+      - name: longitude
+        type: float | null
+        required: false
+      - name: cnpj
+        type: str | null
+        required: false
+      - name: data_atualizacao
+        type: str | null
+        required: false
+    - model: Leito
+      returned_by:
+      - saude.client.consultar_leitos
+      fields:
+      - name: codigo_cnes
+        type: str | null
+        required: false
+      - name: tipo_leito
+        type: str | null
+        required: false
+      - name: especialidade
+        type: str | null
+        required: false
+      - name: existente
+        type: int | null
+        required: false
+      - name: sus
+        type: int | null
+        required: false
+    - model: MunicipioGeocode
+      returned_by:
+      - saude.client.buscar_municipio_geocodigo
+      fields:
+      - name: nome
+        type: str
+        required: true
+      - name: uf
+        type: str
+        required: true
+      - name: geocodigo
+        type: str
+        required: true
+    - model: TipoEstabelecimento
+      returned_by:
+      - saude.client.listar_tipos_estabelecimento
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+    - model: Profissional
+      fields:
+      - name: codigo_cnes
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: cns
+        type: str | null
+        required: false
+      - name: cbo
+        type: str | null
+        required: false
+      - name: descricao_cbo
+        type: str | null
+        required: false
+    - model: ResumoRedeMunicipal
+      fields:
+      - name: codigo_municipio
+        type: str
+        required: true
+      - name: total_estabelecimentos
+        type: int
+        required: false
+      - name: por_tipo
+        type: dict[str, int]
+        required: false
+      - name: total_leitos_existentes
+        type: int
+        required: false
+      - name: total_leitos_sus
+        type: int
+        required: false
+      - name: total_profissionais
+        type: int
+        required: false
+  notes: Inclui InfoDengue (API) e InfoGripe (CSV raw do GitLab da Fiocruz).
+  repo_path: src/mcp_brasil/data/saude

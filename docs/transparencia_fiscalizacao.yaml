@@ -1,0 +1,4371 @@
+catalog: mcp-brasil — transparencia_fiscalizacao
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio transparencia_fiscalizacao no catálogo original.
+  includes:
+  - mj
+  - siconfi
+  - spu_geo
+  - spu_imoveis
+  - tce_ce
+  - tce_es
+  - tce_pa
+  - tce_pe
+  - tce_pi
+  - tce_rj
+  - tce_rn
+  - tce_rs
+  - tce_sc
+  - tce_sp
+  - tce_to
+  - tcu
+  - transparencia
+  - spu_siapa
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 18
+  tools: 137
+  keys_required:
+  - TRANSPARENCIA_API_KEY
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: mj
+  name: MJSP
+  description: MJSP — SINESP (ocorrências criminais), INFOPEN (prisional), PROCONs (Sindec), armas e segurança pública nacional
+  domain: transparencia_fiscalizacao
+  publisher: MJSP
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://dados.mj.gov.br/api/3
+  protocol: ckan_action_api
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    MJ_CKAN_BASE: https://dados.mj.gov.br/api/3/action
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: alto
+  tags:
+  - mj
+  - mjsp
+  - sinesp
+  - infopen
+  - seguranca
+  - criminalidade
+  - prisional
+  - procon
+  tests:
+    path: tests/data/mj
+    files:
+    - test_integration.py
+    test_count: 4
+    passed: 4
+    failed: 0
+    skipped: 0
+    duration_s: 0.06
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - respx
+    hits_live_upstream: false
+    line_coverage_pct: 65.8
+    run_command: make test-feature F=mj
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred dict keys (untyped client, returns dict[str, Any])
+    complete: false
+    fields:
+    - name: count
+      type: Any
+    - name: format
+      type: Any
+    - name: name
+      type: Any
+    - name: notes
+      type: Any
+    - name: resources
+      type: Any
+    - name: results
+      type: Any
+    - name: title
+      type: Any
+    - name: url
+      type: Any
+    note: 'Sem modelo Pydantic: campos são as chaves que client/tools leem do payload upstream. Tipos não declarados no código.'
+  repo_path: src/mcp_brasil/data/mj
+- id: siconfi
+  name: Finanças públicas subnacionais
+  description: 'Finanças públicas subnacionais: RREO, RGF, DCA de municípios/estados via Tesouro Nacional'
+  domain: transparencia_fiscalizacao
+  publisher: Tesouro Nacional
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://apidatalake.tesouro.gov.br/ords/siconfi/tt
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    SICONFI_API_BASE: https://apidatalake.tesouro.gov.br/ords/siconfi/tt
+  tools_count: 7
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - transparencia
+  - fiscal
+  - orcamento
+  - municipios
+  - estados
+  - lrf
+  tests:
+    path: tests/data/siconfi
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 15
+    passed: 15
+    failed: 0
+    skipped: 0
+    duration_s: 3.07
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 90.2
+    run_command: make test-feature F=siconfi
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: AnexoRelatorio
+      returned_by:
+      - siconfi.client.listar_anexos
+      fields:
+      - name: esfera
+        type: str
+        required: true
+      - name: co_tipo_demonstrativo
+        type: str
+        required: true
+      - name: no_anexo
+        type: str
+        required: true
+      - name: de_anexo
+        type: str | null
+        required: false
+    - model: Ente
+      returned_by:
+      - siconfi.client.listar_entes
+      fields:
+      - name: cod_ibge
+        type: int | null
+        required: false
+      - name: ente
+        type: str | null
+        required: false
+      - name: capital
+        type: int | null
+        required: false
+      - name: regiao
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: esfera
+        type: str | null
+        required: false
+      - name: exercicio
+        type: int | null
+        required: false
+      - name: populacao
+        type: int | null
+        required: false
+      - name: cnpj
+        type: str | null
+        required: false
+    - model: ItemDeclaracao
+      returned_by:
+      - siconfi.client.consultar_dca
+      - siconfi.client.consultar_extrato_entregas
+      - siconfi.client.consultar_rgf
+      - siconfi.client.consultar_rreo
+      fields:
+      - name: exercicio
+        type: int | null
+        required: false
+      - name: periodo
+        type: int | null
+        required: false
+      - name: periodicidade
+        type: str | null
+        required: false
+      - name: instituicao
+        type: str | null
+        required: false
+      - name: cod_ibge
+        type: int | null
+        required: false
+      - name: populacao
+        type: int | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: rotulo
+        type: str | null
+        required: false
+      - name: conta
+        type: str | null
+        required: false
+      - name: cod_conta
+        type: str | null
+        required: false
+      - name: coluna
+        type: str | null
+        required: false
+      - name: anexo
+        type: str | null
+        required: false
+      - name: esfera
+        type: str | null
+        required: false
+      - name: poder
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+  repo_path: src/mcp_brasil/data/siconfi
+- id: spu_geo
+  name: SPU GeoPortal
+  description: 'SPU GeoPortal: terrenos de marinha, acrescidos, marginais, ilhas federais, praias, manguezais e localização
+    de imóveis da União. Consulta geoespacial via GeoServer WMS (GetFeatureInfo) da Secretaria do Patrimônio da União.'
+  domain: transparencia_fiscalizacao
+  publisher: SPU/MGI
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://geoportal-spunet.gestao.gov.br/geoserver
+  protocol: ogc_wms_getfeatureinfo
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    SPU_GEO_API_BASE: https://geoportal-spunet.gestao.gov.br/geoserver
+    SPU_WMS_OWS_URL: https://geoportal-spunet.gestao.gov.br/geoserver/ows
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - spu
+  - geo
+  - terreno-marinha
+  - imoveis-uniao
+  - geoservidor
+  - ogc
+  - wms
+  tests:
+    path: tests/data/spu_geo
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_prompts.py
+    - test_resources.py
+    - test_tools.py
+    test_count: 26
+    passed: 26
+    failed: 0
+    skipped: 0
+    duration_s: 0.75
+    test_types:
+    - client_unit
+    - mcp_integration
+    - prompts
+    - resources
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 97.0
+    run_command: make test-feature F=spu_geo
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Camada
+      returned_by:
+      - spu_geo.client.listar_camadas
+      fields:
+      - name: id
+        type: str
+        required: true
+        description: 'Identificador curto usado nas tools (ex: ''terreno_marinha'')'
+      - name: typename
+        type: str
+        required: true
+        description: 'Nome completo no GeoServer (ex: ''spunet:vw_app_...'')'
+      - name: title
+        type: str
+        required: true
+      - name: geometry
+        type: str
+        required: true
+        description: Tipo da geometria (Point, MultiPolygon, ...)
+      - name: description
+        type: str
+        required: true
+    - model: FeatureGeo
+      returned_by:
+      - spu_geo.client.buscar_imoveis_bbox
+      - spu_geo.client.consultar_features
+      fields:
+      - name: id
+        type: str | null
+        required: false
+      - name: camada
+        type: str
+        required: true
+        description: 'ID curto da camada (ex: ''terreno_marinha'')'
+      - name: properties
+        type: dict[str, Any]
+        required: false
+      - name: geometry_type
+        type: str | null
+        required: false
+      nested_in:
+      - ResultadoPonto
+    - model: ResultadoPonto
+      returned_by:
+      - spu_geo.client.verificar_ponto
+      fields:
+      - name: lat
+        type: float
+        required: true
+      - name: lon
+        type: float
+        required: true
+      - name: camadas_encontradas
+        type: list[str]
+        required: false
+      - name: features
+        type: list[FeatureGeo]
+        required: false
+    - model: ImovelUniaoPonto
+      fields:
+      - name: rip
+        type: str | null
+        required: false
+      - name: rip_primitivo
+        type: str | null
+        required: false
+      - name: tipo_imovel
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: bairro
+        type: str | null
+        required: false
+      - name: endereco
+        type: str | null
+        required: false
+      - name: cep
+        type: str | null
+        required: false
+      - name: sistema_fonte
+        type: str | null
+        required: false
+      - name: latitude
+        type: float | null
+        required: false
+      - name: longitude
+        type: float | null
+        required: false
+    - model: TerrenoUniao
+      fields:
+      - name: nome_trecho
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: area_aproximada
+        type: float | null
+        required: false
+        description: Área em m²
+      - name: area_oficial
+        type: float | null
+        required: false
+      - name: etapa_demarcacao
+        type: str | null
+        required: false
+      - name: situacao_trecho
+        type: str | null
+        required: false
+      - name: data_determinacao
+        type: str | null
+        required: false
+      - name: data_aprovacao
+        type: str | null
+        required: false
+      - name: fonte
+        type: str | null
+        required: false
+  notes: GeoServer não expõe WFS GetFeature (401/400); usa WMS GetFeatureInfo com info_format=application/json.
+  repo_path: src/mcp_brasil/data/spu_geo
+- id: spu_imoveis
+  name: Imóveis da União (Raio-X APF / Gov360)
+  description: 'Imóveis da União (Raio-X APF / Gov360): consulta de imóveis federais por órgão, UF, município, regime de utilização
+    (aforamento, ocupação, imóvel funcional, etc.) e tipo de destinação. Dados consolidados do SPUnet/SIAPA republicados mensalmente
+    pelo MGI em repositorio.dados.gov.br.'
+  domain: transparencia_fiscalizacao
+  publisher: SEGES/MGI
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://repositorio.dados.gov.br/seges/raio-x
+  protocol: file_download
+  response_format: csv
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    SPU_IMOVEIS_API_BASE: https://repositorio.dados.gov.br/seges/raio-x
+    PATRIMONIO_UNIAO_CSV_URL: https://repositorio.dados.gov.br/seges/raio-x/patrimonio-uniao.csv
+    DATAPACKAGE_JSON_URL: https://repositorio.dados.gov.br/seges/raio-x/datapackage.json
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - spu
+  - imoveis-uniao
+  - patrimonio
+  - raio-x
+  - gov360
+  - mgi
+  - administracao-publica-federal
+  tests:
+    path: tests/data/spu_imoveis
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_prompts.py
+    - test_resources.py
+    - test_tools.py
+    test_count: 27
+    passed: 27
+    failed: 0
+    skipped: 0
+    duration_s: 0.45
+    test_types:
+    - client_unit
+    - mcp_integration
+    - prompts
+    - resources
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 97.2
+    run_command: make test-feature F=spu_imoveis
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: DatasetInfo
+      returned_by:
+      - spu_imoveis.client.info_dataset
+      fields:
+      - name: nome
+        type: str
+        required: true
+      - name: url_csv
+        type: str
+        required: true
+      - name: url_datapackage
+        type: str
+        required: true
+      - name: total_linhas
+        type: int
+        required: true
+      - name: meses_referencia
+        type: list[str]
+        required: false
+      - name: ultima_atualizacao_cache
+        type: str | null
+        required: false
+    - model: Imovel
+      returned_by:
+      - spu_imoveis.client.buscar_imoveis
+      fields:
+      - name: orgao_superior_sigla
+        type: str | null
+        required: false
+      - name: orgao_superior_nome
+        type: str | null
+        required: false
+      - name: orgao_sigla
+        type: str | null
+        required: false
+      - name: orgao_nome
+        type: str | null
+        required: false
+      - name: ano_mes_referencia
+        type: str | null
+        required: false
+      - name: regime_utilizacao
+        type: str | null
+        required: false
+      - name: tipo_destinacao
+        type: str | null
+        required: false
+      - name: tipo_imovel
+        type: str | null
+        required: false
+      - name: endereco
+        type: str | null
+        required: false
+      - name: municipio_nome
+        type: str | null
+        required: false
+      - name: municipio_cod_ibge
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: area_terreno_m2
+        type: float | null
+        required: false
+        description: Área do terreno em m²
+      - name: area_construida_m2
+        type: float | null
+        required: false
+      - name: valor_imovel
+        type: float | null
+        required: false
+        description: Valor em BRL
+      - name: valor_aluguel
+        type: float | null
+        required: false
+    - model: ResumoOrgao
+      returned_by:
+      - spu_imoveis.client.resumo_por_orgao
+      fields:
+      - name: orgao_superior_sigla
+        type: str
+        required: true
+      - name: orgao_superior_nome
+        type: str
+        required: true
+      - name: total_imoveis
+        type: int
+        required: true
+      - name: area_total_m2
+        type: float
+        required: false
+      - name: area_construida_total_m2
+        type: float
+        required: false
+      - name: valor_total
+        type: float
+        required: false
+    - model: ResumoUF
+      returned_by:
+      - spu_imoveis.client.resumo_por_uf
+      fields:
+      - name: uf
+        type: str
+        required: true
+      - name: total_imoveis
+        type: int
+        required: true
+      - name: area_total_m2
+        type: float
+        required: false
+      - name: area_construida_total_m2
+        type: float
+        required: false
+      - name: valor_total
+        type: float
+        required: false
+      - name: valor_aluguel_total
+        type: float
+        required: false
+  repo_path: src/mcp_brasil/data/spu_imoveis
+- id: tce_ce
+  name: TCE-CE
+  description: 'TCE-CE: licitações, contratos e empenhos dos municípios cearenses via API de Dados Abertos do SIM (Sistema
+    de Informações Municipais).'
+  domain: transparencia_fiscalizacao
+  publisher: TCE-CE
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://api-dados-abertos.tce.ce.gov.br
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    API_BASE: https://api-dados-abertos.tce.ce.gov.br
+    MUNICIPIOS_URL: https://api-dados-abertos.tce.ce.gov.br/municipios
+    LICITACOES_URL: https://api-dados-abertos.tce.ce.gov.br/licitacoes
+    CONTRATOS_URL: https://api-dados-abertos.tce.ce.gov.br/contrato
+    EMPENHOS_URL: https://api-dados-abertos.tce.ce.gov.br/notas_empenhos
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - tce
+  - ce
+  - licitacoes
+  - contratos
+  - empenhos
+  tests:
+    path: tests/data/tce_ce
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 31
+    passed: 31
+    failed: 0
+    skipped: 0
+    duration_s: 0.51
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 98.4
+    run_command: make test-feature F=tce_ce
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: ContratoResultado
+      returned_by:
+      - tce_ce.client.buscar_contratos
+      fields:
+      - name: contratos
+        type: list[Contrato]
+        required: false
+      - name: total
+        type: int
+        required: false
+    - model: EmpenhoResultado
+      returned_by:
+      - tce_ce.client.buscar_empenhos
+      fields:
+      - name: empenhos
+        type: list[Empenho]
+        required: false
+      - name: total
+        type: int
+        required: false
+    - model: Licitacao
+      returned_by:
+      - tce_ce.client.buscar_licitacoes
+      fields:
+      - name: codigo_municipio
+        type: str | null
+        required: false
+      - name: numero_licitacao
+        type: str | null
+        required: false
+      - name: data_realizacao
+        type: str | null
+        required: false
+      - name: modalidade_licitacao
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: valor_orcado_estimado
+        type: float | null
+        required: false
+      - name: data_homologacao
+        type: str | null
+        required: false
+      - name: nome_responsavel_homologacao
+        type: str | null
+        required: false
+      - name: modalidade_processo_administrativo
+        type: str | null
+        required: false
+    - model: Municipio
+      returned_by:
+      - tce_ce.client.listar_municipios
+      fields:
+      - name: codigo_municipio
+        type: str | null
+        required: false
+      - name: nome_municipio
+        type: str | null
+        required: false
+    - model: Contrato
+      fields:
+      - name: codigo_municipio
+        type: str | null
+        required: false
+      - name: numero_contrato
+        type: str | null
+        required: false
+      - name: data_contrato
+        type: str | null
+        required: false
+      - name: tipo_contrato
+        type: str | null
+        required: false
+      - name: modalidade_contrato
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: valor_total_contrato
+        type: float | null
+        required: false
+      - name: data_inicio_vigencia
+        type: str | null
+        required: false
+      - name: data_fim_vigencia
+        type: str | null
+        required: false
+      nested_in:
+      - ContratoResultado
+    - model: Empenho
+      fields:
+      - name: codigo_municipio
+        type: int | null
+        required: false
+      - name: numero_empenho
+        type: str | null
+        required: false
+      - name: data_emissao
+        type: str | null
+        required: false
+      - name: valor_empenho
+        type: float | null
+        required: false
+      - name: nome_negociante
+        type: str | null
+        required: false
+      - name: numero_documento_negociante
+        type: str | null
+        required: false
+      - name: historico
+        type: str | null
+        required: false
+      - name: codigo_orgao
+        type: str | null
+        required: false
+      - name: codigo_funcao
+        type: str | null
+        required: false
+      nested_in:
+      - EmpenhoResultado
+  repo_path: src/mcp_brasil/data/tce_ce
+- id: tce_es
+  name: TCE-ES
+  description: 'TCE-ES: licitações, contratos, contratações municipais e obras públicas do Espírito Santo via API de Dados
+    Abertos (dados.es.gov.br).'
+  domain: transparencia_fiscalizacao
+  publisher: TCE-ES
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://dados.es.gov.br/api/3/action
+  protocol: ckan_action_api
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    CKAN_BASE: https://dados.es.gov.br/api/3/action/datastore_search
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - tce
+  - es
+  - licitacoes
+  - contratos
+  - obras
+  - municipios
+  tests:
+    path: tests/data/tce_es
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 31
+    passed: 31
+    failed: 0
+    skipped: 0
+    duration_s: 0.49
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 97.7
+    run_command: make test-feature F=tce_es
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: ContratacaoMunicipio
+      returned_by:
+      - tce_es.client.buscar_contratacoes_municipios
+      fields:
+      - name: NomeUnidadeGestoraReferencia
+        type: str | null
+        required: false
+      - name: NomeEsferaAdministrativa
+        type: str | null
+        required: false
+      - name: ObjetoContratacao
+        type: str | null
+        required: false
+      - name: ModalidadeLicitacao
+        type: str | null
+        required: false
+      - name: ValorEstimado
+        type: str | null
+        required: false
+      - name: ValorTotalContratacao
+        type: str | null
+        required: false
+      - name: AnoReferencia
+        type: str | null
+        required: false
+      - name: SituacaoContratacao
+        type: str | null
+        required: false
+      - name: NomePoder
+        type: str | null
+        required: false
+    - model: Contrato
+      returned_by:
+      - tce_es.client.buscar_contratos
+      fields:
+      - name: ContratoNumero
+        type: str | null
+        required: false
+      - name: ContratoAno
+        type: str | null
+        required: false
+      - name: Modalidade
+        type: str | null
+        required: false
+      - name: ResumoObjeto
+        type: str | null
+        required: false
+      - name: FornecedorNome
+        type: str | null
+        required: false
+      - name: FornecedorDocumento
+        type: str | null
+        required: false
+      - name: TermoOriginalValorGlobal
+        type: str | null
+        required: false
+      - name: TermoOriginalDataInicioVigencia
+        type: str | null
+        required: false
+      - name: TermoOriginalDataFimVigencia
+        type: str | null
+        required: false
+      - name: VigenciaAtualValorGlobal
+        type: str | null
+        required: false
+      - name: Setor
+        type: str | null
+        required: false
+      - name: UrlPortalTransparencia
+        type: str | null
+        required: false
+    - model: Licitacao
+      returned_by:
+      - tce_es.client.buscar_licitacoes
+      fields:
+      - name: Modalidade
+        type: str | null
+        required: false
+      - name: NumeroEdital
+        type: str | null
+        required: false
+      - name: AnoEdital
+        type: str | null
+        required: false
+      - name: Objeto
+        type: str | null
+        required: false
+      - name: DataAbertura
+        type: str | null
+        required: false
+      - name: ValorReferencia
+        type: str | null
+        required: false
+      - name: ValorHomologado
+        type: str | null
+        required: false
+      - name: Situacao
+        type: str | null
+        required: false
+    - model: Obra
+      returned_by:
+      - tce_es.client.buscar_obras
+      fields:
+      - name: Licitacao
+        type: str | null
+        required: false
+      - name: Contrato
+        type: str | null
+        required: false
+      - name: DataAssinaturaContrato
+        type: str | null
+        required: false
+      - name: Empresa
+        type: str | null
+        required: false
+      - name: EmpresaCNPJ
+        type: str | null
+        required: false
+      - name: ValorInicial
+        type: str | null
+        required: false
+      - name: Situacao
+        type: str | null
+        required: false
+  repo_path: src/mcp_brasil/data/tce_es
+- id: tce_pa
+  name: TCE-PA
+  description: 'TCE-PA: Diário Oficial, sessões plenárias, jurisprudência (acórdãos, resoluções, portarias, prejulgados) e
+    conteúdo informativo do Tribunal de Contas do Estado do Pará via API de Dados Abertos e Pesquisa Integrada.'
+  domain: transparencia_fiscalizacao
+  publisher: TCE-PA
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://sistemas.tcepa.tc.br/dadosabertos/api
+  protocol: rest+html_scrape
+  response_format: json|html
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    API_BASE: https://sistemas.tcepa.tc.br/dadosabertos/api
+    DIARIO_OFICIAL_URL: https://sistemas.tcepa.tc.br/dadosabertos/api/v1/diario_oficial
+    PESQUISA_BASE_URL: https://www.tcepa.tc.br/pesquisaintegrada
+    SESSOES_SEARCH_URL: https://www.tcepa.tc.br/pesquisaintegrada/pesquisa/resultados
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - tce
+  - pa
+  - diario-oficial
+  - sessoes
+  - acordaos
+  - jurisprudencia
+  - pará
+  tests:
+    path: tests/data/tce_pa
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 65
+    passed: 65
+    failed: 0
+    skipped: 0
+    duration_s: 0.71
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 91.4
+    run_command: make test-feature F=tce_pa
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: DiarioOficial
+      returned_by:
+      - tce_pa.client.buscar_diario_oficial
+      fields:
+      - name: numero_publicacao
+        type: int | null
+        required: false
+      - name: publicacao
+        type: str | null
+        required: false
+      - name: data_publicacao
+        type: str | null
+        required: false
+      - name: tipo_ato
+        type: str | null
+        required: false
+    - model: ResultadoPesquisa
+      returned_by:
+      - tce_pa.client.buscar_pesquisa_integrada
+      fields:
+      - name: titulo
+        type: str | null
+        required: false
+      - name: url_pagina
+        type: str | null
+        required: false
+      - name: url_documento
+        type: str | null
+        required: false
+      - name: campos
+        type: dict[str, str]
+        required: false
+    - model: SessaoPlenaria
+      returned_by:
+      - tce_pa.client.buscar_sessoes_plenarias
+      fields:
+      - name: codigo
+        type: int | null
+        required: false
+      - name: titulo
+        type: str | null
+        required: false
+      - name: data_sessao
+        type: str | null
+        required: false
+      - name: tipo_sessao
+        type: str | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+      - name: url_pagina
+        type: str | null
+        required: false
+      - name: url_documento
+        type: str | null
+        required: false
+  repo_path: src/mcp_brasil/data/tce_pa
+- id: tce_pe
+  name: TCE-PE
+  description: 'TCE-PE: licitações, contratos, despesas e fornecedores dos municípios e órgãos estaduais de Pernambuco via
+    API SAGRES/LICON.'
+  domain: transparencia_fiscalizacao
+  publisher: TCE-PE
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://sistemas.tce.pe.gov.br/DadosAbertos
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    API_BASE: https://sistemas.tce.pe.gov.br/DadosAbertos
+  tools_count: 5
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - tce
+  - pe
+  - licitacoes
+  - contratos
+  - despesas
+  - fornecedores
+  tests:
+    path: tests/data/tce_pe
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 30
+    passed: 30
+    failed: 0
+    skipped: 0
+    duration_s: 0.63
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 92.9
+    run_command: make test-feature F=tce_pe
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Contrato
+      returned_by:
+      - tce_pe.client.buscar_contratos
+      fields:
+      - name: numero_contrato
+        type: str | null
+        required: false
+      - name: ano_referencia
+        type: int | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: valor_contrato
+        type: float | null
+        required: false
+      - name: fornecedor
+        type: str | null
+        required: false
+      - name: cpf_cnpj
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: unidade_gestora
+        type: str | null
+        required: false
+      - name: id_unidade_gestora
+        type: int | null
+        required: false
+    - model: Despesa
+      returned_by:
+      - tce_pe.client.buscar_despesas
+      fields:
+      - name: numero_empenho
+        type: str | null
+        required: false
+      - name: ano_referencia
+        type: int | null
+        required: false
+      - name: mes_referencia
+        type: int | null
+        required: false
+      - name: fornecedor
+        type: str | null
+        required: false
+      - name: cpf_cnpj
+        type: str | null
+        required: false
+      - name: historico
+        type: str | null
+        required: false
+      - name: valor_empenhado
+        type: float | null
+        required: false
+      - name: valor_liquidado
+        type: float | null
+        required: false
+      - name: valor_pago
+        type: float | null
+        required: false
+      - name: funcao
+        type: str | null
+        required: false
+      - name: elemento_despesa
+        type: str | null
+        required: false
+      - name: unidade_gestora
+        type: str | null
+        required: false
+      - name: codigo_municipio
+        type: str | null
+        required: false
+    - model: Fornecedor
+      returned_by:
+      - tce_pe.client.buscar_fornecedores
+      fields:
+      - name: cpf_cnpj
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: tipo_credor
+        type: int | null
+        required: false
+    - model: Licitacao
+      returned_by:
+      - tce_pe.client.buscar_licitacoes
+      fields:
+      - name: numero_licitacao
+        type: str | null
+        required: false
+      - name: ano_licitacao
+        type: int | null
+        required: false
+      - name: modalidade
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: valor_estimado
+        type: float | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: unidade_gestora
+        type: str | null
+        required: false
+      - name: id_unidade_gestora
+        type: int | null
+        required: false
+    - model: UnidadeJurisdicionada
+      returned_by:
+      - tce_pe.client.buscar_unidades
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: natureza
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: codigo_municipio
+        type: str | null
+        required: false
+  notes: Padrão de URL {API_BASE}/{Entidade}!json?{params}.
+  repo_path: src/mcp_brasil/data/tce_pe
+- id: tce_pi
+  name: TCE-PI
+  description: 'TCE-PI: prefeituras, despesas, receitas e órgãos do Piauí via API do Portal da Cidadania do TCE-PI.'
+  domain: transparencia_fiscalizacao
+  publisher: TCE-PI
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://sistemas.tce.pi.gov.br/api/portaldacidadania
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    API_BASE: https://sistemas.tce.pi.gov.br/api/portaldacidadania
+    PREFEITURAS_URL: https://sistemas.tce.pi.gov.br/api/portaldacidadania/prefeituras
+    DESPESAS_URL: https://sistemas.tce.pi.gov.br/api/portaldacidadania/despesas
+    DESPESAS_TOTAL_URL: https://sistemas.tce.pi.gov.br/api/portaldacidadania/despesas/total
+    RECEITAS_URL: https://sistemas.tce.pi.gov.br/api/portaldacidadania/receitas
+    RECEITAS_TOTAL_URL: https://sistemas.tce.pi.gov.br/api/portaldacidadania/receitas/total
+    ORGAOS_URL: https://sistemas.tce.pi.gov.br/api/portaldacidadania/orgaos/lista
+    CREDORES_URL: https://sistemas.tce.pi.gov.br/api/portaldacidadania/credores
+  tools_count: 5
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - tce
+  - pi
+  - prefeituras
+  - despesas
+  - receitas
+  - orgaos
+  tests:
+    path: tests/data/tce_pi
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 29
+    passed: 29
+    failed: 0
+    skipped: 0
+    duration_s: 0.43
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 97.4
+    run_command: make test-feature F=tce_pi
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Credor
+      returned_by:
+      - tce_pi.client.consultar_credores
+      fields:
+      - name: nome
+        type: str
+        required: true
+      - name: pago
+        type: float
+        required: false
+    - model: DespesaAnual
+      returned_by:
+      - tce_pi.client.consultar_despesas
+      - tce_pi.client.consultar_despesas_total
+      fields:
+      - name: exercicio
+        type: int
+        required: true
+      - name: empenhada
+        type: float
+        required: false
+      - name: liquidada
+        type: float
+        required: false
+      - name: paga
+        type: float
+        required: false
+    - model: DespesaFuncao
+      returned_by:
+      - tce_pi.client.consultar_despesas_por_funcao
+      fields:
+      - name: funcao
+        type: str
+        required: true
+      - name: paga
+        type: float
+        required: false
+    - model: Gestor
+      returned_by:
+      - tce_pi.client.consultar_gestor
+      fields:
+      - name: nome
+        type: str
+        required: true
+      - name: inicio_gestao
+        type: str | null
+        required: false
+    - model: Orgao
+      returned_by:
+      - tce_pi.client.listar_orgaos
+      fields:
+      - name: id
+        type: str
+        required: true
+      - name: nome
+        type: str
+        required: true
+      - name: sigla
+        type: str | null
+        required: false
+    - model: Prefeitura
+      returned_by:
+      - tce_pi.client.buscar_prefeitura
+      - tce_pi.client.listar_prefeituras
+      fields:
+      - name: id
+        type: int
+        required: true
+      - name: nome
+        type: str
+        required: true
+      - name: codIBGE
+        type: str | null
+        required: false
+      - name: urlPrefeitura
+        type: str | null
+        required: false
+      - name: urlCamara
+        type: str | null
+        required: false
+    - model: ReceitaAnual
+      returned_by:
+      - tce_pi.client.consultar_receitas_total
+      fields:
+      - name: exercicio
+        type: int | null
+        required: false
+      - name: prevista
+        type: float
+        required: false
+      - name: arrecadada
+        type: float
+        required: false
+    - model: ReceitaDetalhe
+      returned_by:
+      - tce_pi.client.consultar_receitas
+      fields:
+      - name: categoria
+        type: str | null
+        required: false
+      - name: origem
+        type: str | null
+        required: false
+      - name: receita
+        type: str | null
+        required: false
+      - name: detalhamento
+        type: str | null
+        required: false
+      - name: prevista
+        type: float
+        required: false
+      - name: arrecadada
+        type: float
+        required: false
+  repo_path: src/mcp_brasil/data/tce_pi
+- id: tce_rj
+  name: TCE-RJ
+  description: 'TCE-RJ: licitações, contratos, compras diretas, obras paralisadas, penalidades, prestação de contas e concessões
+    públicas do Estado e municípios do Rio de Janeiro.'
+  domain: transparencia_fiscalizacao
+  publisher: TCE-RJ
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://dados.tcerj.tc.br/api/v1
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    API_BASE: https://dados.tcerj.tc.br/api/v1
+    LICITACOES_URL: https://dados.tcerj.tc.br/api/v1/licitacoes
+    CONTRATOS_MUNICIPIO_URL: https://dados.tcerj.tc.br/api/v1/contratos_municipio
+    COMPRAS_DIRETAS_MUNICIPIO_URL: https://dados.tcerj.tc.br/api/v1/compras_diretas_municipio
+    OBRAS_PARALISADAS_URL: https://dados.tcerj.tc.br/api/v1/obras_paralisadas
+    CONCESSOES_PUBLICAS_URL: https://dados.tcerj.tc.br/api/v1/concessoes_publicas
+    PRESTACAO_CONTAS_MUNICIPIO_URL: https://dados.tcerj.tc.br/api/v1/prestacao_contas_municipio
+    PENALIDADES_MUNICIPIO_URL: https://dados.tcerj.tc.br/api/v1/penalidades_ressarcimento_municipio
+    COMPRAS_DIRETAS_ESTADO_URL: https://dados.tcerj.tc.br/api/v1/compras_diretas_estado
+    CONTRATOS_ESTADO_URL: https://dados.tcerj.tc.br/api/v1/contratos_estado
+    PENALIDADES_ESTADO_URL: https://dados.tcerj.tc.br/api/v1/penalidades_ressarcimento_estado
+  tools_count: 7
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - tce
+  - rj
+  - licitacoes
+  - contratos
+  - obras
+  - penalidades
+  tests:
+    path: tests/data/tce_rj
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 37
+    passed: 37
+    failed: 0
+    skipped: 0
+    duration_s: 0.56
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 96.0
+    run_command: make test-feature F=tce_rj
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: CompraDireta
+      returned_by:
+      - tce_rj.client.buscar_compras_diretas_estado
+      - tce_rj.client.buscar_compras_diretas_municipio
+      fields:
+      - name: processo
+        type: str | null
+        required: false
+      - name: ano_processo
+        type: str | null
+        required: false
+      - name: unidade
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: afastamento
+        type: str | null
+        required: false
+      - name: fornecedor_vencedor
+        type: str | null
+        required: false
+      - name: valor_processo
+        type: float | null
+        required: false
+      - name: data_aprovacao
+        type: str | null
+        required: false
+      - name: enquadramento_legal
+        type: str | null
+        required: false
+    - model: ConcessaoMunicipio
+      returned_by:
+      - tce_rj.client.buscar_concessoes
+      fields:
+      - name: municipio
+        type: str
+        required: true
+      - name: concessoes
+        type: list[Concessao]
+        required: false
+    - model: ContratoMunicipioResultado
+      returned_by:
+      - tce_rj.client.buscar_contratos_municipio
+      fields:
+      - name: contratos
+        type: list[ContratoMunicipio]
+        required: false
+      - name: total
+        type: int
+        required: false
+    - model: LicitacaoResultado
+      returned_by:
+      - tce_rj.client.buscar_licitacoes
+      fields:
+      - name: licitacoes
+        type: list[Licitacao]
+        required: false
+      - name: total
+        type: int
+        required: false
+    - model: ObraParalisada
+      returned_by:
+      - tce_rj.client.buscar_obras_paralisadas
+      fields:
+      - name: ente
+        type: str | null
+        required: false
+      - name: tipo_ente
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: funcao_governo
+        type: str | null
+        required: false
+      - name: numero_contrato
+        type: str | null
+        required: false
+      - name: nome_contratada
+        type: str | null
+        required: false
+      - name: cnpj_contratada
+        type: str | null
+        required: false
+      - name: valor_total_contrato
+        type: float | null
+        required: false
+      - name: valor_pago_obra
+        type: float | null
+        required: false
+      - name: tempo_paralisacao
+        type: str | null
+        required: false
+      - name: motivo_paralisacao
+        type: str | null
+        required: false
+      - name: data_paralisacao
+        type: str | null
+        required: false
+      - name: data_inicio_obra
+        type: str | null
+        required: false
+      - name: status_contrato
+        type: str | null
+        required: false
+      - name: classificacao_obra
+        type: str | null
+        required: false
+    - model: Penalidade
+      returned_by:
+      - tce_rj.client.buscar_penalidades
+      fields:
+      - name: processo
+        type: str | null
+        required: false
+      - name: ano_condenacao
+        type: int | null
+        required: false
+      - name: valor_penalidade
+        type: float | null
+        required: false
+      - name: condenacao
+        type: str | null
+        required: false
+      - name: ente
+        type: str | null
+        required: false
+      - name: nome_orgao
+        type: str | null
+        required: false
+      - name: tipo_ente
+        type: str | null
+        required: false
+      - name: grupo_natureza
+        type: str | null
+        required: false
+      - name: data_sessao
+        type: str | null
+        required: false
+    - model: PrestacaoContas
+      returned_by:
+      - tce_rj.client.buscar_prestacao_contas
+      fields:
+      - name: municipio
+        type: str | null
+        required: false
+      - name: regiao
+        type: str | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+      - name: indicador
+        type: str | null
+        required: false
+      - name: processo
+        type: str | null
+        required: false
+      - name: responsavel
+        type: str | null
+        required: false
+    - model: Concessao
+      fields:
+      - name: ente
+        type: str | null
+        required: false
+      - name: unidade
+        type: str | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: data_assinatura
+        type: str | null
+        required: false
+      - name: data_execucao_final
+        type: str | null
+        required: false
+      - name: situacao_concessao
+        type: str | null
+        required: false
+      - name: natureza
+        type: str | null
+        required: false
+      - name: segmento_servico
+        type: str | null
+        required: false
+      - name: nome_razao_social
+        type: str | null
+        required: false
+      - name: valor_total_outorga
+        type: float | null
+        required: false
+      nested_in:
+      - ConcessaoMunicipio
+    - model: ContratoMunicipio
+      fields:
+      - name: ente
+        type: str | null
+        required: false
+      - name: numero_contrato
+        type: str | null
+        required: false
+      - name: ano_contrato
+        type: int | null
+        required: false
+      - name: contratado
+        type: str | null
+        required: false
+      - name: cpf_cnpj_contratado
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: tipo_contrato
+        type: str | null
+        required: false
+      - name: valor_contrato
+        type: float | null
+        required: false
+      - name: data_assinatura_contrato
+        type: str | null
+        required: false
+      - name: data_vencimento_contrato
+        type: str | null
+        required: false
+      nested_in:
+      - ContratoMunicipioResultado
+    - model: Licitacao
+      fields:
+      - name: ente
+        type: str | null
+        required: false
+      - name: unidade
+        type: str | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+      - name: modalidade
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: processo_licitatorio
+        type: str | null
+        required: false
+      - name: numero_edital
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: valor_estimado
+        type: float | null
+        required: false
+      - name: data_publicacao_oficial
+        type: str | null
+        required: false
+      - name: data_homologacao
+        type: str | null
+        required: false
+      nested_in:
+      - LicitacaoResultado
+  repo_path: src/mcp_brasil/data/tce_rj
+- id: tce_rn
+  name: TCE-RN
+  description: 'TCE-RN: jurisdicionados, licitações, contratos, despesas e receitas do Rio Grande do Norte via API SIAI do
+    TCE-RN.'
+  domain: transparencia_fiscalizacao
+  publisher: TCE-RN
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://apidadosabertos.tce.rn.gov.br
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    API_BASE: https://apidadosabertos.tce.rn.gov.br/api
+    JURISDICIONADOS_PATH: https://apidadosabertos.tce.rn.gov.br/api/InformacoesBasicasApi/JurisdicionadosTCE/Json
+    DESPESA_PATH: https://apidadosabertos.tce.rn.gov.br/api/BalancoOrcamentarioApi/Despesa/Json
+    RECEITA_PATH: https://apidadosabertos.tce.rn.gov.br/api/BalancoOrcamentarioApi/Receita/Json
+    LICITACOES_PATH: https://apidadosabertos.tce.rn.gov.br/api/ProcedimentosLicitatoriosApi/LicitacaoPublica/Json
+    CONTRATOS_PATH: https://apidadosabertos.tce.rn.gov.br/api/ContratosApi/Contratos/Json
+  tools_count: 5
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - tce
+  - rn
+  - licitacoes
+  - contratos
+  - despesas
+  - receitas
+  tests:
+    path: tests/data/tce_rn
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 24
+    passed: 24
+    failed: 0
+    skipped: 0
+    duration_s: 0.34
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 95.3
+    run_command: make test-feature F=tce_rn
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Contrato
+      returned_by:
+      - tce_rn.client.buscar_contratos
+      fields:
+      - name: numero_contrato
+        type: str | null
+        required: false
+      - name: ano_contrato
+        type: int | null
+        required: false
+      - name: objeto_contrato
+        type: str | null
+        required: false
+      - name: valor_contrato
+        type: float | null
+        required: false
+      - name: nome_contratado
+        type: str | null
+        required: false
+      - name: cpf_cnpj_contratado
+        type: str | null
+        required: false
+      - name: data_inicio_vigencia
+        type: str | null
+        required: false
+      - name: data_termino_vigencia
+        type: str | null
+        required: false
+    - model: Despesa
+      returned_by:
+      - tce_rn.client.buscar_despesas
+      fields:
+      - name: descricao_categoria_economica
+        type: str | null
+        required: false
+      - name: descricao_grupo_despesa
+        type: str | null
+        required: false
+      - name: descricao_elemento_despesa
+        type: str | null
+        required: false
+      - name: valor_dotacao_inicial
+        type: float | null
+        required: false
+      - name: valor_dotacao_atualizada
+        type: float | null
+        required: false
+      - name: valor_empenho_ate_periodo
+        type: float | null
+        required: false
+      - name: valor_liquidacao_ate_periodo
+        type: float | null
+        required: false
+      - name: valor_pago_ate_periodo
+        type: float | null
+        required: false
+    - model: Jurisdicionado
+      returned_by:
+      - tce_rn.client.listar_jurisdicionados
+      fields:
+      - name: identificador_unidade
+        type: int | null
+        required: false
+      - name: codigo_orgao
+        type: str | null
+        required: false
+      - name: nome_orgao
+        type: str | null
+        required: false
+      - name: cnpj
+        type: str | null
+        required: false
+    - model: Licitacao
+      returned_by:
+      - tce_rn.client.buscar_licitacoes
+      fields:
+      - name: numero_licitacao
+        type: str | null
+        required: false
+      - name: ano_licitacao
+        type: str | null
+        required: false
+      - name: modalidade
+        type: str | null
+        required: false
+      - name: tipo_objeto
+        type: str | null
+        required: false
+      - name: descricao_objeto
+        type: str | null
+        required: false
+      - name: valor_total_orcado
+        type: float | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: nome_jurisdicionado
+        type: str | null
+        required: false
+    - model: Receita
+      returned_by:
+      - tce_rn.client.buscar_receitas
+      fields:
+      - name: descricao_receita
+        type: str | null
+        required: false
+      - name: cod_natureza_receita
+        type: str | null
+        required: false
+      - name: valor_previsto_inicial
+        type: float | null
+        required: false
+      - name: valor_previsto_atualizado
+        type: float | null
+        required: false
+      - name: valor_realizado_no_exercicio
+        type: float | null
+        required: false
+  repo_path: src/mcp_brasil/data/tce_rn
+- id: tce_rs
+  name: TCE-RS
+  description: 'TCE-RS: índices de educação e saúde, gestão fiscal (LRF) e catálogo de datasets dos municípios do Rio Grande
+    do Sul via portal CKAN do TCE-RS.'
+  domain: transparencia_fiscalizacao
+  publisher: TCE-RS
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://dados.tce.rs.gov.br
+  protocol: rest+ckan_action_api
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    PORTAL_BASE: https://dados.tce.rs.gov.br
+    DATA_BASE: https://dados.tce.rs.gov.br/dados
+    CKAN_API_BASE: https://dados.tce.rs.gov.br/api/3/action
+    MUNICIPIOS_URL: https://dados.tce.rs.gov.br/dados/auxiliar/municipios.json
+    EDUCACAO_INDICE_URL: https://dados.tce.rs.gov.br/dados/municipal/educacao-indice
+    SAUDE_INDICE_URL: https://dados.tce.rs.gov.br/dados/municipal/saude-indice
+    GESTAO_FISCAL_URL: https://dados.tce.rs.gov.br/dados/municipal/gastos-lrf-mde-asps
+    PACKAGE_SEARCH_URL: https://dados.tce.rs.gov.br/api/3/action/package_search
+  tools_count: 5
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - tce
+  - rs
+  - educacao
+  - saude
+  - gestao-fiscal
+  - ckan
+  tests:
+    path: tests/data/tce_rs
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 40
+    passed: 40
+    failed: 0
+    skipped: 0
+    duration_s: 0.48
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 99.0
+    run_command: make test-feature F=tce_rs
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Dataset
+      returned_by:
+      - tce_rs.client.buscar_datasets
+      fields:
+      - name: nome
+        type: str | null
+        required: false
+      - name: titulo
+        type: str | null
+        required: false
+      - name: grupo
+        type: str | null
+        required: false
+      - name: notas
+        type: str | null
+        required: false
+      - name: url
+        type: str | null
+        required: false
+      - name: num_recursos
+        type: int | null
+        required: false
+    - model: GestaoFiscal
+      returned_by:
+      - tce_rs.client.buscar_gestao_fiscal
+      fields:
+      - name: ano
+        type: int | null
+        required: false
+      - name: codigo_orgao
+        type: int | null
+        required: false
+      - name: nome_orgao
+        type: str | null
+        required: false
+      - name: receita_corrente_liquida
+        type: float | null
+        required: false
+      - name: despesa_pessoal
+        type: float | null
+        required: false
+      - name: divida_consolidada
+        type: float | null
+        required: false
+      - name: operacoes_credito
+        type: float | null
+        required: false
+      - name: receita_mde
+        type: float | null
+        required: false
+      - name: despesa_mde
+        type: float | null
+        required: false
+      - name: receita_asps
+        type: float | null
+        required: false
+      - name: despesa_asps
+        type: float | null
+        required: false
+    - model: IndiceEducacao
+      returned_by:
+      - tce_rs.client.buscar_indices_educacao
+      fields:
+      - name: ano
+        type: int | null
+        required: false
+      - name: codigo_orgao
+        type: int | null
+        required: false
+      - name: nome_orgao
+        type: str | null
+        required: false
+      - name: valor_despesa
+        type: float | null
+        required: false
+      - name: valor_receita
+        type: float | null
+        required: false
+      - name: indice
+        type: float | null
+        required: false
+    - model: IndiceSaude
+      returned_by:
+      - tce_rs.client.buscar_indices_saude
+      fields:
+      - name: ano
+        type: int | null
+        required: false
+      - name: codigo_orgao
+        type: int | null
+        required: false
+      - name: nome_orgao
+        type: str | null
+        required: false
+      - name: valor_despesa
+        type: float | null
+        required: false
+      - name: valor_receita
+        type: float | null
+        required: false
+      - name: indice
+        type: float | null
+        required: false
+    - model: Municipio
+      returned_by:
+      - tce_rs.client.listar_municipios
+      fields:
+      - name: codigo
+        type: int | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: codigo_ibge
+        type: int | null
+        required: false
+  repo_path: src/mcp_brasil/data/tce_rs
+- id: tce_sc
+  name: TCE-SC
+  description: 'TCE-SC: municípios e unidades gestoras de Santa Catarina via Portal da Transparência do TCE-SC.'
+  domain: transparencia_fiscalizacao
+  publisher: TCE-SC
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://servicos.tcesc.tc.br/endpoints-portal-transparencia
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    API_BASE: https://servicos.tcesc.tc.br/endpoints-portal-transparencia
+    MUNICIPIOS_URL: https://servicos.tcesc.tc.br/endpoints-portal-transparencia/municipios.php
+    UNIDADES_GESTORAS_URL: https://servicos.tcesc.tc.br/endpoints-portal-transparencia/unidades-gestoras.php
+  tools_count: 2
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - tce
+  - sc
+  - municipios
+  - unidades-gestoras
+  tests:
+    path: tests/data/tce_sc
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 18
+    passed: 18
+    failed: 0
+    skipped: 0
+    duration_s: 0.2
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 98.6
+    run_command: make test-feature F=tce_sc
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Municipio
+      returned_by:
+      - tce_sc.client.listar_municipios
+      fields:
+      - name: codigo_municipio
+        type: int | null
+        required: false
+      - name: nome_municipio
+        type: str | null
+        required: false
+    - model: UnidadeGestora
+      returned_by:
+      - tce_sc.client.listar_unidades_gestoras
+      fields:
+      - name: codigo_unidade
+        type: int | null
+        required: false
+      - name: nome_unidade
+        type: str | null
+        required: false
+      - name: sigla_unidade
+        type: str | null
+        required: false
+      - name: nome_municipio
+        type: str | null
+        required: false
+  repo_path: src/mcp_brasil/data/tce_sc
+- id: tce_sp
+  name: TCE-SP
+  description: 'TCE-SP: despesas e receitas dos 645 municípios paulistas, com dados mensais desde 2014 até o exercício atual.'
+  domain: transparencia_fiscalizacao
+  publisher: TCE-SP
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://transparencia.tce.sp.gov.br/api
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    API_BASE: https://transparencia.tce.sp.gov.br/api
+    MUNICIPIOS_URL: https://transparencia.tce.sp.gov.br/api/json/municipios
+    DESPESAS_URL: https://transparencia.tce.sp.gov.br/api/json/despesas
+    RECEITAS_URL: https://transparencia.tce.sp.gov.br/api/json/receitas
+  tools_count: 3
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - tce
+  - sp
+  - despesas
+  - receitas
+  - municipios
+  tests:
+    path: tests/data/tce_sp
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 25
+    passed: 25
+    failed: 0
+    skipped: 0
+    duration_s: 0.27
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 95.0
+    run_command: make test-feature F=tce_sp
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Despesa
+      returned_by:
+      - tce_sp.client.buscar_despesas
+      fields:
+      - name: orgao
+        type: str | null
+        required: false
+      - name: mes
+        type: str | null
+        required: false
+      - name: evento
+        type: str | null
+        required: false
+      - name: nr_empenho
+        type: str | null
+        required: false
+      - name: id_fornecedor
+        type: str | null
+        required: false
+      - name: nm_fornecedor
+        type: str | null
+        required: false
+      - name: dt_emissao_despesa
+        type: str | null
+        required: false
+      - name: vl_despesa
+        type: float | null
+        required: false
+    - model: Municipio
+      returned_by:
+      - tce_sp.client.listar_municipios
+      fields:
+      - name: municipio
+        type: str
+        required: true
+      - name: municipio_extenso
+        type: str
+        required: true
+    - model: Receita
+      returned_by:
+      - tce_sp.client.buscar_receitas
+      fields:
+      - name: orgao
+        type: str | null
+        required: false
+      - name: mes
+        type: str | null
+        required: false
+      - name: ds_fonte_recurso
+        type: str | null
+        required: false
+      - name: ds_cd_aplicacao_fixo
+        type: str | null
+        required: false
+      - name: ds_alinea
+        type: str | null
+        required: false
+      - name: ds_subalinea
+        type: str | null
+        required: false
+      - name: vl_arrecadacao
+        type: float | null
+        required: false
+  repo_path: src/mcp_brasil/data/tce_sp
+- id: tce_to
+  name: TCE-TO
+  description: 'TCE-TO: processos, pautas de sessões e busca de pessoas do Tribunal de Contas do Tocantins via API e-Contas.'
+  domain: transparencia_fiscalizacao
+  publisher: TCE-TO
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://api.tceto.tc.br/econtas/api
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    API_BASE: https://api.tceto.tc.br/econtas/api
+    PESSOAS_URL: https://api.tceto.tc.br/econtas/api/pessoas
+    PAUTAS_URL: https://api.tceto.tc.br/econtas/api/pautas
+    PROCESSO_URL: https://api.tceto.tc.br/econtas/api/processo
+  tools_count: 3
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - tce
+  - to
+  - processos
+  - pautas
+  tests:
+    path: tests/data/tce_to
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 18
+    passed: 18
+    failed: 0
+    skipped: 0
+    duration_s: 0.25
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 95.4
+    run_command: make test-feature F=tce_to
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Pauta
+      returned_by:
+      - tce_to.client.listar_pautas
+      fields:
+      - name: data
+        type: str | null
+        required: false
+      - name: hora
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: origem
+        type: str | null
+        required: false
+      - name: url
+        type: str | null
+        required: false
+    - model: Pessoa
+      returned_by:
+      - tce_to.client.buscar_pessoas
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: codigo
+        type: str | null
+        required: false
+      - name: processos
+        type: list[ProcessoResumo] | null
+        required: false
+    - model: Processo
+      returned_by:
+      - tce_to.client.consultar_processo
+      fields:
+      - name: numero_ano
+        type: str | null
+        required: false
+      - name: assunto
+        type: str | null
+        required: false
+      - name: classe_assunto
+        type: str | null
+        required: false
+      - name: entidade_origem
+        type: str | null
+        required: false
+      - name: entidade_origem_municipio
+        type: str | null
+        required: false
+      - name: entidade_origem_cnpj
+        type: str | null
+        required: false
+      - name: data_entrada
+        type: str | null
+        required: false
+      - name: departamento_atual
+        type: str | null
+        required: false
+      - name: complemento
+        type: str | null
+        required: false
+      - name: distribuicao
+        type: str | null
+        required: false
+      - name: eletronico
+        type: str | null
+        required: false
+      - name: sigiloso
+        type: bool | null
+        required: false
+    - model: ProcessoResumo
+      fields:
+      - name: numero_ano
+        type: str | null
+        required: false
+      - name: assunto
+        type: str | null
+        required: false
+      - name: classe_assunto
+        type: str | null
+        required: false
+      - name: entidade_origem
+        type: str | null
+        required: false
+      - name: entidade_origem_municipio
+        type: str | null
+        required: false
+      - name: data_entrada
+        type: str | null
+        required: false
+      - name: departamento_atual
+        type: str | null
+        required: false
+      nested_in:
+      - Pessoa
+  repo_path: src/mcp_brasil/data/tce_to
+- id: tcu
+  name: Dados do TCU
+  description: 'Dados do TCU: acórdãos, inabilitados, inidôneos, certidões, débitos e contratos'
+  domain: transparencia_fiscalizacao
+  publisher: TCU
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://dados-abertos.apps.tcu.gov.br/api
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  - POST
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    TCU_DADOS_ABERTOS_BASE: https://dados-abertos.apps.tcu.gov.br/api
+    TCU_CONTAS_ORDS_BASE: https://contas.tcu.gov.br/ords
+    TCU_CERTIDOES_BASE: https://certidoes-apf.apps.tcu.gov.br/api/rest/publico
+    TCU_DIVIDA_BASE: https://divida.apps.tcu.gov.br/api/publico
+    TCU_CONTRATA_BASE: https://contas.tcu.gov.br/contrata2RS/api/publico
+    ACORDAOS_URL: https://dados-abertos.apps.tcu.gov.br/api/acordao/recupera-acordaos
+    PAUTAS_SESSAO_URL: https://dados-abertos.apps.tcu.gov.br/api/pautassessao
+    CADIRREG_URL: https://dados-abertos.apps.tcu.gov.br/api/recuperapessoacadirreg
+    INABILITADOS_URL: https://contas.tcu.gov.br/ords/condenacao/consulta/inabilitados
+    INIDONEOS_URL: https://contas.tcu.gov.br/ords/condenacao/consulta/inidoneos
+    PEDIDOS_CONGRESSO_URL: https://contas.tcu.gov.br/ords/api/publica/scn/pedidos_congresso
+    TIPOS_CERTIDOES_URL: https://certidoes-apf.apps.tcu.gov.br/api/rest/publico/tipos-certidoes
+    CERTIDOES_URL: https://certidoes-apf.apps.tcu.gov.br/api/rest/publico/certidoes
+    CALCULAR_DEBITO_URL: https://divida.apps.tcu.gov.br/api/publico/calculadora/calcular-saldos-debito
+    TERMOS_CONTRATUAIS_URL: https://contas.tcu.gov.br/contrata2RS/api/publico/termos-contratuais
+  tools_count: 9
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - controle
+  - contas
+  - acordaos
+  - licitacoes
+  - certidoes
+  tests:
+    path: tests/data/tcu
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 49
+    passed: 49
+    failed: 0
+    skipped: 0
+    duration_s: 0.56
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 95.5
+    run_command: make test-feature F=tcu
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Acordao
+      returned_by:
+      - tcu.client.consultar_acordaos
+      fields:
+      - name: key
+        type: str
+        required: true
+        description: 'Identificador único (ex: ACORDAO-COMPLETO-2745491)'
+      - name: tipo
+        type: str
+        required: false
+      - name: ano_acordao
+        type: str
+        required: false
+        source_key: anoAcordao
+      - name: titulo
+        type: str
+        required: false
+      - name: numero_acordao
+        type: str
+        required: false
+        source_key: numeroAcordao
+      - name: numero_ata
+        type: str
+        required: false
+        source_key: numeroAta
+      - name: colegiado
+        type: str
+        required: false
+      - name: data_sessao
+        type: str
+        required: false
+        source_key: dataSessao
+      - name: relator
+        type: str
+        required: false
+      - name: situacao
+        type: str
+        required: false
+      - name: sumario
+        type: str | null
+        required: false
+      - name: url_acordao
+        type: str
+        required: false
+        source_key: urlAcordao
+    - model: CertidaoConsolidada
+      returned_by:
+      - tcu.client.consultar_certidoes
+      fields:
+      - name: razao_social
+        type: str
+        required: false
+        source_key: razaoSocial
+      - name: nome_fantasia
+        type: str
+        required: false
+        source_key: nomeFantasia
+      - name: cnpj
+        type: str
+        required: false
+      - name: certidoes
+        type: list[CertidaoItem]
+        required: false
+      - name: se_cnpj_encontrado
+        type: bool
+        required: false
+        source_key: seCnpjEncontradoNaBaseTcu
+    - model: Inabilitado
+      returned_by:
+      - tcu.client.consultar_inabilitados
+      fields:
+      - name: nome
+        type: str
+        required: false
+      - name: cpf
+        type: str
+        required: false
+      - name: processo
+        type: str
+        required: false
+      - name: deliberacao
+        type: str
+        required: false
+      - name: data_transito_julgado
+        type: str
+        required: false
+      - name: data_final
+        type: str
+        required: false
+      - name: data_acordao
+        type: str
+        required: false
+      - name: uf
+        type: str
+        required: false
+      - name: municipio
+        type: str
+        required: false
+    - model: Inidoneo
+      returned_by:
+      - tcu.client.consultar_inidoneos
+      fields:
+      - name: nome
+        type: str
+        required: false
+      - name: cpf_cnpj
+        type: str
+        required: false
+      - name: processo
+        type: str
+        required: false
+      - name: deliberacao
+        type: str
+        required: false
+      - name: data_transito_julgado
+        type: str
+        required: false
+      - name: data_final
+        type: str
+        required: false
+      - name: data_acordao
+        type: str
+        required: false
+      - name: uf
+        type: str
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+    - model: PautaSessao
+      returned_by:
+      - tcu.client.consultar_pautas_sessao
+      fields:
+      - name: nome_colegiado
+        type: str
+        required: false
+        source_key: nomeColegiado
+      - name: sigla_colegiado
+        type: str
+        required: false
+        source_key: siglaColegiado
+      - name: data_sessao
+        type: str
+        required: false
+        source_key: dataSessao
+      - name: sigla_relator
+        type: str
+        required: false
+        source_key: siglaRelator
+      - name: nome_relator
+        type: str
+        required: false
+        source_key: nomeRelator
+      - name: numero_processo
+        type: str
+        required: false
+        source_key: numeroProcesso
+      - name: natureza_processo
+        type: str
+        required: false
+        source_key: naturezaProcesso
+      - name: tipo_processo
+        type: str
+        required: false
+        source_key: tipoProcesso
+    - model: PedidoCongresso
+      returned_by:
+      - tcu.client.consultar_pedidos_congresso
+      fields:
+      - name: tipo
+        type: str
+        required: false
+      - name: numero
+        type: int
+        required: false
+      - name: data_aprovacao
+        type: str
+        required: false
+      - name: assunto
+        type: str
+        required: false
+      - name: autor
+        type: str | null
+        required: false
+      - name: processo_scn
+        type: str
+        required: false
+      - name: link_proposicao
+        type: str
+        required: false
+    - model: PessoaCadirreg
+      returned_by:
+      - tcu.client.consultar_cadirreg
+      fields:
+      - name: nome_responsavel
+        type: str
+        required: false
+        source_key: nomeResponsavel
+      - name: num_cpf
+        type: str
+        required: false
+        source_key: numCPF
+      - name: num_processo
+        type: str
+        required: false
+        source_key: numProcesso
+      - name: ano_processo
+        type: str
+        required: false
+        source_key: anoProcesso
+      - name: julgamento
+        type: str
+        required: false
+      - name: unidade_tecnica_processo
+        type: str
+        required: false
+        source_key: unidadeTecnicaProcesso
+      - name: se_detentor_cargo
+        type: str
+        required: false
+        source_key: seDetentorCargoFuncaoPublica
+      - name: se_falecido
+        type: str
+        required: false
+        source_key: seFalecido
+    - model: ResultadoDebito
+      returned_by:
+      - tcu.client.calcular_debito
+      fields:
+      - name: data
+        type: str
+        required: false
+      - name: saldo_debito
+        type: float
+        required: false
+        source_key: saldoDebito
+      - name: saldo_variacao_selic
+        type: float
+        required: false
+        source_key: saldoVariacaoSelic
+      - name: saldo_juros
+        type: float
+        required: false
+        source_key: saldoJuros
+      - name: saldo_total
+        type: float
+        required: false
+        source_key: saldoTotal
+    - model: TermoContratual
+      returned_by:
+      - tcu.client.consultar_termos_contratuais
+      fields:
+      - name: numero
+        type: int
+        required: false
+      - name: ano
+        type: int
+        required: false
+      - name: tipo_contratacao
+        type: str
+        required: false
+        source_key: tipoContratacao
+      - name: nome_fornecedor
+        type: str
+        required: false
+        source_key: nomeFornecedor
+      - name: cnpj_fornecedor
+        type: str
+        required: false
+        source_key: cnpjFornecedor
+      - name: objeto
+        type: str
+        required: false
+      - name: valor_inicial
+        type: float
+        required: false
+        source_key: valorInicial
+      - name: valor_atualizado
+        type: float
+        required: false
+        source_key: valorAtualizado
+      - name: data_assinatura
+        type: str
+        required: false
+        source_key: dataAssinatura
+      - name: data_termino_vigencia
+        type: str
+        required: false
+        source_key: dataTerminoVigencia
+      - name: modalidade_licitacao
+        type: str
+        required: false
+        source_key: modalidadeLicitacao
+      - name: numero_processo
+        type: str
+        required: false
+        source_key: numeroProcesso
+      - name: unidade_gestora
+        type: str
+        required: false
+        source_key: unidadeGestora
+    - model: CertidaoItem
+      fields:
+      - name: emissor
+        type: str
+        required: false
+      - name: tipo
+        type: str
+        required: false
+      - name: descricao
+        type: str
+        required: false
+      - name: situacao
+        type: str
+        required: false
+      - name: observacao
+        type: str | null
+        required: false
+      - name: data_hora_emissao
+        type: str
+        required: false
+        source_key: dataHoraEmissao
+      nested_in:
+      - CertidaoConsolidada
+    - model: ParcelaDebito
+      fields:
+      - name: data_fato
+        type: str
+        required: true
+        description: Data do fato gerador (DD/MM/AAAA)
+      - name: indicativo
+        type: str
+        required: false
+        description: D para débito, C para crédito
+      - name: valor_original
+        type: float
+        required: true
+        description: Valor original da parcela
+  notes: POST usado apenas para cálculo de débito (CALCULAR_DEBITO_URL).
+  repo_path: src/mcp_brasil/data/tcu
+- id: transparencia
+  name: Portal da Transparência
+  description: 'Portal da Transparência: contratos, despesas, servidores, licitações, sanções, imóveis, renúncias fiscais,
+    órgãos, coronavírus, benefícios sociais e mais'
+  domain: transparencia_fiscalizacao
+  publisher: CGU
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://api.portaldatransparencia.gov.br/api-de-dados
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: true
+    type: header
+    header: chave-api-dados
+    env_var: TRANSPARENCIA_API_KEY
+    signup_url: https://portaldatransparencia.gov.br/api-de-dados/cadastrar-email
+    cost: free
+  endpoints:
+    TRANSPARENCIA_API_BASE: https://api.portaldatransparencia.gov.br/api-de-dados
+    CONTRATOS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/contratos/cpf-cnpj
+    DESPESAS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/despesas/recursos-recebidos
+    SERVIDORES_URL: https://api.portaldatransparencia.gov.br/api-de-dados/servidores
+    LICITACOES_URL: https://api.portaldatransparencia.gov.br/api-de-dados/licitacoes
+    BOLSA_FAMILIA_MUNICIPIO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/novo-bolsa-familia-por-municipio
+    BOLSA_FAMILIA_NIS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/novo-bolsa-familia-sacado-por-nis
+    EMENDAS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/emendas
+    VIAGENS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/viagens-por-cpf
+    CONVENIOS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/convenios
+    CARTOES_URL: https://api.portaldatransparencia.gov.br/api-de-dados/cartoes
+    PEP_URL: https://api.portaldatransparencia.gov.br/api-de-dados/peps
+    ACORDOS_LENIENCIA_URL: https://api.portaldatransparencia.gov.br/api-de-dados/acordos-leniencia
+    NOTAS_FISCAIS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/notas-fiscais
+    BENEFICIOS_CIDADAO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/beneficios-cidadao
+    PESSOAS_FISICAS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/pessoas-fisicas
+    PESSOAS_JURIDICAS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/pessoas-juridicas
+    CONTRATO_DETALHE_URL: https://api.portaldatransparencia.gov.br/api-de-dados/contratos/id
+    SERVIDOR_DETALHE_URL: https://api.portaldatransparencia.gov.br/api-de-dados/servidores
+    IMOVEIS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/imoveis
+    SITUACAO_IMOVEL_URL: https://api.portaldatransparencia.gov.br/api-de-dados/situacao-imovel
+    PERMISSIONARIOS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/permissionarios
+    RENUNCIAS_VALOR_URL: https://api.portaldatransparencia.gov.br/api-de-dados/renuncias-valor
+    RENUNCIAS_IMUNES_URL: https://api.portaldatransparencia.gov.br/api-de-dados/renuncias-fiscais-empresas-imunes-isentas
+    RENUNCIAS_HABILITADAS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/renuncias-fiscais-empresas-habilitadas-beneficios-fiscais
+    ORGAOS_SIAPE_URL: https://api.portaldatransparencia.gov.br/api-de-dados/orgaos-siape
+    ORGAOS_SIAFI_URL: https://api.portaldatransparencia.gov.br/api-de-dados/orgaos-siafi
+    CORONAVIRUS_TRANSFERENCIAS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/coronavirus/transferencias
+    CORONAVIRUS_DESPESAS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/coronavirus/movimento-liquido-despesa
+    VIAGENS_ORGAO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/viagens
+    SERVIDORES_REMUNERACAO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/servidores/remuneracao
+    SERVIDORES_POR_ORGAO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/servidores/por-orgao
+    SERVIDORES_FUNCOES_URL: https://api.portaldatransparencia.gov.br/api-de-dados/servidores/funcoes-e-cargos
+    SEGURO_DEFESO_MUNICIPIO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/seguro-defeso-por-municipio
+    SEGURO_DEFESO_CODIGO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/seguro-defeso-codigo
+    SAFRA_MUNICIPIO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/safra-por-municipio
+    SAFRA_CODIGO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/safra-codigo-por-cpf-ou-nis
+    PETI_MUNICIPIO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/peti-por-municipio
+    PETI_CODIGO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/peti-por-cpf-ou-nis
+    BOLSA_FAMILIA_BENEFICIARIO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/novo-bolsa-familia-sacado-beneficiario-por-municipio
+    LICITACOES_UGS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/licitacoes/ugs
+    LICITACOES_POR_PROCESSO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/licitacoes/por-processo
+    LICITACOES_POR_UG_URL: https://api.portaldatransparencia.gov.br/api-de-dados/licitacoes/por-ug-modalidade-numero
+    LICITACOES_PARTICIPANTES_URL: https://api.portaldatransparencia.gov.br/api-de-dados/licitacoes/participantes
+    LICITACOES_MODALIDADES_URL: https://api.portaldatransparencia.gov.br/api-de-dados/licitacoes/modalidades
+    LICITACOES_ITENS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/licitacoes/itens-licitados
+    LICITACOES_EMPENHOS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/licitacoes/empenhos
+    LICITACOES_CONTRATOS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/licitacoes/contratos-relacionados-licitacao
+    EMENDAS_DOCUMENTOS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/emendas/documentos
+    DESPESAS_ORGAO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/despesas/por-orgao
+    DESPESAS_FUNCIONAL_URL: https://api.portaldatransparencia.gov.br/api-de-dados/despesas/por-funcional-programatica
+    DESPESAS_FUNCIONAL_MOV_URL: https://api.portaldatransparencia.gov.br/api-de-dados/despesas/por-funcional-programatica/movimentacao-liquida
+    DESPESAS_DOCUMENTOS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/despesas/documentos
+    DESPESAS_DOCUMENTOS_FAVORECIDO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/despesas/documentos-por-favorecido
+    DESPESAS_ITENS_EMPENHO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/despesas/itens-de-empenho
+    DESPESAS_TIPO_TRANSFERENCIA_URL: https://api.portaldatransparencia.gov.br/api-de-dados/despesas/tipo-transferencia
+    DESPESAS_PLANO_ORC_URL: https://api.portaldatransparencia.gov.br/api-de-dados/despesas/plano-orcamentario
+    DESPESAS_FAVORECIDOS_DOC_URL: https://api.portaldatransparencia.gov.br/api-de-dados/despesas/favorecidos-finais-por-documento
+    CONVENIO_ID_URL: https://api.portaldatransparencia.gov.br/api-de-dados/convenios/id
+    CONVENIO_NUMERO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/convenios/numero
+    CONVENIO_PROCESSO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/convenios/numero-processo
+    CONVENIO_TIPOS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/convenios/tipo-instrumento
+    CONTRATOS_GERAL_URL: https://api.portaldatransparencia.gov.br/api-de-dados/contratos
+    CONTRATO_NUMERO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/contratos/numero
+    CONTRATO_PROCESSO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/contratos/processo
+    CONTRATO_TERMOS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/contratos/termo-aditivo
+    CONTRATO_ITENS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/contratos/itens-contratados
+    CONTRATO_DOCS_URL: https://api.portaldatransparencia.gov.br/api-de-dados/contratos/documentos-relacionados
+    CONTRATO_APOSTILAMENTO_URL: https://api.portaldatransparencia.gov.br/api-de-dados/contratos/apostilamento
+    NOTA_FISCAL_CHAVE_URL: https://api.portaldatransparencia.gov.br/api-de-dados/notas-fiscais-por-chave
+  client_rate_limit: 80/60s
+  tools_count: 54
+  license: open data; atribuição
+  legal_risk: baixo
+  lgpd_notes: servidores, NIS Bolsa Família
+  tags:
+  - governo
+  - contratos
+  - despesas
+  - servidores
+  - licitações
+  - sanções
+  tests:
+    path: tests/data/transparencia
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_prompts.py
+    - test_resources.py
+    - test_tools.py
+    test_count: 148
+    passed: 148
+    failed: 0
+    skipped: 0
+    duration_s: 1.5
+    test_types:
+    - client_unit
+    - mcp_integration
+    - prompts
+    - resources
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 65.7
+    run_command: make test-feature F=transparencia
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: AcordoLeniencia
+      returned_by:
+      - transparencia.client.buscar_acordos_leniencia
+      fields:
+      - name: empresa
+        type: str | null
+        required: false
+      - name: cnpj
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+    - model: BeneficioSocial
+      returned_by:
+      - transparencia.client.consultar_beneficio_social
+      fields:
+      - name: tipo
+        type: str | null
+        required: false
+      - name: nome_beneficiario
+        type: str | null
+        required: false
+      - name: cpf
+        type: str | null
+        required: false
+      - name: nis
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: mes_referencia
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+    - model: BolsaFamiliaMunicipio
+      returned_by:
+      - transparencia.client.consultar_bolsa_familia_municipio
+      fields:
+      - name: municipio
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: quantidade
+        type: int | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: data_referencia
+        type: str | null
+        required: false
+    - model: BolsaFamiliaSacado
+      returned_by:
+      - transparencia.client.consultar_bolsa_familia_nis
+      fields:
+      - name: nis
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+    - model: CartaoPagamento
+      returned_by:
+      - transparencia.client.buscar_cartoes_pagamento
+      fields:
+      - name: portador
+        type: str | null
+        required: false
+      - name: cpf
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: data
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: estabelecimento
+        type: str | null
+        required: false
+    - model: ContratoDetalhe
+      returned_by:
+      - transparencia.client.detalhar_contrato
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: valor_inicial
+        type: float | null
+        required: false
+      - name: valor_final
+        type: float | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: fornecedor
+        type: str | null
+        required: false
+      - name: modalidade
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: licitacao
+        type: str | null
+        required: false
+    - model: ContratoFornecedor
+      returned_by:
+      - transparencia.client.buscar_contratos
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: valor_inicial
+        type: float | null
+        required: false
+      - name: valor_final
+        type: float | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: fornecedor
+        type: str | null
+        required: false
+    - model: ContratoGeral
+      returned_by:
+      - transparencia.client.buscar_contrato_numero
+      - transparencia.client.buscar_contratos_geral
+      - transparencia.client.buscar_contratos_licitacao
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: valor_inicial
+        type: float | null
+        required: false
+      - name: valor_final
+        type: float | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: fornecedor
+        type: str | null
+        required: false
+      - name: modalidade
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+    - model: Convenio
+      returned_by:
+      - transparencia.client.buscar_convenio_numero
+      - transparencia.client.buscar_convenios
+      fields:
+      - name: numero
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: valor_convenio
+        type: float | null
+        required: false
+      - name: valor_liberado
+        type: float | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: convenente
+        type: str | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+    - model: ConvenioDetalhe
+      returned_by:
+      - transparencia.client.detalhar_convenio
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: valor_convenio
+        type: float | null
+        required: false
+      - name: valor_liberado
+        type: float | null
+        required: false
+      - name: valor_contrapartida
+        type: float | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: convenente
+        type: str | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+      - name: tipo_instrumento
+        type: str | null
+        required: false
+    - model: CoronavirusDespesa
+      returned_by:
+      - transparencia.client.consultar_coronavirus_despesas
+      fields:
+      - name: funcao
+        type: str | null
+        required: false
+      - name: acao
+        type: str | null
+        required: false
+      - name: programa
+        type: str | null
+        required: false
+      - name: grupo_despesa
+        type: str | null
+        required: false
+      - name: empenhado
+        type: float | null
+        required: false
+      - name: liquidado
+        type: float | null
+        required: false
+      - name: pago
+        type: float | null
+        required: false
+    - model: CoronavirusTransferencia
+      returned_by:
+      - transparencia.client.consultar_coronavirus_transferencias
+      fields:
+      - name: tipo
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: favorecido
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: acao
+        type: str | null
+        required: false
+      - name: grupo_despesa
+        type: str | null
+        required: false
+    - model: DespesaFuncional
+      returned_by:
+      - transparencia.client.consultar_despesas_funcional
+      fields:
+      - name: funcao
+        type: str | null
+        required: false
+      - name: subfuncao
+        type: str | null
+        required: false
+      - name: programa
+        type: str | null
+        required: false
+      - name: acao
+        type: str | null
+        required: false
+      - name: empenhado
+        type: float | null
+        required: false
+      - name: liquidado
+        type: float | null
+        required: false
+      - name: pago
+        type: float | null
+        required: false
+    - model: DespesaOrgao
+      returned_by:
+      - transparencia.client.consultar_despesas_orgao
+      fields:
+      - name: orgao_codigo
+        type: str | null
+        required: false
+      - name: orgao_nome
+        type: str | null
+        required: false
+      - name: empenhado
+        type: float | null
+        required: false
+      - name: liquidado
+        type: float | null
+        required: false
+      - name: pago
+        type: float | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+      - name: mes
+        type: int | null
+        required: false
+    - model: DocumentoDespesa
+      returned_by:
+      - transparencia.client.buscar_documentos_despesa
+      - transparencia.client.buscar_empenhos_licitacao
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: data
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: favorecido
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+    - model: DocumentoEmenda
+      returned_by:
+      - transparencia.client.buscar_documentos_emenda
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: data
+        type: str | null
+        required: false
+    - model: Emenda
+      returned_by:
+      - transparencia.client.buscar_emendas
+      fields:
+      - name: numero
+        type: str | null
+        required: false
+      - name: autor
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: localidade
+        type: str | null
+        required: false
+      - name: valor_empenhado
+        type: float | null
+        required: false
+      - name: valor_pago
+        type: float | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+    - model: EmpresaBeneficioFiscal
+      returned_by:
+      - transparencia.client.buscar_empresas_beneficios_fiscais
+      fields:
+      - name: cnpj
+        type: str | null
+        required: false
+      - name: razao_social
+        type: str | null
+        required: false
+      - name: nome_fantasia
+        type: str | null
+        required: false
+      - name: beneficio_fiscal
+        type: str | null
+        required: false
+      - name: fruicao_vigente
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+    - model: FuncaoCargo
+      returned_by:
+      - transparencia.client.listar_funcoes_cargos
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: nivel
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+    - model: GarantiaSafra
+      returned_by:
+      - transparencia.client.consultar_garantia_safra
+      fields:
+      - name: nis
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: quantidade
+        type: int | null
+        required: false
+      - name: data_referencia
+        type: str | null
+        required: false
+    - model: ImovelFuncional
+      returned_by:
+      - transparencia.client.buscar_imoveis_funcionais
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: endereco
+        type: str | null
+        required: false
+      - name: cep
+        type: str | null
+        required: false
+      - name: regiao
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: orgao_responsavel
+        type: str | null
+        required: false
+      - name: data_referencia
+        type: str | null
+        required: false
+    - model: ItemContratado
+      returned_by:
+      - transparencia.client.buscar_itens_contratados
+      fields:
+      - name: descricao
+        type: str | null
+        required: false
+      - name: quantidade
+        type: int | null
+        required: false
+      - name: valor_unitario
+        type: float | null
+        required: false
+      - name: valor_total
+        type: float | null
+        required: false
+    - model: ItemEmpenho
+      returned_by:
+      - transparencia.client.buscar_itens_empenho
+      fields:
+      - name: descricao
+        type: str | null
+        required: false
+      - name: quantidade
+        type: int | null
+        required: false
+      - name: valor_unitario
+        type: float | null
+        required: false
+      - name: valor_total
+        type: float | null
+        required: false
+    - model: ItemLicitado
+      returned_by:
+      - transparencia.client.buscar_itens_licitados
+      fields:
+      - name: descricao
+        type: str | null
+        required: false
+      - name: quantidade
+        type: int | null
+        required: false
+      - name: valor_estimado
+        type: float | null
+        required: false
+      - name: valor_homologado
+        type: float | null
+        required: false
+      - name: fornecedor
+        type: str | null
+        required: false
+    - model: Licitacao
+      returned_by:
+      - transparencia.client.buscar_licitacao_por_processo
+      - transparencia.client.buscar_licitacao_por_ug
+      - transparencia.client.buscar_licitacoes
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: modalidade
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: valor_estimado
+        type: float | null
+        required: false
+      - name: data_abertura
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+    - model: LicitacaoDetalhe
+      returned_by:
+      - transparencia.client.detalhar_licitacao
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: modalidade
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: valor_estimado
+        type: float | null
+        required: false
+      - name: data_abertura
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: processo
+        type: str | null
+        required: false
+      - name: fornecedor_vencedor
+        type: str | null
+        required: false
+    - model: NotaFiscal
+      returned_by:
+      - transparencia.client.buscar_nota_fiscal_chave
+      - transparencia.client.buscar_notas_fiscais
+      fields:
+      - name: numero
+        type: str | null
+        required: false
+      - name: serie
+        type: str | null
+        required: false
+      - name: emitente
+        type: str | null
+        required: false
+      - name: cnpj_emitente
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: data_emissao
+        type: str | null
+        required: false
+    - model: Orgao
+      returned_by:
+      - transparencia.client.listar_orgaos
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+    - model: ParticipanteLicitacao
+      returned_by:
+      - transparencia.client.buscar_participantes_licitacao
+      fields:
+      - name: cpf_cnpj
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: valor_proposta
+        type: float | null
+        required: false
+    - model: Permissionario
+      returned_by:
+      - transparencia.client.buscar_permissionarios
+      fields:
+      - name: cpf
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: orgao_permissionario
+        type: str | null
+        required: false
+      - name: cargo
+        type: str | null
+        required: false
+      - name: valor_pago_mes
+        type: float | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+    - model: PessoaExpostaPoliticamente
+      returned_by:
+      - transparencia.client.buscar_pep
+      fields:
+      - name: cpf
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: funcao
+        type: str | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+    - model: PessoaFisicaVinculos
+      returned_by:
+      - transparencia.client.consultar_cpf
+      fields:
+      - name: cpf
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: tipo_vinculo
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: beneficios
+        type: str | null
+        required: false
+    - model: PessoaJuridicaVinculos
+      returned_by:
+      - transparencia.client.consultar_cnpj
+      fields:
+      - name: cnpj
+        type: str | null
+        required: false
+      - name: razao_social
+        type: str | null
+        required: false
+      - name: sancoes
+        type: str | null
+        required: false
+      - name: contratos
+        type: str | null
+        required: false
+    - model: PetiBeneficio
+      returned_by:
+      - transparencia.client.consultar_peti
+      fields:
+      - name: nis
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: quantidade
+        type: int | null
+        required: false
+      - name: data_referencia
+        type: str | null
+        required: false
+    - model: RecursoRecebido
+      returned_by:
+      - transparencia.client.consultar_despesas
+      fields:
+      - name: ano
+        type: int | null
+        required: false
+      - name: mes
+        type: int | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: favorecido_nome
+        type: str | null
+        required: false
+      - name: orgao_nome
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+    - model: RemuneracaoServidor
+      returned_by:
+      - transparencia.client.buscar_remuneracoes_servidores
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: cpf
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: remuneracao_basica
+        type: float | null
+        required: false
+      - name: remuneracao_apos_deducoes
+        type: float | null
+        required: false
+    - model: RenunciaFiscal
+      returned_by:
+      - transparencia.client.buscar_renuncias_fiscais
+      fields:
+      - name: cnpj
+        type: str | null
+        required: false
+      - name: razao_social
+        type: str | null
+        required: false
+      - name: tipo_renuncia
+        type: str | null
+        required: false
+      - name: beneficio_fiscal
+        type: str | null
+        required: false
+      - name: tributo
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+    - model: Sancao
+      returned_by:
+      - transparencia.client.buscar_sancoes
+      fields:
+      - name: fonte
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: cpf_cnpj
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+      - name: fundamentacao
+        type: str | null
+        required: false
+    - model: SancaoDetalhe
+      returned_by:
+      - transparencia.client.detalhar_sancao
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: fonte
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: cpf_cnpj
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+      - name: fundamentacao
+        type: str | null
+        required: false
+      - name: processo
+        type: str | null
+        required: false
+      - name: valor_multa
+        type: float | null
+        required: false
+    - model: SeguroDefeso
+      returned_by:
+      - transparencia.client.consultar_seguro_defeso
+      fields:
+      - name: nis
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+      - name: quantidade
+        type: int | null
+        required: false
+      - name: data_referencia
+        type: str | null
+        required: false
+    - model: Servidor
+      returned_by:
+      - transparencia.client.buscar_servidores
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: cpf
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: tipo_servidor
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+    - model: ServidorAgregado
+      returned_by:
+      - transparencia.client.buscar_servidores_por_orgao
+      fields:
+      - name: orgao_codigo
+        type: str | null
+        required: false
+      - name: orgao_nome
+        type: str | null
+        required: false
+      - name: quantidade
+        type: int | null
+        required: false
+    - model: ServidorDetalhe
+      returned_by:
+      - transparencia.client.detalhar_servidor
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: cpf
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: tipo_servidor
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: cargo
+        type: str | null
+        required: false
+      - name: funcao
+        type: str | null
+        required: false
+      - name: remuneracao_basica
+        type: float | null
+        required: false
+      - name: remuneracao_apos_deducoes
+        type: float | null
+        required: false
+      - name: honorarios
+        type: float | null
+        required: false
+      - name: outras_remuneracoes
+        type: float | null
+        required: false
+      - name: jetons
+        type: float | null
+        required: false
+    - model: TermoAditivo
+      returned_by:
+      - transparencia.client.buscar_termos_aditivos
+      fields:
+      - name: numero
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: data
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+    - model: UnidadeGestora
+      returned_by:
+      - transparencia.client.buscar_unidades_gestoras
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: orgao_vinculado
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+    - model: Viagem
+      returned_by:
+      - transparencia.client.buscar_viagens_orgao
+      - transparencia.client.consultar_viagens
+      - transparencia.client.detalhar_viagem
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: cpf
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: cargo
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: destino
+        type: str | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+      - name: valor_passagens
+        type: float | null
+        required: false
+      - name: valor_diarias
+        type: float | null
+        required: false
+  repo_path: src/mcp_brasil/data/transparencia
+- id: spu_siapa
+  name: SIAPA/SPIUNET consolidado
+  description: 'SIAPA/SPIUNET consolidado: ~813k imóveis da União com consulta SQL via DuckDB local. Inclui dominiais (aforamento/ocupação)
+    e uso especial. Opt-in: MCP_BRASIL_DATASETS=spu_siapa.'
+  domain: transparencia_fiscalizacao
+  publisher: SPU/MGI
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://drive.spu.gestao.gov.br
+  protocol: file_download
+  response_format: csv
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=spu_siapa
+    table: imoveis_siapa
+    ttl_days: 30
+    approx_size_mb: 220
+    source_encoding: cp1252
+    delimiter: ;
+    zip_member: null
+    null_markers:
+    - '-'
+    all_varchar: false
+    pii_columns: []
+    partitioning: single table
+    sources:
+    - url: https://drive.spu.gestao.gov.br/index.php/s/fMLLrXK5FFjteaj/download
+      zip_member: null
+      partition: null
+  tools_count: 8
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - spu
+  - siapa
+  - imoveis-uniao
+  - dataset
+  - duckdb
+  - aforamento
+  - dominiais
+  tests:
+    path: tests/datasets/spu_siapa
+    files:
+    - test_integration.py
+    test_count: 8
+    passed: 8
+    failed: 0
+    skipped: 0
+    duration_s: 0.48
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 72.0
+    run_command: uv run pytest tests/datasets/spu_siapa
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: schema_tabela resource (curated subset)
+    table: imoveis_siapa
+    complete: false
+    fields:
+    - name: classe
+      type: VARCHAR
+      description: Dominial ou Uso Especial
+    - name: rip_imovel
+      type: BIGINT
+      description: RIP do imóvel (13 dígitos)
+    - name: rip_utilizacao
+      type: VARCHAR
+      description: Nº de utilização/subitem
+    - name: data_cadastro
+      type: VARCHAR
+      description: 'Data de cadastro (mascarada com ###)'
+    - name: uf
+      type: VARCHAR
+      description: Sigla UF
+    - name: municipio
+      type: VARCHAR
+      description: Município
+    - name: endereco
+      type: VARCHAR
+      description: Endereço completo
+    - name: bairro
+      type: VARCHAR
+      description: Bairro
+    - name: latitude
+      type: DOUBLE
+      description: Latitude (graus decimais)
+    - name: longitude
+      type: DOUBLE
+      description: Longitude
+    - name: nivel_precisao
+      type: VARCHAR
+      description: Fonte da geolocalização
+    - name: conceituacao_terreno
+      type: VARCHAR
+      description: Marinha / Marginal / Interior / Ilha
+    - name: tipo_imovel
+      type: VARCHAR
+      description: Categoria do imóvel
+    - name: regime_utilizacao
+      type: VARCHAR
+      description: Aforamento / Ocupação / Uso em Serviço Público / Cessão
+    - name: proprietario_oficial
+      type: VARCHAR
+      description: Entidade federal titular (União, autarquia, etc.)
+    - name: data_inicio_utilizacao
+      type: VARCHAR
+      description: Início da utilização
+    - name: area_terreno_m2
+      type: DOUBLE
+      description: Área do terreno total (m²)
+    - name: area_uniao_m2
+      type: DOUBLE
+      description: Área da União no imóvel (m²)
+    note: Subset curado; DESCRIBE na tabela DuckDB para schema completo.
+  repo_path: src/mcp_brasil/datasets/spu_siapa

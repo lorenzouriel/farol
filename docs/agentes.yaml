@@ -1,0 +1,72 @@
+catalog: mcp-brasil — agentes
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio agentes no catálogo original.
+  includes:
+  - redator
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 1
+  tools: 5
+  keys_required: []
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: redator
+  name: Redação oficial
+  description: 'Redação oficial: ofício, despacho, portaria, parecer, nota técnica'
+  domain: agentes
+  publisher: mcp-brasil
+  official_source: true
+  modality: agent
+  protocol: agent
+  response_format: n/a
+  auth:
+    required: false
+    type: none
+    env_var: null
+  tools_count: 5
+  license: MIT
+  legal_risk: baixo
+  tags:
+  - documentos
+  - redacao-oficial
+  - govtech
+  tests:
+    path: tests/agentes/redator
+    files:
+    - test_integration.py
+    - test_tools.py
+    test_count: 38
+    passed: 38
+    failed: 0
+    skipped: 0
+    duration_s: 0.2
+    test_types:
+    - mcp_integration
+    - tool_unit
+    hits_live_upstream: false
+    line_coverage_pct: 85.3
+    run_command: uv run pytest tests/agentes/redator
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: agent
+    note: Retorna texto gerado (documentos oficiais); sem payload upstream.
+  repo_path: src/mcp_brasil/agentes/redator

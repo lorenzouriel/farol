@@ -1,0 +1,1256 @@
+catalog: mcp-brasil — dados_abertos_utilidades
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio dados_abertos_utilidades no catálogo original.
+  includes:
+  - brasilapi
+  - dados_gov_br
+  - diario_oficial
+  - tabua_mares
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 4
+  tools: 45
+  keys_required:
+  - DADOS_GOV_BR_API_KEY
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: brasilapi
+  name: BrasilAPI
+  description: 'BrasilAPI: CEP, CNPJ, DDD, bancos, câmbio, feriados, taxas, FIPE, ISBN, NCM, PIX e Registro.br — dados públicos
+    unificados.'
+  domain: dados_abertos_utilidades
+  publisher: BrasilAPI (comunidade)
+  official_source: false
+  modality: rest_passthrough
+  base_url: https://brasilapi.com.br/api
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    BRASILAPI_BASE: https://brasilapi.com.br/api
+    CEP_URL: https://brasilapi.com.br/api/cep/v1
+    CNPJ_URL: https://brasilapi.com.br/api/cnpj/v1
+    DDD_URL: https://brasilapi.com.br/api/ddd/v1
+    BANKS_URL: https://brasilapi.com.br/api/banks/v1
+    CAMBIO_MOEDAS_URL: https://brasilapi.com.br/api/cambio/v1/moedas
+    CAMBIO_COTACAO_URL: https://brasilapi.com.br/api/cambio/v1/cotacao
+    FERIADOS_URL: https://brasilapi.com.br/api/feriados/v1
+    TAXAS_URL: https://brasilapi.com.br/api/taxas/v1
+    FIPE_TABELAS_URL: https://brasilapi.com.br/api/fipe/tabelas/v1
+    FIPE_MARCAS_URL: https://brasilapi.com.br/api/fipe/marcas/v1
+    FIPE_VEICULOS_URL: https://brasilapi.com.br/api/fipe/veiculos/v1
+    ISBN_URL: https://brasilapi.com.br/api/isbn/v1
+    NCM_URL: https://brasilapi.com.br/api/ncm/v1
+    PIX_URL: https://brasilapi.com.br/api/pix/v1/participants
+    REGISTRO_BR_URL: https://brasilapi.com.br/api/registrobr/v1
+  client_rate_limit: 60/60s
+  tools_count: 16
+  license: MIT
+  legal_risk: baixo
+  tags:
+  - cep
+  - cnpj
+  - bancos
+  - cambio
+  - fipe
+  - feriados
+  - isbn
+  - ncm
+  - pix
+  tests:
+    path: tests/data/brasilapi
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 44
+    passed: 44
+    failed: 0
+    skipped: 0
+    duration_s: 0.52
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 78.1
+    run_command: make test-feature F=brasilapi
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Banco
+      returned_by:
+      - brasilapi.client.consultar_banco
+      - brasilapi.client.listar_bancos
+      fields:
+      - name: ispb
+        type: str | null
+        required: false
+      - name: name
+        type: str | null
+        required: false
+      - name: code
+        type: int | null
+        required: false
+      - name: fullName
+        type: str | null
+        required: false
+    - model: Cotacao
+      returned_by:
+      - brasilapi.client.consultar_cotacao
+      fields:
+      - name: moeda
+        type: str
+        required: true
+      - name: data
+        type: str
+        required: true
+      - name: valor_compra
+        type: float | null
+        required: false
+      - name: valor_venda
+        type: float | null
+        required: false
+    - model: DddInfo
+      returned_by:
+      - brasilapi.client.consultar_ddd
+      fields:
+      - name: state
+        type: str
+        required: true
+      - name: cities
+        type: list[str]
+        required: true
+    - model: EmpresaCnpj
+      returned_by:
+      - brasilapi.client.consultar_cnpj
+      fields:
+      - name: cnpj
+        type: str
+        required: true
+      - name: razao_social
+        type: str | null
+        required: false
+      - name: nome_fantasia
+        type: str | null
+        required: false
+      - name: situacao_cadastral
+        type: int | null
+        required: false
+      - name: descricao_situacao_cadastral
+        type: str | null
+        required: false
+      - name: data_situacao_cadastral
+        type: str | null
+        required: false
+      - name: porte
+        type: str | null
+        required: false
+      - name: natureza_juridica
+        type: str | null
+        required: false
+      - name: cnae_fiscal
+        type: int | null
+        required: false
+      - name: cnae_fiscal_descricao
+        type: str | null
+        required: false
+      - name: logradouro
+        type: str | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: complemento
+        type: str | null
+        required: false
+      - name: bairro
+        type: str | null
+        required: false
+      - name: cep
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: ddd_telefone_1
+        type: str | null
+        required: false
+      - name: email
+        type: str | null
+        required: false
+      - name: capital_social
+        type: float | null
+        required: false
+    - model: Endereco
+      returned_by:
+      - brasilapi.client.consultar_cep
+      fields:
+      - name: cep
+        type: str
+        required: true
+      - name: state
+        type: str
+        required: true
+        description: Sigla do estado (UF)
+      - name: city
+        type: str
+        required: true
+      - name: neighborhood
+        type: str | null
+        required: false
+      - name: street
+        type: str | null
+        required: false
+      - name: service
+        type: str | null
+        required: false
+    - model: Feriado
+      returned_by:
+      - brasilapi.client.consultar_feriados
+      fields:
+      - name: date
+        type: str
+        required: true
+      - name: name
+        type: str
+        required: true
+      - name: type
+        type: str
+        required: true
+    - model: FipeMarca
+      returned_by:
+      - brasilapi.client.listar_marcas_fipe
+      fields:
+      - name: nome
+        type: str
+        required: true
+      - name: valor
+        type: str
+        required: true
+    - model: FipeTabela
+      returned_by:
+      - brasilapi.client.listar_tabelas_fipe
+      fields:
+      - name: codigo
+        type: int
+        required: true
+      - name: mes
+        type: str
+        required: true
+    - model: FipeVeiculo
+      returned_by:
+      - brasilapi.client.buscar_veiculos_fipe
+      fields:
+      - name: valor
+        type: str
+        required: true
+      - name: marca
+        type: str | null
+        required: false
+      - name: modelo
+        type: str | null
+        required: false
+      - name: ano_modelo
+        type: int | null
+        required: false
+      - name: combustivel
+        type: str | null
+        required: false
+      - name: codigo_fipe
+        type: str | null
+        required: false
+      - name: mes_referencia
+        type: str | null
+        required: false
+    - model: Livro
+      returned_by:
+      - brasilapi.client.consultar_isbn
+      fields:
+      - name: isbn
+        type: str | null
+        required: false
+      - name: title
+        type: str | null
+        required: false
+      - name: subtitle
+        type: str | null
+        required: false
+      - name: authors
+        type: list[str] | null
+        required: false
+      - name: publisher
+        type: str | null
+        required: false
+      - name: year
+        type: int | str | null
+        required: false
+      - name: format
+        type: str | null
+        required: false
+      - name: page_count
+        type: int | null
+        required: false
+      - name: subjects
+        type: list[str] | null
+        required: false
+      - name: provider
+        type: str | null
+        required: false
+    - model: Moeda
+      returned_by:
+      - brasilapi.client.listar_moedas
+      fields:
+      - name: simbolo
+        type: str
+        required: true
+      - name: nome_formatado
+        type: str
+        required: true
+      - name: tipo_moeda
+        type: str | null
+        required: false
+    - model: NcmItem
+      returned_by:
+      - brasilapi.client.buscar_ncm
+      - brasilapi.client.consultar_ncm
+      fields:
+      - name: codigo
+        type: str
+        required: true
+      - name: descricao
+        type: str
+        required: true
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+      - name: tipo_ato
+        type: str | null
+        required: false
+      - name: numero_ato
+        type: str | null
+        required: false
+      - name: ano_ato
+        type: str | null
+        required: false
+    - model: PixParticipante
+      returned_by:
+      - brasilapi.client.listar_pix_participantes
+      fields:
+      - name: ispb
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: nome_reduzido
+        type: str | null
+        required: false
+      - name: modalidade_participacao
+        type: str | null
+        required: false
+      - name: tipo_participacao
+        type: str | null
+        required: false
+      - name: inicio_operacao
+        type: str | null
+        required: false
+    - model: RegistroBrDominio
+      returned_by:
+      - brasilapi.client.consultar_registro_br
+      fields:
+      - name: status_code
+        type: int | null
+        required: false
+      - name: status
+        type: str | null
+        required: false
+      - name: fqdn
+        type: str | null
+        required: false
+      - name: hosts
+        type: list[str] | null
+        required: false
+      - name: publication_status
+        type: str | null
+        required: false
+      - name: expires_at
+        type: str | null
+        required: false
+    - model: TaxaOficial
+      returned_by:
+      - brasilapi.client.consultar_taxa
+      fields:
+      - name: nome
+        type: str
+        required: true
+      - name: valor
+        type: float | null
+        required: false
+  repo_path: src/mcp_brasil/data/brasilapi
+- id: dados_gov_br
+  name: Portal Brasileiro de Dados Abertos (dados.gov.br)
+  description: 'Portal Brasileiro de Dados Abertos (dados.gov.br): catálogo central de datasets abertos do governo federal.
+    Busca, listagem e detalhamento de conjuntos de dados, organizações, temas, tags e reusos.'
+  domain: dados_abertos_utilidades
+  publisher: CGU / MGI (dados.gov.br)
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://dados.gov.br/dados/api
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: true
+    type: header
+    header: chave-api-dados-abertos
+    env_var: DADOS_GOV_BR_API_KEY
+    signup_url: https://dados.gov.br (Minha Conta, login gov.br)
+    cost: free
+  endpoints:
+    API_BASE: https://dados.gov.br/dados/api
+    API_PUBLICO: https://dados.gov.br/dados/api/publico
+    CONJUNTOS_URL: https://dados.gov.br/dados/api/publico/conjuntos-dados
+    ORGANIZACAO_URL: https://dados.gov.br/dados/api/publico/organizacao
+    REUSOS_URL: https://dados.gov.br/dados/api/publico/reusos
+    REUSO_URL: https://dados.gov.br/dados/api/publico/reuso
+    TEMAS_URL: https://dados.gov.br/dados/api/temas
+    TAGS_URL: https://dados.gov.br/dados/api/tags
+  tools_count: 11
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - dados-abertos
+  - datasets
+  - portal
+  - governo-federal
+  - catalogo
+  tests:
+    path: tests/data/dados_gov_br
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 51
+    passed: 51
+    failed: 0
+    skipped: 0
+    duration_s: 0.75
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 84.5
+    run_command: make test-feature F=dados_gov_br
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: ConjuntoDetalhe
+      returned_by:
+      - dados_gov_br.client.detalhar_conjunto
+      fields:
+      - name: id
+        type: str | null
+        required: false
+      - name: titulo
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: organizacao
+        type: str | null
+        required: false
+      - name: licenca
+        type: str | null
+        required: false
+      - name: periodicidade
+        type: str | null
+        required: false
+      - name: responsavel
+        type: str | null
+        required: false
+      - name: emailResponsavel
+        type: str | null
+        required: false
+      - name: versao
+        type: str | null
+        required: false
+      - name: visibilidade
+        type: str | null
+        required: false
+      - name: coberturaEspacial
+        type: str | null
+        required: false
+      - name: coberturaTemporalInicio
+        type: str | null
+        required: false
+      - name: coberturaTemporalFim
+        type: str | null
+        required: false
+      - name: temas
+        type: list[dict[str, str]]
+        required: false
+      - name: tags
+        type: list[Tag]
+        required: false
+      - name: recursos
+        type: list[Recurso]
+        required: false
+      - name: dadosAbertos
+        type: str | null
+        required: false
+      - name: descontinuado
+        type: bool | null
+        required: false
+      - name: dataUltimaAtualizacaoMetadados
+        type: str | null
+        required: false
+      - name: dataUltimaAtualizacaoArquivo
+        type: str | null
+        required: false
+      - name: dataCatalogacao
+        type: str | null
+        required: false
+      - name: observanciaLegal
+        type: str | null
+        required: false
+      - name: ods
+        type: list[int]
+        required: false
+    - model: ConjuntoResultado
+      returned_by:
+      - dados_gov_br.client.buscar_conjuntos
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: conjuntos
+        type: list[ConjuntoIndice]
+        required: false
+    - model: ODS
+      returned_by:
+      - dados_gov_br.client.listar_ods
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+    - model: ObservanciaLegal
+      returned_by:
+      - dados_gov_br.client.listar_observancia_legal
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+    - model: OrganizacaoDetalhe
+      returned_by:
+      - dados_gov_br.client.detalhar_organizacao
+      fields:
+      - name: id
+        type: str | null
+        required: false
+      - name: name
+        type: str | null
+        required: false
+      - name: displayName
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: urlFoto
+        type: str | null
+        required: false
+      - name: quantidadeSeguidores
+        type: int | null
+        required: false
+      - name: quantidadeConjuntoDados
+        type: int | null
+        required: false
+      - name: ativo
+        type: str | null
+        required: false
+    - model: OrganizacaoResultado
+      returned_by:
+      - dados_gov_br.client.listar_organizacoes
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: organizacoes
+        type: list[OrganizacaoIndice]
+        required: false
+    - model: ReusoDetalhe
+      returned_by:
+      - dados_gov_br.client.detalhar_reuso
+      fields:
+      - name: id
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: url
+        type: str | null
+        required: false
+      - name: organizacao
+        type: str | null
+        required: false
+      - name: responsavel
+        type: str | null
+        required: false
+      - name: autor
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: dataAtualizacao
+        type: str | null
+        required: false
+      - name: dataLancamento
+        type: str | null
+        required: false
+      - name: temas
+        type: list[str]
+        required: false
+      - name: tipos
+        type: list[str]
+        required: false
+      - name: palavrasChave
+        type: list[str]
+        required: false
+      - name: conjuntoDados
+        type: list[str]
+        required: false
+    - model: ReusoIndice
+      returned_by:
+      - dados_gov_br.client.listar_reusos
+      fields:
+      - name: id
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: autor
+        type: str | null
+        required: false
+      - name: organizacao
+        type: str | null
+        required: false
+      - name: dataAtualizacao
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+    - model: Tag
+      returned_by:
+      - dados_gov_br.client.buscar_tags
+      - dados_gov_br.client.listar_tags_conjunto
+      fields:
+      - name: id
+        type: str | null
+        required: false
+      - name: name
+        type: str | null
+        required: false
+      - name: display_name
+        type: str | null
+        required: false
+      nested_in:
+      - ConjuntoDetalhe
+    - model: Tema
+      returned_by:
+      - dados_gov_br.client.listar_temas
+      fields:
+      - name: id
+        type: str | null
+        required: false
+      - name: name
+        type: str | null
+        required: false
+      - name: title
+        type: str | null
+        required: false
+      - name: description
+        type: str | null
+        required: false
+      - name: displayName
+        type: str | null
+        required: false
+      - name: packageCount
+        type: int | null
+        required: false
+    - model: ConjuntoIndice
+      fields:
+      - name: id
+        type: str | null
+        required: false
+      - name: title
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: notes
+        type: str | null
+        required: false
+      - name: organizationName
+        type: str | null
+        required: false
+      - name: organizationTitle
+        type: str | null
+        required: false
+      - name: temas
+        type: str | null
+        required: false
+      - name: dataCriacao
+        type: str | null
+        required: false
+      - name: dataAtualizacao
+        type: str | null
+        required: false
+      - name: quantidadeRecursos
+        type: int | null
+        required: false
+      - name: quantidadeDownloads
+        type: int | null
+        required: false
+      - name: licenca
+        type: str | null
+        required: false
+      - name: dadosAbertos
+        type: bool | null
+        required: false
+      nested_in:
+      - ConjuntoResultado
+    - model: OrganizacaoIndice
+      fields:
+      - name: id
+        type: str | null
+        required: false
+      - name: titulo
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: urlImagem
+        type: str | null
+        required: false
+      - name: qtdConjuntoDeDados
+        type: str | null
+        required: false
+      - name: qtdSeguidores
+        type: str | null
+        required: false
+      - name: organizationEsfera
+        type: str | null
+        required: false
+      - name: organizationUf
+        type: str | null
+        required: false
+      nested_in:
+      - OrganizacaoResultado
+    - model: Recurso
+      fields:
+      - name: id
+        type: str | null
+        required: false
+      - name: titulo
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: link
+        type: str | null
+        required: false
+      - name: formato
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: tamanho
+        type: int | null
+        required: false
+      - name: nomeArquivo
+        type: str | null
+        required: false
+      - name: quantidadeDownloads
+        type: int | null
+        required: false
+      - name: dataUltimaAtualizacaoArquivo
+        type: str | null
+        required: false
+      - name: dataCatalogacao
+        type: str | null
+        required: false
+      nested_in:
+      - ConjuntoDetalhe
+  notes: Exige chave, mas o README lista apenas 4 APIs com chave — divergência de documentação.
+  repo_path: src/mcp_brasil/data/dados_gov_br
+- id: diario_oficial
+  name: Querido Diário + DOU
+  description: 'Diários oficiais: busca em diários municipais (Querido Diário, 5.000+ cidades) e no Diário Oficial da União
+    (DOU federal). Contratos, nomeações, licitações, decretos, portarias e atos administrativos.'
+  domain: dados_abertos_utilidades
+  publisher: Open Knowledge Brasil (Querido Diário) + Imprensa Nacional
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://api.queridodiario.ok.org.br
+  protocol: rest+html_scrape
+  response_format: json|html
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    QUERIDO_DIARIO_API: https://api.queridodiario.ok.org.br
+    GAZETTES_URL: https://api.queridodiario.ok.org.br/gazettes
+    CITIES_URL: https://api.queridodiario.ok.org.br/cities
+    DOU_API_BASE: https://www.in.gov.br
+    DOU_SEARCH_URL: https://www.in.gov.br/consulta/-/buscar/dou
+    DOU_ARTICLE_URL: https://www.in.gov.br/en/web/dou/-
+  tools_count: 11
+  license: CC BY 4.0 (Querido Diário); LAI (DOU)
+  legal_risk: baixo
+  tags:
+  - diario-oficial
+  - transparencia
+  - municipios
+  - federal
+  - dou
+  - licitacoes
+  - contratos
+  tests:
+    path: tests/data/diario_oficial
+    files:
+    - test_client.py
+    - test_client_dou.py
+    - test_integration.py
+    - test_tools.py
+    - test_tools_dou.py
+    test_count: 63
+    passed: 63
+    failed: 0
+    skipped: 0
+    duration_s: 0.89
+    test_types:
+    - client_unit
+    - mcp_integration
+    - test_client_dou
+    - test_tools_dou
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 89.1
+    run_command: make test-feature F=diario_oficial
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: CidadeQueridoDiario
+      returned_by:
+      - diario_oficial.client.buscar_cidades
+      - diario_oficial.client.listar_cidades
+      fields:
+      - name: territory_id
+        type: str
+        required: true
+      - name: territory_name
+        type: str
+        required: true
+      - name: state_code
+        type: str
+        required: true
+      - name: publication_urls
+        type: list[str] | null
+        required: false
+      - name: level
+        type: str | null
+        required: false
+    - model: DiarioResultado
+      returned_by:
+      - diario_oficial.client.buscar_diarios
+      fields:
+      - name: total_gazettes
+        type: int
+        required: false
+      - name: gazettes
+        type: list[DiarioOficial]
+        required: false
+    - model: PublicacaoDOU
+      returned_by:
+      - diario_oficial.client_dou.ler_publicacao_dou
+      fields:
+      - name: titulo
+        type: str | null
+        required: false
+      - name: resumo
+        type: str | null
+        required: false
+      - name: url_titulo
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: tipo_publicacao
+        type: str | null
+        required: false
+      - name: secao
+        type: str | null
+        required: false
+      - name: data_publicacao
+        type: str | null
+        required: false
+      - name: edicao
+        type: str | null
+        required: false
+      - name: pagina
+        type: str | null
+        required: false
+      - name: conteudo
+        type: str | null
+        required: false
+      - name: assinante
+        type: str | null
+        required: false
+      - name: cargo_assinante
+        type: str | null
+        required: false
+      nested_in:
+      - ResultadoDOU
+    - model: ResultadoDOU
+      returned_by:
+      - diario_oficial.client_dou.buscar_dou
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: publicacoes
+        type: list[PublicacaoDOU]
+        required: false
+    - model: DiarioOficial
+      fields:
+      - name: territory_id
+        type: str | null
+        required: false
+      - name: territory_name
+        type: str | null
+        required: false
+      - name: state_code
+        type: str | null
+        required: false
+      - name: date
+        type: str | null
+        required: false
+      - name: edition_number
+        type: str | null
+        required: false
+      - name: is_extra_edition
+        type: bool | null
+        required: false
+      - name: url
+        type: str | null
+        required: false
+      - name: txt_url
+        type: str | null
+        required: false
+      - name: excerpts
+        type: list[str] | null
+        required: false
+      - name: highlight_texts
+        type: list[str] | null
+        required: false
+      - name: scraped_at
+        type: str | null
+        required: false
+      - name: source_text
+        type: str | null
+        required: false
+      - name: themes
+        type: list[str] | null
+        required: false
+      - name: subthemes
+        type: list[str] | null
+        required: false
+      nested_in:
+      - DiarioResultado
+  notes: 'DOU (in.gov.br) bloqueia chamadas ''bare'': client envia headers de browser e extrai JSON de <script> no HTML.'
+  repo_path: src/mcp_brasil/data/diario_oficial
+- id: tabua_mares
+  name: Tábua de marés
+  description: Tábua de marés — previsão de marés para portos do litoral brasileiro
+  domain: dados_abertos_utilidades
+  publisher: tabuamare.api.br (terceiro, dados Marinha)
+  official_source: false
+  modality: rest_passthrough
+  base_url: https://tabuamare.api.br/api/v2
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    TABUA_MARES_BASE: https://tabuamare.api.br
+    TABUA_MARES_API: https://tabuamare.api.br/api/v2
+    STATES_URL: https://tabuamare.api.br/api/v2/states
+    HARBOR_NAMES_URL: https://tabuamare.api.br/api/v2/harbor_names
+    HARBORS_URL: https://tabuamare.api.br/api/v2/harbors
+    TABUA_MARE_URL: https://tabuamare.api.br/api/v2/tabua-mare
+    NEAREST_HARBOR_URL: https://tabuamare.api.br/api/v2/nearested-harbor
+    NEAREST_HARBOR_INDEPENDENT_URL: https://tabuamare.api.br/api/v2/nearest-harbor-independent-state
+    GEO_TABUA_MARE_URL: https://tabuamare.api.br/api/v2/geo-tabua-mare
+  tools_count: 7
+  license: open data / terceiro
+  legal_risk: baixo
+  tags:
+  - mares
+  - portos
+  - litoral
+  - navegacao
+  - oceanografia
+  tests:
+    path: tests/data/tabua_mares
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_prompts.py
+    - test_resources.py
+    - test_tools.py
+    test_count: 25
+    passed: 25
+    failed: 0
+    skipped: 0
+    duration_s: 0.27
+    test_types:
+    - client_unit
+    - mcp_integration
+    - prompts
+    - resources
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 98.5
+    run_command: make test-feature F=tabua_mares
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Porto
+      returned_by:
+      - tabua_mares.client.buscar_portos
+      - tabua_mares.client.porto_mais_proximo
+      - tabua_mares.client.porto_mais_proximo_geral
+      fields:
+      - name: id
+        type: str
+        required: true
+        description: 'ID alfanumérico do porto (ex: ''pb01'')'
+      - name: harbor_name
+        type: str
+        required: true
+      - name: state
+        type: str
+        required: true
+      - name: timezone
+        type: str
+        required: true
+      - name: card
+        type: str
+        required: true
+      - name: geo_location
+        type: list[GeoLocalizacao]
+        required: false
+      - name: mean_level
+        type: float | null
+        required: false
+        description: Nível médio do mar em metros
+    - model: PortoResumo
+      returned_by:
+      - tabua_mares.client.listar_portos_estado
+      fields:
+      - name: id
+        type: str
+        required: true
+        description: 'ID alfanumérico do porto (ex: ''pb01'')'
+      - name: year
+        type: int
+        required: true
+      - name: harbor_name
+        type: str
+        required: true
+      - name: data_collection_institution
+        type: str
+        required: true
+    - model: TabuaMare
+      returned_by:
+      - tabua_mares.client.consultar_tabua_mare
+      - tabua_mares.client.tabua_mare_por_geolocalizacao
+      fields:
+      - name: year
+        type: int
+        required: true
+      - name: harbor_name
+        type: str
+        required: true
+      - name: state
+        type: str
+        required: true
+      - name: timezone
+        type: str
+        required: true
+      - name: card
+        type: str
+        required: true
+      - name: data_collection_institution
+        type: str
+        required: true
+      - name: mean_level
+        type: float
+        required: true
+      - name: months
+        type: list[MesMare]
+        required: false
+    - model: DiaMare
+      fields:
+      - name: weekday_name
+        type: str
+        required: true
+      - name: day
+        type: int
+        required: true
+      - name: hours
+        type: list[HoraMare]
+        required: false
+      nested_in:
+      - MesMare
+    - model: GeoLocalizacao
+      fields:
+      - name: lat
+        type: str
+        required: true
+      - name: lng
+        type: str
+        required: true
+      - name: decimal_lat
+        type: str
+        required: true
+        description: 'Latitude em formato graus/minutos (ex: 09° 41'' S)'
+      - name: decimal_lng
+        type: str
+        required: true
+        description: 'Longitude em formato graus/minutos (ex: 35° 43''.5 W)'
+      - name: lat_direction
+        type: str
+        required: true
+      - name: lng_direction
+        type: str
+        required: true
+      nested_in:
+      - Porto
+    - model: HoraMare
+      fields:
+      - name: hour
+        type: str
+        required: true
+        description: Horário no formato HH:MM:SS
+      - name: level
+        type: float
+        required: true
+        description: Nível da maré em metros
+      nested_in:
+      - DiaMare
+    - model: MesMare
+      fields:
+      - name: month_name
+        type: str
+        required: true
+      - name: month
+        type: int
+        required: true
+      - name: days
+        type: list[DiaMare]
+        required: false
+      nested_in:
+      - TabuaMare
+  repo_path: src/mcp_brasil/data/tabua_mares

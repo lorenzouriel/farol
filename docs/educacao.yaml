@@ -1,0 +1,671 @@
+catalog: mcp-brasil — educacao
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio educacao no catálogo original.
+  includes:
+  - fnde
+  - inep
+  - inep_censo_escolar
+  - inep_enem
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 4
+  tools: 21
+  keys_required: []
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: fnde
+  name: Dados do FNDE
+  description: 'Dados do FNDE: matrículas FUNDEB, alimentação escolar (PNAE), livro didático (PNLD) e transporte escolar (PNATE)'
+  domain: educacao
+  publisher: FNDE
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://www.fnde.gov.br/olinda-ide/servico
+  protocol: odata
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    FNDE_OLINDA_BASE: https://www.fnde.gov.br/olinda-ide/servico
+    FUNDEB_URL: https://www.fnde.gov.br/olinda-ide/servico/FUNDEB_Matriculas/versao/v1/odata/FUNDEBMatriculas
+    PNAE_URL: https://www.fnde.gov.br/olinda-ide/servico/PNAE_Numero_Alunos_Atendidos/versao/v1/odata/Alunos_Atendidos
+    PNLD_URL: https://www.fnde.gov.br/olinda-ide/servico/PNLD/versao/v1/odata/pdaPNLD
+    PNATE_URL: https://www.fnde.gov.br/olinda-ide/servico/PNATE_Alunos_Atendidos/versao/v1/odata/PNATEAlunosAtendidos
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - educação
+  - fundeb
+  - pnae
+  - pnld
+  - pnate
+  - escola
+  tests:
+    path: tests/data/fnde
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 21
+    passed: 21
+    failed: 0
+    skipped: 0
+    duration_s: 0.34
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 96.0
+    run_command: make test-feature F=fnde
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: FundebMatricula
+      returned_by:
+      - fnde.client.consultar_fundeb_matriculas
+      fields:
+      - name: ano_censo
+        type: int
+        required: true
+        source_key: AnoCenso
+        description: Ano do Censo Escolar
+      - name: uf
+        type: str
+        required: true
+        source_key: Uf
+        description: Sigla da UF
+      - name: municipio
+        type: str
+        required: true
+        source_key: MunicipioGe
+        description: Nome do município
+      - name: tipo_rede
+        type: str
+        required: true
+        source_key: TipoRedeEducacao
+        description: Tipo de rede educacional
+      - name: tipo_educacao
+        type: str
+        required: true
+        source_key: DescricaoTipoEducacao
+        description: 'Ex: Ensino Regular, Educação Especial'
+      - name: tipo_ensino
+        type: str
+        required: true
+        source_key: DescricaoTipoEnsino
+        description: 'Ex: Ensino Fundamental, Ensino Infantil'
+      - name: tipo_turma
+        type: str
+        required: true
+        source_key: DescricaoTipoTurma
+        description: 'Ex: Anos Iniciais, Creche, Pré-Escola'
+      - name: carga_horaria
+        type: str
+        required: true
+        source_key: DescricaoTipoCargaHoraria
+        description: Parcial ou Integral
+      - name: localizacao
+        type: str
+        required: true
+        source_key: DescricaoTipoLocalizacao
+        description: Urbana ou Rural
+      - name: quantidade
+        type: int
+        required: true
+        source_key: QtdMatricula
+        description: Quantidade de matrículas
+    - model: PnaeAluno
+      returned_by:
+      - fnde.client.consultar_pnae_alunos
+      fields:
+      - name: id
+        type: str
+        required: true
+        source_key: Co_alunos_atendidos
+      - name: ano
+        type: str
+        required: true
+        source_key: Ano
+        description: Ano de referência
+      - name: estado
+        type: str
+        required: true
+        source_key: Estado
+        description: Sigla da UF
+      - name: municipio
+        type: str
+        required: true
+        source_key: Municipio
+        description: Nome do município
+      - name: regiao
+        type: str
+        required: true
+        source_key: Regiao
+        description: Região do Brasil
+      - name: esfera_governo
+        type: str
+        required: true
+        source_key: Esfera_governo
+        description: Municipal, Estadual ou Federal
+      - name: etapa_ensino
+        type: str
+        required: true
+        source_key: Etapa_ensino
+        description: Etapa de ensino
+      - name: quantidade
+        type: int
+        required: true
+        source_key: Qt_alunos_pnae
+        description: Quantidade de alunos PNAE
+    - model: PnateTransporte
+      returned_by:
+      - fnde.client.consultar_pnate_transporte
+      fields:
+      - name: uf
+        type: str
+        required: true
+        source_key: Uf
+        description: Sigla da UF
+      - name: municipio
+        type: str
+        required: true
+        source_key: Municipio
+        description: Nome do município
+      - name: entidade
+        type: str
+        required: true
+        source_key: EntidadeExecutora
+        description: Entidade executora
+      - name: cnpj
+        type: str
+        required: true
+        source_key: Cnpj
+        description: CNPJ da entidade
+      - name: quantidade
+        type: int
+        required: true
+        source_key: QtdAlunosAtendidos
+        description: Quantidade de alunos atendidos
+    - model: PnldLivro
+      returned_by:
+      - fnde.client.consultar_pnld_livros
+      fields:
+      - name: programa
+        type: str
+        required: true
+        source_key: Programa
+        description: Nome do programa
+      - name: ano
+        type: str
+        required: true
+        source_key: Ano
+        description: Ano do programa
+      - name: editora
+        type: str
+        required: true
+        source_key: Editora
+        description: Editora do livro
+      - name: codigo
+        type: str
+        required: true
+        source_key: Cod_livro
+        description: Código do livro
+      - name: titulo
+        type: str
+        required: true
+        source_key: Titulo_livro
+        description: Título do livro
+      - name: criterio
+        type: str
+        required: true
+        source_key: Criterio
+        description: Critério de distribuição
+      - name: quantidade
+        type: int
+        required: true
+        source_key: Qt_titulos
+        description: Quantidade de títulos
+      - name: custo
+        type: float
+        required: true
+        source_key: Custo_titulos
+        description: Custo total em R$
+  repo_path: src/mcp_brasil/data/fnde
+- id: inep
+  name: Dados do INEP
+  description: 'Dados do INEP: IDEB por estado/região, catálogo de microdados (Censo Escolar, ENEM, SAEB, ENADE), indicadores
+    educacionais'
+  domain: educacao
+  publisher: INEP
+  official_source: true
+  modality: url_generator
+  base_url: https://download.inep.gov.br
+  protocol: url_generator
+  response_format: xlsx|zip(csv)
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    INEP_DOWNLOAD_BASE: https://download.inep.gov.br
+    IDEB_BASE: https://download.inep.gov.br/ideb/resultados
+    IDEB_URLS[brasil]: https://download.inep.gov.br/ideb/resultados/divulgacao_brasil_ideb_{ano}.xlsx
+    IDEB_URLS[regioes_ufs]: https://download.inep.gov.br/ideb/resultados/divulgacao_regioes_ufs_ideb_{ano}.xlsx
+    IDEB_URLS[escolas]: https://download.inep.gov.br/ideb/resultados/divulgacao_{etapa}_escolas_{ano}.xlsx
+    IDEB_URLS[municipios]: https://download.inep.gov.br/ideb/resultados/divulgacao_{etapa}_municipios_{ano}.xlsx
+    MICRODADOS_URLS[censo_escolar]: https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_{ano}.zip
+    MICRODADOS_URLS[enem]: https://download.inep.gov.br/microdados/microdados_enem_{ano}.zip
+    MICRODADOS_URLS[saeb]: https://download.inep.gov.br/microdados/microdados_saeb_{ano}.zip
+    MICRODADOS_URLS[censo_superior]: https://download.inep.gov.br/microdados/microdados_censo_da_educacao_superior_{ano}.zip
+    MICRODADOS_URLS[enade]: https://download.inep.gov.br/microdados/microdados_enade_{ano}.zip
+    MICRODADOS_URLS[encceja]: https://download.inep.gov.br/microdados/microdados_encceja_{ano}.zip
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: alto
+  tags:
+  - educação
+  - ideb
+  - censo escolar
+  - enem
+  - saeb
+  - escola
+  tests:
+    path: tests/data/inep
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 22
+    passed: 22
+    failed: 0
+    skipped: 0
+    duration_s: 0.1
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 98.3
+    run_command: make test-feature F=inep
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: IdebUrl
+      returned_by:
+      - inep.client.gerar_urls_ideb
+      fields:
+      - name: nivel
+        type: str
+        required: true
+        description: 'Nível: brasil, regioes_ufs, municipios, escolas'
+      - name: etapa
+        type: str | null
+        required: false
+        description: 'Etapa: anos_iniciais, anos_finais, ensino_medio'
+      - name: ano
+        type: int
+        required: true
+        description: Ano IDEB (bienal)
+      - name: url
+        type: str
+        required: true
+        description: URL para download do arquivo XLSX
+      - name: tamanho_estimado
+        type: str
+        required: true
+        description: Tamanho estimado do arquivo
+    - model: IndicadorEducacional
+      returned_by:
+      - inep.client.listar_indicadores
+      fields:
+      - name: codigo
+        type: str
+        required: true
+        description: Código interno do indicador
+      - name: nome
+        type: str
+        required: true
+        description: Nome do indicador
+      - name: descricao
+        type: str
+        required: true
+        description: Descrição do que mede
+    - model: MicrodadosDataset
+      returned_by:
+      - inep.client.listar_microdados
+      fields:
+      - name: codigo
+        type: str
+        required: true
+        description: Código interno do dataset
+      - name: nome
+        type: str
+        required: true
+        description: Nome completo do dataset
+      - name: descricao
+        type: str
+        required: true
+        description: Descrição do conteúdo
+      - name: frequencia
+        type: str
+        required: true
+        description: Frequência de publicação
+      - name: anos_disponiveis
+        type: list[int]
+        required: true
+        description: Anos com dados publicados
+      - name: url_template
+        type: str
+        required: true
+        description: Template da URL (substituir {ano})
+  notes: 'Sem API REST: o client apenas gera URLs de download (IDEB .xlsx, microdados .zip). Nenhum fetch em runtime.'
+  repo_path: src/mcp_brasil/data/inep
+- id: inep_censo_escolar
+  name: Censo Escolar 2023 (Inep)
+  description: 'Censo Escolar 2023 (Inep): ~180k escolas com infraestrutura e matrículas. Consulta SQL via DuckDB local. Opt-in:
+    MCP_BRASIL_DATASETS=inep_censo_escolar.'
+  domain: educacao
+  publisher: INEP
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://download.inep.gov.br
+  protocol: file_download
+  response_format: zip(csv)
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=inep_censo_escolar
+    table: escolas
+    ttl_days: 365
+    approx_size_mb: 220
+    source_encoding: cp1252
+    delimiter: ;
+    zip_member: microdados_ed_basica_2023.csv
+    null_markers:
+    - ''
+    - ' '
+    all_varchar: false
+    pii_columns: []
+    partitioning: single table
+    sources:
+    - url: https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_2023.zip
+      zip_member: microdados_ed_basica_2023.csv
+      partition: null
+  tools_count: 7
+  license: open data; atribuição
+  legal_risk: alto
+  tags:
+  - inep
+  - educacao
+  - censo-escolar
+  - escolas
+  - matriculas
+  - infraestrutura
+  - dataset
+  - duckdb
+  tests:
+    path: tests/datasets/inep_censo_escolar
+    files:
+    - test_integration.py
+    test_count: 7
+    passed: 7
+    failed: 0
+    skipped: 0
+    duration_s: 0.51
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 81.9
+    run_command: uv run pytest tests/datasets/inep_censo_escolar
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: schema_tabela resource (curated subset)
+    table: escolas
+    complete: false
+    fields:
+    - name: CO_ENTIDADE
+      type: BIGINT
+      description: Código INEP da escola (PK)
+    - name: NO_ENTIDADE
+      type: VARCHAR
+      description: Nome da escola
+    - name: NU_ANO_CENSO
+      type: INT
+      description: Ano do censo
+    - name: SG_UF
+      type: VARCHAR
+      description: Sigla da UF
+    - name: NO_UF
+      type: VARCHAR
+      description: Nome da UF
+    - name: NO_MUNICIPIO
+      type: VARCHAR
+      description: Município
+    - name: CO_MUNICIPIO
+      type: BIGINT
+      description: Código IBGE do município
+    - name: TP_DEPENDENCIA
+      type: INT
+      description: 1=Fed, 2=Est, 3=Mun, 4=Priv
+    - name: TP_LOCALIZACAO
+      type: INT
+      description: 1=Urbana, 2=Rural
+    - name: TP_SITUACAO_FUNCIONAMENTO
+      type: INT
+      description: 1=Ativa, 2=Paralisada, 3=Extinta, 4=Nova
+    - name: DS_ENDERECO
+      type: VARCHAR
+      description: Endereço
+    - name: NO_BAIRRO
+      type: VARCHAR
+      description: Bairro
+    - name: CO_CEP
+      type: VARCHAR
+      description: CEP
+    - name: IN_AGUA_POTAVEL
+      type: INT
+      description: 0/1 — tem água potável
+    - name: IN_ENERGIA_REDE_PUBLICA
+      type: INT
+      description: 0/1 — energia pública
+    - name: IN_INTERNET
+      type: INT
+      description: 0/1 — tem internet
+    - name: IN_BIBLIOTECA
+      type: INT
+      description: 0/1
+    - name: IN_QUADRA_ESPORTES
+      type: INT
+      description: 0/1
+    - name: IN_LABORATORIO_CIENCIAS
+      type: INT
+      description: 0/1
+    - name: IN_LABORATORIO_INFORMATICA
+      type: INT
+      description: 0/1
+    - name: IN_REFEITORIO
+      type: INT
+      description: 0/1
+    - name: QT_MAT_BAS
+      type: INT
+      description: Matrículas educação básica
+    note: Subset curado; DESCRIBE na tabela DuckDB para schema completo.
+  repo_path: src/mcp_brasil/datasets/inep_censo_escolar
+- id: inep_enem
+  name: ENEM 2023 (Inep)
+  description: 'ENEM 2023 (Inep): microdados de ~3,9M inscritos com notas e perfil socioeconômico. Consulta SQL via DuckDB.
+    Dataset pesado — ~2,5 GB descomprimido. Opt-in: MCP_BRASIL_DATASETS=inep_enem.'
+  domain: educacao
+  publisher: INEP
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://download.inep.gov.br
+  protocol: file_download
+  response_format: zip(csv)
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=inep_enem
+    table: enem
+    ttl_days: 365
+    approx_size_mb: 2500
+    source_encoding: cp1252
+    delimiter: ;
+    zip_member: DADOS/MICRODADOS_ENEM_2023.csv
+    null_markers:
+    - ''
+    - ' '
+    all_varchar: false
+    pii_columns:
+    - NU_INSCRICAO
+    partitioning: single table
+    sources:
+    - url: https://download.inep.gov.br/microdados/microdados_enem_2023.zip
+      zip_member: DADOS/MICRODADOS_ENEM_2023.csv
+      partition: null
+  tools_count: 6
+  license: open data; atribuição
+  legal_risk: alto
+  lgpd_notes: NU_INSCRICAO mascarado
+  tags:
+  - inep
+  - educacao
+  - enem
+  - notas
+  - socioeconomico
+  - dataset
+  - duckdb
+  tests:
+    path: tests/datasets/inep_enem
+    files:
+    - test_integration.py
+    test_count: 7
+    passed: 7
+    failed: 0
+    skipped: 0
+    duration_s: 0.45
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 80.6
+    run_command: uv run pytest tests/datasets/inep_enem
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: schema_tabela resource (curated subset)
+    table: enem
+    complete: false
+    fields:
+    - name: NU_INSCRICAO
+      type: BIGINT
+      description: Identificador do inscrito (PII)
+    - name: NU_ANO
+      type: INT
+      description: Ano da edição
+    - name: TP_FAIXA_ETARIA
+      type: INT
+      description: Faixa etária (1-20)
+    - name: TP_SEXO
+      type: VARCHAR
+      description: M/F
+    - name: TP_COR_RACA
+      type: INT
+      description: 0-6 cor/raça
+    - name: TP_ESCOLA
+      type: INT
+      description: 1=Não resp, 2=Pública, 3=Privada
+    - name: SG_UF_ESC
+      type: VARCHAR
+      description: UF da escola
+    - name: SG_UF_PROVA
+      type: VARCHAR
+      description: UF onde fez a prova
+    - name: NO_MUNICIPIO_PROVA
+      type: VARCHAR
+      description: Município da prova
+    - name: TP_PRESENCA_CN
+      type: INT
+      description: 0/1/2 — presença dia 2
+    - name: TP_PRESENCA_CH
+      type: INT
+      description: Presença dia 1 humanas
+    - name: TP_PRESENCA_LC
+      type: INT
+      description: Presença dia 1 linguagens
+    - name: TP_PRESENCA_MT
+      type: INT
+      description: Presença dia 2 matemática
+    - name: NU_NOTA_CN
+      type: DOUBLE
+      description: Nota Ciências da Natureza
+    - name: NU_NOTA_CH
+      type: DOUBLE
+      description: Nota Ciências Humanas
+    - name: NU_NOTA_LC
+      type: DOUBLE
+      description: Nota Linguagens e Códigos
+    - name: NU_NOTA_MT
+      type: DOUBLE
+      description: Nota Matemática
+    - name: NU_NOTA_REDACAO
+      type: DOUBLE
+      description: Nota da Redação (0-1000)
+    - name: TP_LINGUA
+      type: INT
+      description: 0=Inglês, 1=Espanhol
+    - name: Q001-Q025
+      type: VARCHAR
+      description: Questionário socioeconômico
+    note: Subset curado; DESCRIBE na tabela DuckDB para schema completo.
+  notes: ~2,5 GB descompactado; primeira carga pode estourar MCP_BRASIL_DATASET_TIMEOUT default (600s).
+  repo_path: src/mcp_brasil/datasets/inep_enem

@@ -1,0 +1,576 @@
+catalog: mcp-brasil — seguranca_publica
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio seguranca_publica no catálogo original.
+  includes:
+  - atlas_violencia
+  - forum_seguranca
+  - sinesp
+  - isp_rj
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 4
+  tools: 23
+  keys_required: []
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: atlas_violencia
+  name: Atlas da Violência (IPEA/FBSP)
+  description: 'Atlas da Violência (IPEA/FBSP): séries históricas de homicídios, violência por gênero/raça, suicídios, armas
+    de fogo, mortes no trânsito e intervenção policial por município, UF e região.'
+  domain: seguranca_publica
+  publisher: IPEA / FBSP
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://www.ipea.gov.br/atlasviolencia/api/v1
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    API_BASE: https://www.ipea.gov.br/atlasviolencia/api/v1
+    TEMAS_URL: https://www.ipea.gov.br/atlasviolencia/api/v1/temas
+    TEMA_URL: https://www.ipea.gov.br/atlasviolencia/api/v1/tema
+    SERIES_URL: https://www.ipea.gov.br/atlasviolencia/api/v1/series
+    SERIE_URL: https://www.ipea.gov.br/atlasviolencia/api/v1/serie
+    VALORES_URL: https://www.ipea.gov.br/atlasviolencia/api/v1/valores-series
+    VALORES_REGIOES_URL: https://www.ipea.gov.br/atlasviolencia/api/v1/valores-series-por-regioes
+    FONTES_URL: https://www.ipea.gov.br/atlasviolencia/api/v1/fontes
+    FONTE_URL: https://www.ipea.gov.br/atlasviolencia/api/v1/fonte
+    UNIDADES_URL: https://www.ipea.gov.br/atlasviolencia/api/v1/unidades
+    PERIODICIDADES_URL: https://www.ipea.gov.br/atlasviolencia/api/v1/periodicidades
+  tools_count: 7
+  license: open data; atribuição
+  legal_risk: alto
+  tags:
+  - violencia
+  - homicidios
+  - seguranca-publica
+  - ipea
+  - atlas-violencia
+  - series-historicas
+  tests:
+    path: tests/data/atlas_violencia
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 27
+    passed: 27
+    failed: 0
+    skipped: 0
+    duration_s: 0.35
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 91.4
+    run_command: make test-feature F=atlas_violencia
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Fonte
+      returned_by:
+      - atlas_violencia.client.listar_fontes
+      fields:
+      - name: id
+        type: int
+        required: true
+      - name: titulo
+        type: str
+        required: true
+    - model: Periodicidade
+      returned_by:
+      - atlas_violencia.client.listar_periodicidades
+      fields:
+      - name: id
+        type: int
+        required: true
+      - name: titulo
+        type: str
+        required: true
+    - model: Serie
+      returned_by:
+      - atlas_violencia.client.consultar_serie
+      - atlas_violencia.client.listar_series
+      fields:
+      - name: id
+        type: int
+        required: true
+      - name: titulo
+        type: str
+        required: true
+    - model: Tema
+      returned_by:
+      - atlas_violencia.client.consultar_tema
+      - atlas_violencia.client.listar_temas
+      fields:
+      - name: id
+        type: int
+        required: true
+      - name: titulo
+        type: str
+        required: true
+      - name: tema_id
+        type: int
+        required: false
+      - name: tipo
+        type: int
+        required: false
+    - model: Unidade
+      returned_by:
+      - atlas_violencia.client.listar_unidades
+      fields:
+      - name: id
+        type: int
+        required: true
+      - name: titulo
+        type: str
+        required: true
+    - model: ValorSerie
+      returned_by:
+      - atlas_violencia.client.consultar_valores
+      - atlas_violencia.client.consultar_valores_por_regioes
+      fields:
+      - name: cod
+        type: str
+        required: true
+      - name: sigla
+        type: str
+        required: true
+      - name: valor
+        type: str | null
+        required: false
+      - name: periodo
+        type: str | null
+        required: false
+  repo_path: src/mcp_brasil/data/atlas_violencia
+- id: forum_seguranca
+  name: Fórum Brasileiro de Segurança Pública
+  description: 'Fórum Brasileiro de Segurança Pública: publicações sobre segurança pública, violência, sistema prisional,
+    Atlas da Violência e Anuário via DSpace API.'
+  domain: seguranca_publica
+  publisher: Fórum Brasileiro de Segurança Pública
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://publicacoes.forumseguranca.org.br/server/api
+  protocol: dspace_rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    API_BASE: https://publicacoes.forumseguranca.org.br/server/api
+    SEARCH_URL: https://publicacoes.forumseguranca.org.br/server/api/discover/search/objects
+    COMMUNITIES_URL: https://publicacoes.forumseguranca.org.br/server/api/core/communities
+    ITEM_URL: https://publicacoes.forumseguranca.org.br/server/api/core/items
+  tools_count: 4
+  license: metadados abertos; publicações com restrição comercial
+  legal_risk: alto
+  tags:
+  - seguranca-publica
+  - violencia
+  - dspace
+  - publicacoes
+  - forum-seguranca
+  tests:
+    path: tests/data/forum_seguranca
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 17
+    passed: 17
+    failed: 0
+    skipped: 0
+    duration_s: 0.24
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 94.8
+    run_command: make test-feature F=forum_seguranca
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Comunidade
+      returned_by:
+      - forum_seguranca.client.listar_comunidades
+      fields:
+      - name: uuid
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: quantidade_itens
+        type: int
+        required: false
+      - name: handle
+        type: str | null
+        required: false
+    - model: Publicacao
+      returned_by:
+      - forum_seguranca.client.detalhar_publicacao
+      fields:
+      - name: uuid
+        type: str | null
+        required: false
+      - name: titulo
+        type: str | null
+        required: false
+      - name: autores
+        type: list[str]
+        required: false
+      - name: resumo
+        type: str | null
+        required: false
+      - name: data_publicacao
+        type: str | null
+        required: false
+      - name: editora
+        type: str | null
+        required: false
+      - name: assuntos
+        type: list[str]
+        required: false
+      - name: uri
+        type: str | null
+        required: false
+      - name: handle
+        type: str | null
+        required: false
+      - name: issn
+        type: str | null
+        required: false
+      nested_in:
+      - ResultadoBusca
+    - model: ResultadoBusca
+      returned_by:
+      - forum_seguranca.client.buscar_por_tema
+      - forum_seguranca.client.buscar_publicacoes
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: pagina
+        type: int
+        required: false
+      - name: total_paginas
+        type: int
+        required: false
+      - name: publicacoes
+        type: list[Publicacao]
+        required: false
+  repo_path: src/mcp_brasil/data/forum_seguranca
+- id: sinesp
+  name: SINESP/MJSP
+  description: 'SINESP/MJSP: datasets de segurança pública (homicídios, estupros, roubos, furtos, tráfico, sistema penitenciário)
+    via API CKAN do Ministério da Justiça e Segurança Pública.'
+  domain: seguranca_publica
+  publisher: MJSP
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://dados.mj.gov.br/api/3/action
+  protocol: ckan_action_api
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    CKAN_BASE: https://dados.mj.gov.br/api/3/action
+    PACKAGE_LIST_URL: https://dados.mj.gov.br/api/3/action/package_list
+    PACKAGE_SHOW_URL: https://dados.mj.gov.br/api/3/action/package_show
+    PACKAGE_SEARCH_URL: https://dados.mj.gov.br/api/3/action/package_search
+    ORGANIZATION_LIST_URL: https://dados.mj.gov.br/api/3/action/organization_list
+    ORGANIZATION_SHOW_URL: https://dados.mj.gov.br/api/3/action/organization_show
+    GROUP_LIST_URL: https://dados.mj.gov.br/api/3/action/group_list
+    GROUP_SHOW_URL: https://dados.mj.gov.br/api/3/action/group_show
+  tools_count: 6
+  license: open data; atribuição
+  legal_risk: alto
+  tags:
+  - seguranca-publica
+  - sinesp
+  - mjsp
+  - ckan
+  - crimes
+  - penitenciario
+  tests:
+    path: tests/data/sinesp
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 24
+    passed: 24
+    failed: 0
+    skipped: 0
+    duration_s: 0.33
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 95.9
+    run_command: make test-feature F=sinesp
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: DatasetCKAN
+      returned_by:
+      - sinesp.client.buscar_datasets
+      - sinesp.client.detalhar_dataset
+      - sinesp.client.detalhar_organizacao
+      - sinesp.client.listar_datasets_grupo
+      fields:
+      - name: id
+        type: str
+        required: true
+      - name: nome
+        type: str
+        required: true
+      - name: titulo
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: organizacao
+        type: str | null
+        required: false
+      - name: licenca
+        type: str | null
+        required: false
+      - name: tags
+        type: list[str]
+        required: false
+      - name: num_recursos
+        type: int
+        required: false
+      - name: recursos
+        type: list[RecursoCKAN]
+        required: false
+    - model: OrganizacaoCKAN
+      returned_by:
+      - sinesp.client.detalhar_organizacao
+      - sinesp.client.listar_organizacoes
+      fields:
+      - name: id
+        type: str
+        required: true
+      - name: nome
+        type: str
+        required: true
+      - name: titulo
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: num_datasets
+        type: int
+        required: false
+    - model: RecursoCKAN
+      fields:
+      - name: id
+        type: str
+        required: true
+      - name: nome
+        type: str | null
+        required: false
+      - name: formato
+        type: str | null
+        required: false
+      - name: url
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: tamanho
+        type: int | null
+        required: false
+      nested_in:
+      - DatasetCKAN
+  repo_path: src/mcp_brasil/data/sinesp
+- id: isp_rj
+  name: ISP-RJ
+  description: 'ISP-RJ — estatísticas criminais mensais por CISP do RJ desde 1991. Consulta SQL via DuckDB local. Opt-in:
+    MCP_BRASIL_DATASETS=isp_rj.'
+  domain: seguranca_publica
+  publisher: ISP-RJ
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://www.ispdados.rj.gov.br
+  protocol: file_download
+  response_format: csv
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=isp_rj
+    table: isp_rj_cisp_mensal
+    ttl_days: 30
+    approx_size_mb: 3
+    source_encoding: utf-8
+    delimiter: ;
+    zip_member: null
+    null_markers:
+    - ''
+    - ' '
+    - '-'
+    all_varchar: false
+    pii_columns: []
+    partitioning: single table
+    sources:
+    - url: https://www.ispdados.rj.gov.br/arquivos/BaseDPEvolucaoMensalCisp.csv
+      zip_member: null
+      partition: null
+  tools_count: 6
+  license: open data; atribuição
+  legal_risk: alto
+  tags:
+  - isp
+  - seguranca-publica
+  - criminalidade
+  - rj
+  - rio-de-janeiro
+  - homicidios
+  - roubos
+  - dataset
+  - duckdb
+  tests:
+    path: tests/datasets/isp_rj
+    files:
+    - test_integration.py
+    test_count: 5
+    passed: 5
+    failed: 0
+    skipped: 0
+    duration_s: 0.35
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 82.8
+    run_command: uv run pytest tests/datasets/isp_rj
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred from SQL in tools.py (sqlglot)
+    table: isp_rj_cisp_mensal
+    complete: false
+    fields:
+    - name: ano
+      type: inferred by read_csv_auto
+    - name: apreensao_drogas
+      type: inferred by read_csv_auto
+    - name: apreensao_drogas_sem_autor
+      type: inferred by read_csv_auto
+    - name: cvli
+      type: inferred by read_csv_auto
+    - name: estupro
+      type: inferred by read_csv_auto
+    - name: extorsao
+      type: inferred by read_csv_auto
+    - name: feminicidio
+      type: inferred by read_csv_auto
+    - name: furto_veiculos
+      type: inferred by read_csv_auto
+    - name: hom_culposo
+      type: inferred by read_csv_auto
+    - name: hom_doloso
+      type: inferred by read_csv_auto
+    - name: hom_por_interv_policial
+      type: inferred by read_csv_auto
+    - name: latrocinio
+      type: inferred by read_csv_auto
+    - name: lesao_corp_culposa
+      type: inferred by read_csv_auto
+    - name: lesao_corp_dolosa
+      type: inferred by read_csv_auto
+    - name: lesao_corp_morte
+      type: inferred by read_csv_auto
+    - name: letalidade_violenta
+      type: inferred by read_csv_auto
+    - name: mes
+      type: inferred by read_csv_auto
+    - name: munic
+      type: inferred by read_csv_auto
+    - name: recuperacao_veiculos
+      type: inferred by read_csv_auto
+    - name: roubo_carga
+      type: inferred by read_csv_auto
+    - name: roubo_comercio
+      type: inferred by read_csv_auto
+    - name: roubo_residencia
+      type: inferred by read_csv_auto
+    - name: roubo_veiculo
+      type: inferred by read_csv_auto
+    - name: sequestro
+      type: inferred by read_csv_auto
+    - name: tentat_hom
+      type: inferred by read_csv_auto
+    - name: total_furtos
+      type: inferred by read_csv_auto
+    - name: total_roubos
+      type: inferred by read_csv_auto
+    note: Sem schema documentado no código; apenas colunas referenciadas pelas tools. Rode DESCRIBE após o primeiro load.
+  repo_path: src/mcp_brasil/datasets/isp_rj

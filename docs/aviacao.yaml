@@ -1,0 +1,560 @@
+catalog: mcp-brasil — aviacao
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio aviacao no catálogo original.
+  includes:
+  - opensky
+  - anac_pontualidade
+  - anac_rab
+  - anac_tarifas
+  - anac_vra
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 5
+  tools: 29
+  keys_required: []
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: opensky
+  name: OpenSky Network
+  description: OpenSky Network — voos ao vivo sobre o Brasil via ADS-B (rede colaborativa)
+  domain: aviacao
+  publisher: OpenSky Network (terceiro, não-oficial)
+  official_source: false
+  modality: rest_passthrough
+  base_url: https://opensky-network.org/api
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    OPENSKY_API_BASE: https://opensky-network.org/api
+  tools_count: 6
+  license: OpenSky ToS (parcialmente não-comercial)
+  legal_risk: medio
+  tags:
+  - opensky
+  - voos
+  - ads-b
+  - aviacao
+  - rastreamento
+  tests:
+    test_count: 0
+    passed: 0
+    failed: 0
+    skipped: 0
+    duration_s: 0
+    hits_live_upstream: false
+    line_coverage_pct: 41.6
+    run_command: make test-feature F=opensky
+    status: missing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Flight
+      returned_by:
+      - opensky.client.flights_aircraft
+      - opensky.client.flights_arrival
+      - opensky.client.flights_departure
+      fields:
+      - name: icao24
+        type: str
+        required: true
+      - name: callsign
+        type: str | null
+        required: false
+      - name: first_seen
+        type: int
+        required: true
+      - name: last_seen
+        type: int
+        required: true
+      - name: est_departure_airport
+        type: str | null
+        required: false
+      - name: est_arrival_airport
+        type: str | null
+        required: false
+    - model: StateVector
+      returned_by:
+      - opensky.client.states_bbox
+      - opensky.client.states_brasil
+      fields:
+      - name: icao24
+        type: str
+        required: true
+      - name: callsign
+        type: str | null
+        required: false
+      - name: origin_country
+        type: str | null
+        required: false
+      - name: time_position
+        type: int | null
+        required: false
+      - name: last_contact
+        type: int | null
+        required: false
+      - name: longitude
+        type: float | null
+        required: false
+      - name: latitude
+        type: float | null
+        required: false
+      - name: baro_altitude
+        type: float | null
+        required: false
+      - name: on_ground
+        type: bool | null
+        required: false
+      - name: velocity
+        type: float | null
+        required: false
+      - name: true_track
+        type: float | null
+        required: false
+      - name: vertical_rate
+        type: float | null
+        required: false
+      - name: geo_altitude
+        type: float | null
+        required: false
+      - name: squawk
+        type: str | null
+        required: false
+    - model: TrackPoint
+      returned_by:
+      - opensky.client.track_aircraft
+      fields:
+      - name: time
+        type: int
+        required: true
+      - name: latitude
+        type: float | null
+        required: false
+      - name: longitude
+        type: float | null
+        required: false
+      - name: baro_altitude
+        type: float | null
+        required: false
+      - name: true_track
+        type: float | null
+        required: false
+      - name: on_ground
+        type: bool | null
+        required: false
+  notes: 'Anônimo: ~400 req/dia por IP. TOS parcialmente não-comercial.'
+  repo_path: src/mcp_brasil/data/opensky
+- id: anac_pontualidade
+  name: ANAC Pontualidade
+  description: 'ANAC Pontualidade — % atrasos/cancelamentos mensais (Res. 218) com consulta SQL via DuckDB. Opt-in: MCP_BRASIL_DATASETS=anac_pontualidade.'
+  domain: aviacao
+  publisher: ANAC
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://sistemas.anac.gov.br
+  protocol: file_download
+  response_format: csv
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=anac_pontualidade
+    table: pontualidade
+    ttl_days: 30
+    approx_size_mb: 25
+    source_encoding: cp1252
+    delimiter: ;
+    zip_member: null
+    null_markers: null
+    all_varchar: true
+    pii_columns: []
+    partitioning: union_all_by_name view over per-partition tables
+    sources:
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7ões%20a%C3%A9reas/Percentuais%20de%20atrasos%20e%20cancelamentos/2024/01%20-%20janeiro/Anexo%20I.csv
+      zip_member: null
+      partition: '202401'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7ões%20a%C3%A9reas/Percentuais%20de%20atrasos%20e%20cancelamentos/2024/02%20-%20fevereiro/Anexo%20I.csv
+      zip_member: null
+      partition: '202402'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7ões%20a%C3%A9reas/Percentuais%20de%20atrasos%20e%20cancelamentos/2024/03%20-%20marco/Anexo%20I.csv
+      zip_member: null
+      partition: '202403'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7ões%20a%C3%A9reas/Percentuais%20de%20atrasos%20e%20cancelamentos/2024/04%20-%20abril/Anexo%20I.csv
+      zip_member: null
+      partition: '202404'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7ões%20a%C3%A9reas/Percentuais%20de%20atrasos%20e%20cancelamentos/2024/05%20-%20maio/Anexo%20I.csv
+      zip_member: null
+      partition: '202405'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7ões%20a%C3%A9reas/Percentuais%20de%20atrasos%20e%20cancelamentos/2024/06%20-%20junho/Anexo%20I.csv
+      zip_member: null
+      partition: '202406'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7ões%20a%C3%A9reas/Percentuais%20de%20atrasos%20e%20cancelamentos/2024/07%20-%20julho/Anexo%20I.csv
+      zip_member: null
+      partition: '202407'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7ões%20a%C3%A9reas/Percentuais%20de%20atrasos%20e%20cancelamentos/2024/08%20-%20agosto/Anexo%20I.csv
+      zip_member: null
+      partition: '202408'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7ões%20a%C3%A9reas/Percentuais%20de%20atrasos%20e%20cancelamentos/2024/09%20-%20setembro/Anexo%20I.csv
+      zip_member: null
+      partition: '202409'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7ões%20a%C3%A9reas/Percentuais%20de%20atrasos%20e%20cancelamentos/2024/10%20-%20outubro/Anexo%20I.csv
+      zip_member: null
+      partition: '202410'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7ões%20a%C3%A9reas/Percentuais%20de%20atrasos%20e%20cancelamentos/2024/11%20-%20novembro/Anexo%20I.csv
+      zip_member: null
+      partition: '202411'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7ões%20a%C3%A9reas/Percentuais%20de%20atrasos%20e%20cancelamentos/2024/12%20-%20dezembro/Anexo%20I.csv
+      zip_member: null
+      partition: '202412'
+  tools_count: 5
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - anac
+  - aviacao
+  - pontualidade
+  - atrasos
+  - cancelamentos
+  - dataset
+  - duckdb
+  tests:
+    test_count: 0
+    passed: 0
+    failed: 0
+    skipped: 0
+    duration_s: 0
+    hits_live_upstream: false
+    line_coverage_pct: 28.8
+    run_command: uv run pytest tests/datasets/anac_pontualidade
+    status: missing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred from SQL in tools.py (sqlglot)
+    table: pontualidade
+    complete: false
+    fields:
+    - name: aeroporto_destino_designador_oaci
+      type: VARCHAR
+    - name: aeroporto_origem_designador_oaci
+      type: VARCHAR
+    - name: empresa_aerea
+      type: VARCHAR
+    - name: etapas_previstas
+      type: VARCHAR
+    - name: n_voo
+      type: VARCHAR
+    - name: percentuais_de_atrasos_superiores_a_30_minutos
+      type: VARCHAR
+    - name: percentuais_de_atrasos_superiores_a_60_minutos
+      type: VARCHAR
+    - name: percentuais_de_cancelamentos
+      type: VARCHAR
+    note: Sem schema documentado no código; apenas colunas referenciadas pelas tools. Rode DESCRIBE após o primeiro load.
+  notes: Não aparece na tabela do README; código carrega 12 meses de 2024.
+  repo_path: src/mcp_brasil/datasets/anac_pontualidade
+- id: anac_rab
+  name: ANAC RAB
+  description: 'ANAC RAB — Registro Aeronáutico Brasileiro (~75k aeronaves) com consulta SQL via DuckDB. Busca por matrícula,
+    operador, fabricante, UF. Opt-in: MCP_BRASIL_DATASETS=anac_rab.'
+  domain: aviacao
+  publisher: ANAC
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://sistemas.anac.gov.br
+  protocol: file_download
+  response_format: csv
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=anac_rab
+    table: rab
+    ttl_days: 7
+    approx_size_mb: 13
+    source_encoding: cp1252
+    delimiter: ;
+    zip_member: null
+    null_markers: null
+    all_varchar: true
+    pii_columns: []
+    partitioning: single table
+    sources:
+    - url: https://sistemas.anac.gov.br/dadosabertos/Aeronaves/RAB/dados_aeronaves.csv
+      zip_member: null
+      partition: null
+  tools_count: 6
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - anac
+  - aviacao
+  - aeronaves
+  - rab
+  - dataset
+  - duckdb
+  tests:
+    test_count: 0
+    passed: 0
+    failed: 0
+    skipped: 0
+    duration_s: 0
+    hits_live_upstream: false
+    line_coverage_pct: 10.5
+    run_command: uv run pytest tests/datasets/anac_rab
+    status: missing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred from SQL in tools.py (sqlglot)
+    table: rab
+    complete: false
+    fields:
+    - name: cd_interdicao
+      type: VARCHAR
+    - name: ds_categoria_homologacao
+      type: VARCHAR
+    - name: ds_modelo
+      type: VARCHAR
+    - name: dt_validade_ca
+      type: VARCHAR
+    - name: marcas
+      type: VARCHAR
+    - name: nm_fabricante
+      type: VARCHAR
+    - name: nr_ano_fabricacao
+      type: VARCHAR
+    - name: nr_assentos
+      type: VARCHAR
+    - name: operadores
+      type: VARCHAR
+    - name: proprietarios
+      type: VARCHAR
+    - name: qt_motor
+      type: VARCHAR
+    - name: tp_motor
+      type: VARCHAR
+    - name: tp_operacao
+      type: VARCHAR
+    note: Sem schema documentado no código; apenas colunas referenciadas pelas tools. Rode DESCRIBE após o primeiro load.
+  repo_path: src/mcp_brasil/datasets/anac_rab
+- id: anac_tarifas
+  name: ANAC Tarifas
+  description: 'ANAC Tarifas — ~4,3M linhas/ano de bilhetes vendidos, com consulta SQL via DuckDB. Preço médio por rota, série
+    histórica, comparativo entre companhias. Popular cache com scripts/refresh_anac_tarifas.py. Opt-in: MCP_BRASIL_DATASETS=anac_tarifas.'
+  domain: aviacao
+  publisher: ANAC
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://sas.anac.gov.br
+  protocol: file_download
+  response_format: csv
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=anac_tarifas
+    table: tarifas
+    ttl_days: 90
+    approx_size_mb: 40
+    source_encoding: cp1252
+    delimiter: null
+    zip_member: null
+    null_markers: null
+    all_varchar: false
+    pii_columns: []
+    partitioning: single table
+    sources:
+    - url: https://sas.anac.gov.br/sas/downloads/view/frmDownload.aspx
+      zip_member: null
+      partition: null
+  tools_count: 6
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - anac
+  - aviacao
+  - tarifas
+  - precos
+  - passagens
+  - dataset
+  - duckdb
+  tests:
+    test_count: 0
+    passed: 0
+    failed: 0
+    skipped: 0
+    duration_s: 0
+    hits_live_upstream: false
+    line_coverage_pct: 8.6
+    run_command: uv run pytest tests/datasets/anac_tarifas
+    status: missing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred from SQL in tools.py (sqlglot)
+    table: tarifas
+    complete: false
+    fields:
+    - name: ano
+      type: inferred by read_csv_auto
+    - name: destino
+      type: inferred by read_csv_auto
+    - name: empresa
+      type: inferred by read_csv_auto
+    - name: mes
+      type: inferred by read_csv_auto
+    - name: origem
+      type: inferred by read_csv_auto
+    - name: tarifa
+      type: inferred by read_csv_auto
+    note: Sem schema documentado no código; apenas colunas referenciadas pelas tools. Rode DESCRIBE após o primeiro load.
+  notes: Fonte é form ASP.NET (SAS ANAC). Cache precisa ser pré-populado com Playwright (scripts/refresh_anac_tarifas.py);
+    não baixa on-demand.
+  repo_path: src/mcp_brasil/datasets/anac_tarifas
+- id: anac_vra
+  name: ANAC VRA
+  description: 'ANAC VRA — Voo Regular Ativo mensal (2024) com consulta SQL via DuckDB. ~12 CSVs agregados. Opt-in: MCP_BRASIL_DATASETS=anac_vra.'
+  domain: aviacao
+  publisher: ANAC
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://sistemas.anac.gov.br
+  protocol: file_download
+  response_format: csv
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=anac_vra
+    table: vra
+    ttl_days: 30
+    approx_size_mb: 150
+    source_encoding: cp1252
+    delimiter: ;
+    zip_member: null
+    null_markers: null
+    all_varchar: true
+    pii_columns: []
+    partitioning: union_all_by_name view over per-partition tables
+    sources:
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2024/01%20-%20Janeiro/VRA_202401.csv
+      zip_member: null
+      partition: '202401'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2024/02%20-%20Fevereiro/VRA_202402.csv
+      zip_member: null
+      partition: '202402'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2024/03%20-%20Mar%C3%A7o/VRA_202403.csv
+      zip_member: null
+      partition: '202403'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2024/04%20-%20Abril/VRA_202404.csv
+      zip_member: null
+      partition: '202404'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2024/05%20-%20Maio/VRA_202405.csv
+      zip_member: null
+      partition: '202405'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2024/06%20-%20Junho/VRA_202406.csv
+      zip_member: null
+      partition: '202406'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2024/07%20-%20Julho/VRA_202407.csv
+      zip_member: null
+      partition: '202407'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2024/08%20-%20Agosto/VRA_202408.csv
+      zip_member: null
+      partition: '202408'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2024/09%20-%20Setembro/VRA_202409.csv
+      zip_member: null
+      partition: '202409'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2024/10%20-%20Outubro/VRA_202410.csv
+      zip_member: null
+      partition: '202410'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2024/11%20-%20Novembro/VRA_202411.csv
+      zip_member: null
+      partition: '202411'
+    - url: https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2024/12%20-%20Dezembro/VRA_202412.csv
+      zip_member: null
+      partition: '202412'
+  tools_count: 6
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - anac
+  - aviacao
+  - voos
+  - vra
+  - pontualidade
+  - dataset
+  - duckdb
+  tests:
+    test_count: 0
+    passed: 0
+    failed: 0
+    skipped: 0
+    duration_s: 0
+    hits_live_upstream: false
+    line_coverage_pct: 24.5
+    run_command: uv run pytest tests/datasets/anac_vra
+    status: missing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred from SQL in tools.py (sqlglot)
+    table: vra
+    complete: false
+    fields:
+    - name: chegada_prevista
+      type: VARCHAR
+    - name: chegada_real
+      type: VARCHAR
+    - name: codigo_justificativa
+      type: VARCHAR
+    - name: icao_aerodromo_destino
+      type: VARCHAR
+    - name: icao_aerodromo_origem
+      type: VARCHAR
+    - name: icao_empresa_aerea
+      type: VARCHAR
+    - name: numero_voo
+      type: VARCHAR
+    - name: partida_prevista
+      type: VARCHAR
+    - name: partida_real
+      type: VARCHAR
+    - name: situacao_voo
+      type: VARCHAR
+    note: Sem schema documentado no código; apenas colunas referenciadas pelas tools. Rode DESCRIBE após o primeiro load.
+  notes: README diz 2020-present, mas o código só carrega 2024 (_ANOS=[2024]).
+  repo_path: src/mcp_brasil/datasets/anac_vra

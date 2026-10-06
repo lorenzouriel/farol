@@ -1,0 +1,1109 @@
+catalog: mcp-brasil — compras_publicas
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio compras_publicas no catálogo original.
+  includes:
+  - compras
+  - transferegov
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 2
+  tools: 34
+  keys_required: []
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: compras
+  name: PNCP + ComprasNet/SIASG + Contratos.gov.br
+  description: 'Compras públicas: PNCP, Dados Abertos Compras.gov.br, Contratos.gov.br (licitações, contratos, fornecedores,
+    CATMAT, CATSER, pregões, empenhos).'
+  domain: compras_publicas
+  publisher: MGI / PNCP / SIASG
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://pncp.gov.br/api/consulta
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    pncp.PNCP_API_BASE: https://pncp.gov.br/api/consulta/v1
+    pncp.CONTRATACOES_URL: https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao
+    pncp.CONTRATACOES_PROPOSTA_URL: https://pncp.gov.br/api/consulta/v1/contratacoes/proposta
+    pncp.CONTRATACOES_ATUALIZACAO_URL: https://pncp.gov.br/api/consulta/v1/contratacoes/atualizacao
+    pncp.CONTRATOS_URL: https://pncp.gov.br/api/consulta/v1/contratos
+    pncp.CONTRATOS_ATUALIZACAO_URL: https://pncp.gov.br/api/consulta/v1/contratos/atualizacao
+    pncp.ATAS_URL: https://pncp.gov.br/api/consulta/v1/atas
+    pncp.ATAS_ATUALIZACAO_URL: https://pncp.gov.br/api/consulta/v1/atas/atualizacao
+    pncp.FORNECEDORES_URL: https://pncp.gov.br/api/consulta/v1/fornecedores
+    pncp.ORGAOS_URL: https://pncp.gov.br/api/pncp/v1/orgaos
+    pncp.CONTRATACAO_DETALHE_URL: https://pncp.gov.br/api/consulta/v1/orgaos
+    pncp.PCA_URL: https://pncp.gov.br/api/consulta/v1/pca
+    pncp.INSTRUMENTOS_COBRANCA_URL: https://pncp.gov.br/api/consulta/v1/instrumentoscobranca/inclusao
+    dadosabertos.API_BASE: https://dadosabertos.compras.gov.br
+    dadosabertos.LICITACOES_URL: https://dadosabertos.compras.gov.br/modulo-legado/1_consultarLicitacao
+    dadosabertos.ITENS_LICITACAO_URL: https://dadosabertos.compras.gov.br/modulo-legado/2_consultarItemLicitacao
+    dadosabertos.PREGOES_URL: https://dadosabertos.compras.gov.br/modulo-legado/3_consultarPregoes
+    dadosabertos.COMPRAS_SEM_LICITACAO_URL: https://dadosabertos.compras.gov.br/modulo-legado/5_consultarComprasSemLicitacao
+    dadosabertos.CONTRATOS_URL: https://dadosabertos.compras.gov.br/modulo-contratos/1_consultarContratos
+    dadosabertos.FORNECEDOR_URL: https://dadosabertos.compras.gov.br/modulo-fornecedor/1_consultarFornecedor
+    dadosabertos.GRUPO_MATERIAL_URL: https://dadosabertos.compras.gov.br/modulo-material/1_consultarGrupoMaterial
+    dadosabertos.ITEM_MATERIAL_URL: https://dadosabertos.compras.gov.br/modulo-material/4_consultarItemMaterial
+    dadosabertos.ITEM_SERVICO_URL: https://dadosabertos.compras.gov.br/modulo-servico/6_consultarItemServico
+    dadosabertos.UASG_URL: https://dadosabertos.compras.gov.br/modulo-uasg/1_consultarUasg
+    dadosabertos.PESQUISA_PRECO_MATERIAL_URL: https://dadosabertos.compras.gov.br/modulo-pesquisa-preco/1_consultarMaterial
+    dadosabertos.PESQUISA_PRECO_SERVICO_URL: https://dadosabertos.compras.gov.br/modulo-pesquisa-preco/3_consultarServico
+    contratosgovbr.API_BASE: https://contratos.comprasnet.gov.br
+    contratosgovbr.CONTRATO_POR_ID_URL: https://contratos.comprasnet.gov.br/api/contrato/id
+    contratosgovbr.CONTRATO_POR_UG_URL: https://contratos.comprasnet.gov.br/api/contrato/ug
+    contratosgovbr.CONTRATO_INATIVO_POR_UG_URL: https://contratos.comprasnet.gov.br/api/contrato/inativo/ug
+    contratosgovbr.CONTRATO_POR_UASG_NUMERO_URL: https://contratos.comprasnet.gov.br/api/contrato/ugorigem
+    contratosgovbr.ORGAOS_URL: https://contratos.comprasnet.gov.br/api/contrato/orgaos
+    contratosgovbr.UNIDADES_URL: https://contratos.comprasnet.gov.br/api/contrato/unidades
+    contratosgovbr.CONTRATO_SUBRESOURCE_URL: https://contratos.comprasnet.gov.br/api/contrato
+  tools_count: 29
+  license: Lei 14.133/2021 (publicidade obrigatória)
+  legal_risk: baixo
+  tags:
+  - licitacoes
+  - contratos
+  - compras
+  - pncp
+  - fornecedores
+  - catmat
+  - catser
+  - empenhos
+  tests:
+    path: tests/data/compras
+    files:
+    - test_client.py
+    - test_client.py
+    - test_client.py
+    - test_composed_server.py
+    - test_integration.py
+    - test_integration.py
+    - test_integration.py
+    - test_tools.py
+    - test_tools.py
+    - test_tools.py
+    test_count: 127
+    passed: 127
+    failed: 0
+    skipped: 0
+    duration_s: 1.65
+    test_types:
+    - client_unit
+    - mcp_integration
+    - test_composed_server
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 85.0
+    run_command: make test-feature F=compras
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: AtaResultado
+      returned_by:
+      - compras.pncp.client.buscar_atas
+      - compras.pncp.client.buscar_atas_atualizadas
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: atas
+        type: list[AtaRegistroPreco]
+        required: false
+    - model: Contratacao
+      returned_by:
+      - compras.pncp.client.consultar_contratacao_detalhe
+      fields:
+      - name: orgao_cnpj
+        type: str | null
+        required: false
+      - name: orgao_nome
+        type: str | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+      - name: numero_sequencial
+        type: int | null
+        required: false
+      - name: numero_controle_pncp
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: modalidade_id
+        type: int | null
+        required: false
+      - name: modalidade_nome
+        type: str | null
+        required: false
+      - name: situacao_id
+        type: int | null
+        required: false
+      - name: situacao_nome
+        type: str | null
+        required: false
+      - name: valor_estimado
+        type: float | null
+        required: false
+      - name: valor_homologado
+        type: float | null
+        required: false
+      - name: data_publicacao
+        type: str | null
+        required: false
+      - name: data_abertura
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: esfera
+        type: str | null
+        required: false
+      - name: link_pncp
+        type: str | null
+        required: false
+      nested_in:
+      - ContratacaoResultado
+    - model: ContratacaoResultado
+      returned_by:
+      - compras.pncp.client.buscar_contratacoes
+      - compras.pncp.client.buscar_contratacoes_abertas
+      - compras.pncp.client.buscar_contratacoes_atualizadas
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: contratacoes
+        type: list[Contratacao]
+        required: false
+    - model: ContratoDAResultado
+      returned_by:
+      - compras.dadosabertos.client.buscar_contratos
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: contratos
+        type: list[ContratoDA]
+        required: false
+    - model: ContratoResultado
+      returned_by:
+      - compras.pncp.client.buscar_contratos
+      - compras.pncp.client.buscar_contratos_atualizados
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: contratos
+        type: list[Contrato]
+        required: false
+    - model: ContratoResumo
+      returned_by:
+      - compras.contratosgovbr.client.consultar_contrato
+      - compras.contratosgovbr.client.listar_contratos_ug
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: receita_despesa
+        type: str | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: orgao_codigo
+        type: str | null
+        required: false
+      - name: orgao_nome
+        type: str | null
+        required: false
+      - name: unidade_codigo
+        type: str | null
+        required: false
+      - name: unidade_nome
+        type: str | null
+        required: false
+      - name: fornecedor_tipo
+        type: str | null
+        required: false
+      - name: fornecedor_cnpj_cpf
+        type: str | null
+        required: false
+      - name: fornecedor_nome
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: categoria
+        type: str | null
+        required: false
+      - name: processo
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: fundamento_legal
+        type: str | null
+        required: false
+      - name: modalidade
+        type: str | null
+        required: false
+      - name: data_assinatura
+        type: str | null
+        required: false
+      - name: data_publicacao
+        type: str | null
+        required: false
+      - name: vigencia_inicio
+        type: str | null
+        required: false
+      - name: vigencia_fim
+        type: str | null
+        required: false
+      - name: valor_inicial
+        type: str | null
+        required: false
+      - name: valor_global
+        type: str | null
+        required: false
+      - name: valor_parcela
+        type: str | null
+        required: false
+      - name: valor_acumulado
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+    - model: Empenho
+      returned_by:
+      - compras.contratosgovbr.client.listar_empenhos
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: credor
+        type: str | null
+        required: false
+      - name: fonte_recurso
+        type: str | null
+        required: false
+      - name: programa_trabalho
+        type: str | null
+        required: false
+      - name: naturezadespesa
+        type: str | null
+        required: false
+      - name: empenhado
+        type: str | null
+        required: false
+      - name: liquidado
+        type: str | null
+        required: false
+      - name: pago
+        type: str | null
+        required: false
+    - model: Fatura
+      returned_by:
+      - compras.contratosgovbr.client.listar_faturas
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: emissao
+        type: str | null
+        required: false
+      - name: vencimento
+        type: str | null
+        required: false
+      - name: valor
+        type: str | null
+        required: false
+      - name: juros
+        type: str | null
+        required: false
+      - name: multa
+        type: str | null
+        required: false
+      - name: glosa
+        type: str | null
+        required: false
+      - name: valorliquido
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+    - model: FornecedorDAResultado
+      returned_by:
+      - compras.dadosabertos.client.consultar_fornecedor
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: fornecedores
+        type: list[FornecedorDA]
+        required: false
+    - model: FornecedorResultado
+      returned_by:
+      - compras.pncp.client.consultar_fornecedor
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: fornecedores
+        type: list[Fornecedor]
+        required: false
+    - model: GrupoMaterialResultado
+      returned_by:
+      - compras.dadosabertos.client.listar_grupos_material
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: grupos
+        type: list[GrupoMaterial]
+        required: false
+    - model: HistoricoContrato
+      returned_by:
+      - compras.contratosgovbr.client.listar_historico
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: fornecedor
+        type: str | null
+        required: false
+      - name: data_assinatura
+        type: str | null
+        required: false
+      - name: vigencia_inicio
+        type: str | null
+        required: false
+      - name: vigencia_fim
+        type: str | null
+        required: false
+      - name: valor_global
+        type: str | null
+        required: false
+      - name: situacao_contrato
+        type: str | null
+        required: false
+    - model: InstrumentoCobrancaResultado
+      returned_by:
+      - compras.pncp.client.buscar_instrumentos_cobranca
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: instrumentos
+        type: list[InstrumentoCobranca]
+        required: false
+    - model: ItemContrato
+      returned_by:
+      - compras.contratosgovbr.client.listar_itens
+      fields:
+      - name: tipo_item
+        type: str | null
+        required: false
+      - name: codigo_item
+        type: str | null
+        required: false
+      - name: descricao_item
+        type: str | null
+        required: false
+      - name: unidade
+        type: str | null
+        required: false
+      - name: quantidade
+        type: str | null
+        required: false
+      - name: valor_unitario
+        type: str | null
+        required: false
+      - name: valor_total
+        type: str | null
+        required: false
+    - model: ItemMaterialResultado
+      returned_by:
+      - compras.dadosabertos.client.buscar_material
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: itens
+        type: list[ItemMaterial]
+        required: false
+    - model: ItemServicoResultado
+      returned_by:
+      - compras.dadosabertos.client.buscar_servico
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: itens
+        type: list[ItemServico]
+        required: false
+    - model: LicitacaoResultado
+      returned_by:
+      - compras.dadosabertos.client.buscar_dispensas
+      - compras.dadosabertos.client.buscar_licitacoes
+      - compras.dadosabertos.client.buscar_pregoes
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: licitacoes
+        type: list[Licitacao]
+        required: false
+    - model: OrgaoResultado
+      returned_by:
+      - compras.pncp.client.consultar_orgao
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: orgaos
+        type: list[OrgaoContratante]
+        required: false
+    - model: PcaResultado
+      returned_by:
+      - compras.pncp.client.buscar_pca
+      - compras.pncp.client.buscar_pca_atualizacao
+      - compras.pncp.client.buscar_pca_usuario
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: pcas
+        type: list[Pca]
+        required: false
+    - model: Terceirizado
+      returned_by:
+      - compras.contratosgovbr.client.listar_terceirizados
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: funcao
+        type: str | null
+        required: false
+      - name: jornada
+        type: str | null
+        required: false
+      - name: salario
+        type: str | null
+        required: false
+      - name: custo
+        type: str | null
+        required: false
+      - name: escolaridade
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+    - model: UasgResultado
+      returned_by:
+      - compras.dadosabertos.client.buscar_uasg
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: uasgs
+        type: list[Uasg]
+        required: false
+    - model: AtaRegistroPreco
+      fields:
+      - name: orgao_cnpj
+        type: str | null
+        required: false
+      - name: orgao_nome
+        type: str | null
+        required: false
+      - name: numero_ata
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: fornecedor_cnpj
+        type: str | null
+        required: false
+      - name: fornecedor_nome
+        type: str | null
+        required: false
+      - name: valor_total
+        type: float | null
+        required: false
+      - name: vigencia_inicio
+        type: str | null
+        required: false
+      - name: vigencia_fim
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      nested_in:
+      - AtaResultado
+    - model: Contrato
+      fields:
+      - name: orgao_cnpj
+        type: str | null
+        required: false
+      - name: orgao_nome
+        type: str | null
+        required: false
+      - name: numero_contrato
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: fornecedor_cnpj
+        type: str | null
+        required: false
+      - name: fornecedor_nome
+        type: str | null
+        required: false
+      - name: valor_inicial
+        type: float | null
+        required: false
+      - name: valor_final
+        type: float | null
+        required: false
+      - name: vigencia_inicio
+        type: str | null
+        required: false
+      - name: vigencia_fim
+        type: str | null
+        required: false
+      - name: data_publicacao
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      nested_in:
+      - ContratoResultado
+    - model: ContratoDA
+      fields:
+      - name: codigo_orgao
+        type: str | null
+        required: false
+      - name: nome_orgao
+        type: str | null
+        required: false
+      - name: codigo_unidade_gestora
+        type: str | null
+        required: false
+      - name: nome_unidade_gestora
+        type: str | null
+        required: false
+      - name: numero_contrato
+        type: str | null
+        required: false
+      - name: nome_modalidade_compra
+        type: str | null
+        required: false
+      - name: nome_tipo
+        type: str | null
+        required: false
+      - name: nome_categoria
+        type: str | null
+        required: false
+      - name: ni_fornecedor
+        type: str | null
+        required: false
+      - name: nome_fornecedor
+        type: str | null
+        required: false
+      - name: processo
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: data_vigencia_inicial
+        type: str | null
+        required: false
+      - name: data_vigencia_final
+        type: str | null
+        required: false
+      - name: valor_global
+        type: float | null
+        required: false
+      - name: valor_parcela
+        type: float | null
+        required: false
+      - name: valor_acumulado
+        type: float | null
+        required: false
+      nested_in:
+      - ContratoDAResultado
+    - model: Fornecedor
+      fields:
+      - name: cnpj
+        type: str | null
+        required: false
+      - name: razao_social
+        type: str | null
+        required: false
+      - name: nome_fantasia
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: porte
+        type: str | null
+        required: false
+      - name: data_abertura
+        type: str | null
+        required: false
+      nested_in:
+      - FornecedorResultado
+    - model: FornecedorDA
+      fields:
+      - name: cnpj
+        type: str | null
+        required: false
+      - name: cpf
+        type: str | null
+        required: false
+      - name: nome_razao_social
+        type: str | null
+        required: false
+      - name: uf_sigla
+        type: str | null
+        required: false
+      - name: nome_municipio
+        type: str | null
+        required: false
+      - name: porte_empresa_nome
+        type: str | null
+        required: false
+      - name: natureza_juridica_nome
+        type: str | null
+        required: false
+      - name: nome_cnae
+        type: str | null
+        required: false
+      - name: ativo
+        type: bool | null
+        required: false
+      - name: habilitado_licitar
+        type: bool | null
+        required: false
+      nested_in:
+      - FornecedorDAResultado
+    - model: GrupoMaterial
+      fields:
+      - name: codigo_grupo
+        type: int | null
+        required: false
+      - name: nome_grupo
+        type: str | null
+        required: false
+      - name: status_grupo
+        type: bool | null
+        required: false
+      nested_in:
+      - GrupoMaterialResultado
+    - model: InstrumentoCobranca
+      fields:
+      - name: cnpj_orgao
+        type: str | null
+        required: false
+      - name: ano_contrato
+        type: int | null
+        required: false
+      - name: numero_instrumento
+        type: str | null
+        required: false
+      - name: tipo_nome
+        type: str | null
+        required: false
+      - name: data_emissao
+        type: str | null
+        required: false
+      - name: objeto_contrato
+        type: str | null
+        required: false
+      - name: fornecedor_nome
+        type: str | null
+        required: false
+      - name: fornecedor_cnpj
+        type: str | null
+        required: false
+      - name: valor_nf
+        type: str | null
+        required: false
+      - name: chave_nfe
+        type: str | null
+        required: false
+      nested_in:
+      - InstrumentoCobrancaResultado
+    - model: ItemMaterial
+      fields:
+      - name: codigo_item
+        type: int | null
+        required: false
+      - name: descricao_item
+        type: str | null
+        required: false
+      - name: codigo_grupo
+        type: int | null
+        required: false
+      - name: codigo_classe
+        type: int | null
+        required: false
+      - name: codigo_pdm
+        type: int | null
+        required: false
+      - name: status_item
+        type: bool | null
+        required: false
+      nested_in:
+      - ItemMaterialResultado
+    - model: ItemPca
+      fields:
+      - name: numero_item
+        type: int | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: quantidade_estimada
+        type: float | null
+        required: false
+      - name: valor_unitario
+        type: float | null
+        required: false
+      - name: valor_total
+        type: float | null
+        required: false
+      - name: unidade_fornecimento
+        type: str | null
+        required: false
+      - name: categoria
+        type: str | null
+        required: false
+      - name: data_desejada
+        type: str | null
+        required: false
+      nested_in:
+      - Pca
+    - model: ItemServico
+      fields:
+      - name: codigo_servico
+        type: int | null
+        required: false
+      - name: nome_servico
+        type: str | null
+        required: false
+      - name: codigo_secao
+        type: int | null
+        required: false
+      - name: codigo_divisao
+        type: int | null
+        required: false
+      - name: codigo_grupo
+        type: int | null
+        required: false
+      - name: codigo_classe
+        type: int | null
+        required: false
+      - name: status_servico
+        type: bool | null
+        required: false
+      nested_in:
+      - ItemServicoResultado
+    - model: Licitacao
+      fields:
+      - name: id_compra
+        type: str | null
+        required: false
+      - name: identificador
+        type: str | null
+        required: false
+      - name: numero_processo
+        type: str | null
+        required: false
+      - name: uasg
+        type: int | null
+        required: false
+      - name: modalidade
+        type: int | null
+        required: false
+      - name: nome_modalidade
+        type: str | null
+        required: false
+      - name: numero_aviso
+        type: int | null
+        required: false
+      - name: situacao_aviso
+        type: str | null
+        required: false
+      - name: tipo_pregao
+        type: str | null
+        required: false
+      - name: objeto
+        type: str | null
+        required: false
+      - name: valor_estimado_total
+        type: float | null
+        required: false
+      - name: valor_homologado_total
+        type: float | null
+        required: false
+      - name: numero_itens
+        type: int | null
+        required: false
+      - name: data_publicacao
+        type: str | null
+        required: false
+      - name: data_abertura_proposta
+        type: str | null
+        required: false
+      - name: nome_responsavel
+        type: str | null
+        required: false
+      - name: funcao_responsavel
+        type: str | null
+        required: false
+      - name: endereco_entrega_edital
+        type: str | null
+        required: false
+      nested_in:
+      - LicitacaoResultado
+    - model: OrgaoContratante
+      fields:
+      - name: cnpj
+        type: str | null
+        required: false
+      - name: razao_social
+        type: str | null
+        required: false
+      - name: esfera
+        type: str | null
+        required: false
+      - name: poder
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      nested_in:
+      - OrgaoResultado
+    - model: Pca
+      fields:
+      - name: orgao_cnpj
+        type: str | null
+        required: false
+      - name: orgao_nome
+        type: str | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+      - name: unidade_nome
+        type: str | null
+        required: false
+      - name: id_pca
+        type: str | null
+        required: false
+      - name: data_publicacao
+        type: str | null
+        required: false
+      - name: itens
+        type: list[ItemPca]
+        required: false
+      nested_in:
+      - PcaResultado
+    - model: Uasg
+      fields:
+      - name: codigo_uasg
+        type: str | null
+        required: false
+      - name: nome_uasg
+        type: str | null
+        required: false
+      - name: cnpj_cpf_orgao
+        type: str | null
+        required: false
+      - name: sigla_uf
+        type: str | null
+        required: false
+      - name: nome_municipio
+        type: str | null
+        required: false
+      - name: uso_sisg
+        type: bool | null
+        required: false
+      - name: status_uasg
+        type: bool | null
+        required: false
+      nested_in:
+      - UasgResultado
+  repo_path: src/mcp_brasil/data/compras
+- id: transferegov
+  name: TransfereGov
+  description: 'TransfereGov — emendas parlamentares pix (transferências especiais): busca por autor, município, ano e detalhamento.'
+  domain: compras_publicas
+  publisher: MGI
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://api.transferegov.gestao.gov.br
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    TRANSFEREGOV_API_BASE: https://api.transferegov.gestao.gov.br
+    PLANO_ACAO_URL: https://api.transferegov.gestao.gov.br/transferenciasespeciais/plano_acao_especial
+  tools_count: 5
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - emendas
+  - pix
+  - transferencias
+  - parlamentar
+  - municipio
+  tests:
+    path: tests/data/transferegov
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 36
+    passed: 36
+    failed: 0
+    skipped: 0
+    duration_s: 0.43
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 95.4
+    run_command: make test-feature F=transferegov
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: TransferenciaEspecial
+      returned_by:
+      - transferegov.client.buscar_emenda_por_autor
+      - transferegov.client.buscar_emendas_pix
+      - transferegov.client.detalhe_emenda
+      - transferegov.client.emendas_por_municipio
+      - transferegov.client.resumo_emendas_ano
+      fields:
+      - name: id_plano_acao
+        type: int | null
+        required: false
+      - name: codigo_plano_acao
+        type: str | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: nome_parlamentar
+        type: str | null
+        required: false
+      - name: numero_emenda
+        type: str | null
+        required: false
+      - name: ano_emenda
+        type: str | null
+        required: false
+      - name: valor_custeio
+        type: float | null
+        required: false
+      - name: valor_investimento
+        type: float | null
+        required: false
+      - name: cnpj_beneficiario
+        type: str | null
+        required: false
+      - name: nome_beneficiario
+        type: str | null
+        required: false
+      - name: uf_beneficiario
+        type: str | null
+        required: false
+      - name: area_politica_publica
+        type: str | null
+        required: false
+  repo_path: src/mcp_brasil/data/transferegov

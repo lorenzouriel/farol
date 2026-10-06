@@ -1,0 +1,278 @@
+catalog: mcp-brasil — geografia_estatistica
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio geografia_estatistica no catálogo original.
+  includes:
+  - ibge
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 1
+  tools: 9
+  keys_required: []
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: ibge
+  name: Dados do IBGE
+  description: 'Dados do IBGE: estados, municípios, regiões, nomes e agregados estatísticos'
+  domain: geografia_estatistica
+  publisher: IBGE
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://servicodados.ibge.gov.br/api
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    IBGE_API_BASE: https://servicodados.ibge.gov.br/api
+    LOCALIDADES_URL: https://servicodados.ibge.gov.br/api/v1/localidades
+    NOMES_URL: https://servicodados.ibge.gov.br/api/v2/censos/nomes
+    AGREGADOS_URL: https://servicodados.ibge.gov.br/api/v3/agregados
+    CNAE_URL: https://servicodados.ibge.gov.br/api/v2/cnae
+    MALHAS_URL: https://servicodados.ibge.gov.br/api/v3/malhas
+  tools_count: 9
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - geodados
+  - censo
+  - indicadores
+  - localidades
+  tests:
+    path: tests/data/ibge
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_prompts.py
+    - test_resources.py
+    - test_tools.py
+    test_count: 68
+    passed: 68
+    failed: 0
+    skipped: 0
+    duration_s: 0.69
+    test_types:
+    - client_unit
+    - mcp_integration
+    - prompts
+    - resources
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 98.6
+    run_command: make test-feature F=ibge
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: AgregadoValor
+      returned_by:
+      - ibge.client.consultar_agregado
+      fields:
+      - name: localidade_id
+        type: str
+        required: true
+      - name: localidade_nome
+        type: str
+        required: true
+      - name: valor
+        type: str | null
+        required: false
+    - model: CnaeSecao
+      returned_by:
+      - ibge.client.listar_cnae_secoes
+      fields:
+      - name: id
+        type: str
+        required: true
+      - name: descricao
+        type: str
+        required: true
+    - model: CnaeSubclasse
+      returned_by:
+      - ibge.client.buscar_cnae_subclasse
+      fields:
+      - name: id
+        type: str
+        required: true
+      - name: descricao
+        type: str
+        required: true
+      - name: classe_id
+        type: str
+        required: false
+      - name: classe_descricao
+        type: str
+        required: false
+      - name: grupo_id
+        type: str
+        required: false
+      - name: grupo_descricao
+        type: str
+        required: false
+      - name: divisao_id
+        type: str
+        required: false
+      - name: divisao_descricao
+        type: str
+        required: false
+      - name: secao_id
+        type: str
+        required: false
+      - name: secao_descricao
+        type: str
+        required: false
+      - name: atividades
+        type: list[str]
+        required: false
+    - model: Estado
+      returned_by:
+      - ibge.client.listar_estados
+      fields:
+      - name: id
+        type: int
+        required: true
+      - name: sigla
+        type: str
+        required: true
+      - name: nome
+        type: str
+        required: true
+      - name: regiao
+        type: Regiao
+        required: true
+    - model: MalhaMetadados
+      returned_by:
+      - ibge.client.buscar_malha_metadados
+      fields:
+      - name: id
+        type: str
+        required: true
+      - name: nivel_geografico
+        type: str
+        required: true
+      - name: centroide_lat
+        type: float
+        required: true
+      - name: centroide_lon
+        type: float
+        required: true
+      - name: area_km2
+        type: float | null
+        required: false
+      - name: bbox_min_lon
+        type: float | null
+        required: false
+      - name: bbox_min_lat
+        type: float | null
+        required: false
+      - name: bbox_max_lon
+        type: float | null
+        required: false
+      - name: bbox_max_lat
+        type: float | null
+        required: false
+    - model: Municipio
+      returned_by:
+      - ibge.client.listar_municipios
+      fields:
+      - name: id
+        type: int
+        required: true
+        description: Código IBGE de 7 dígitos
+      - name: nome
+        type: str
+        required: true
+    - model: NomeConsulta
+      returned_by:
+      - ibge.client.consultar_nome
+      fields:
+      - name: nome
+        type: str
+        required: true
+      - name: sexo
+        type: str | null
+        required: false
+      - name: localidade
+        type: str
+        required: true
+      - name: res
+        type: list[NomeFrequencia]
+        required: true
+    - model: RankingResult
+      returned_by:
+      - ibge.client.ranking_nomes
+      fields:
+      - name: localidade
+        type: str
+        required: true
+      - name: sexo
+        type: str | null
+        required: false
+      - name: res
+        type: list[RankingEntry]
+        required: true
+    - model: Regiao
+      returned_by:
+      - ibge.client.listar_regioes
+      fields:
+      - name: id
+        type: int
+        required: true
+      - name: sigla
+        type: str
+        required: true
+      - name: nome
+        type: str
+        required: true
+      nested_in:
+      - Estado
+    - model: NomeFrequencia
+      fields:
+      - name: periodo
+        type: str
+        required: true
+      - name: frequencia
+        type: int
+        required: true
+      nested_in:
+      - NomeConsulta
+    - model: RankingEntry
+      fields:
+      - name: nome
+        type: str
+        required: true
+      - name: frequencia
+        type: int
+        required: true
+      - name: ranking
+        type: int
+        required: true
+      nested_in:
+      - RankingResult
+  repo_path: src/mcp_brasil/data/ibge

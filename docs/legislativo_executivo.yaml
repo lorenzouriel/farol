@@ -1,0 +1,908 @@
+catalog: mcp-brasil — legislativo_executivo
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio legislativo_executivo no catálogo original.
+  includes:
+  - camara
+  - governadores
+  - senado
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 3
+  tools: 41
+  keys_required: []
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: camara
+  name: Câmara dos Deputados
+  description: 'Câmara dos Deputados: deputados, proposições, votações, despesas, comissões'
+  domain: legislativo_executivo
+  publisher: Câmara dos Deputados
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://dadosabertos.camara.leg.br/api/v2
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    CAMARA_API_BASE: https://dadosabertos.camara.leg.br/api/v2
+    DEPUTADOS_URL: https://dadosabertos.camara.leg.br/api/v2/deputados
+    PROPOSICOES_URL: https://dadosabertos.camara.leg.br/api/v2/proposicoes
+    VOTACOES_URL: https://dadosabertos.camara.leg.br/api/v2/votacoes
+    EVENTOS_URL: https://dadosabertos.camara.leg.br/api/v2/eventos
+    ORGAOS_URL: https://dadosabertos.camara.leg.br/api/v2/orgaos
+    FRENTES_URL: https://dadosabertos.camara.leg.br/api/v2/frentes
+  client_rate_limit: 60/60s
+  tools_count: 11
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - legislativo
+  - deputados
+  - proposições
+  - votações
+  - despesas
+  - comissões
+  tests:
+    path: tests/data/camara
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_prompts.py
+    - test_resources.py
+    - test_tools.py
+    test_count: 90
+    passed: 90
+    failed: 0
+    skipped: 0
+    duration_s: 0.83
+    test_types:
+    - client_unit
+    - mcp_integration
+    - prompts
+    - resources
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 95.3
+    run_command: make test-feature F=camara
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Deputado
+      returned_by:
+      - camara.client.listar_deputados
+      - camara.client.obter_deputado
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: sigla_partido
+        type: str | null
+        required: false
+      - name: sigla_uf
+        type: str | null
+        required: false
+      - name: email
+        type: str | null
+        required: false
+      - name: foto
+        type: str | null
+        required: false
+      - name: legislatura
+        type: int | null
+        required: false
+    - model: DespesaDeputado
+      returned_by:
+      - camara.client.listar_despesas
+      fields:
+      - name: deputado_id
+        type: int | null
+        required: false
+      - name: deputado_nome
+        type: str | null
+        required: false
+      - name: tipo_despesa
+        type: str | null
+        required: false
+      - name: fornecedor
+        type: str | null
+        required: false
+      - name: cnpj_cpf
+        type: str | null
+        required: false
+      - name: valor_documento
+        type: float | null
+        required: false
+      - name: valor_liquido
+        type: float | null
+        required: false
+      - name: data_documento
+        type: str | null
+        required: false
+      - name: mes
+        type: int | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+    - model: Evento
+      returned_by:
+      - camara.client.listar_eventos
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+      - name: titulo
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: local
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: orgaos
+        type: str | null
+        required: false
+    - model: FrenteParlamentar
+      returned_by:
+      - camara.client.listar_frentes
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: titulo
+        type: str | null
+        required: false
+      - name: legislatura
+        type: int | null
+        required: false
+      - name: coordenador
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+    - model: Orgao
+      returned_by:
+      - camara.client.listar_orgaos
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: sigla
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+    - model: Proposicao
+      returned_by:
+      - camara.client.buscar_proposicoes
+      - camara.client.obter_proposicao
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: sigla_tipo
+        type: str | null
+        required: false
+      - name: numero
+        type: int | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+      - name: ementa
+        type: str | null
+        required: false
+      - name: data_apresentacao
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: orgao_situacao
+        type: str | null
+        required: false
+      - name: autor
+        type: str | null
+        required: false
+      - name: autor_partido
+        type: str | null
+        required: false
+      - name: autor_uf
+        type: str | null
+        required: false
+      - name: regime
+        type: str | null
+        required: false
+      - name: url_inteiro_teor
+        type: str | null
+        required: false
+      - name: uri
+        type: str | null
+        required: false
+    - model: Tramitacao
+      returned_by:
+      - camara.client.obter_tramitacoes
+      fields:
+      - name: data
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: orgao
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: despacho
+        type: str | null
+        required: false
+    - model: Votacao
+      returned_by:
+      - camara.client.listar_votacoes
+      fields:
+      - name: id
+        type: str | null
+        required: false
+      - name: data
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: aprovacao
+        type: bool | null
+        required: false
+      - name: proposicao_id
+        type: int | null
+        required: false
+      - name: proposicao_descricao
+        type: str | null
+        required: false
+    - model: VotoNominal
+      returned_by:
+      - camara.client.obter_votos
+      fields:
+      - name: deputado_id
+        type: int | null
+        required: false
+      - name: deputado_nome
+        type: str | null
+        required: false
+      - name: partido
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: voto
+        type: str | null
+        required: false
+  repo_path: src/mcp_brasil/data/camara
+- id: governadores
+  name: Governadores de todos os estados e DF em exercício
+  description: Governadores de todos os estados e DF em exercício — nome, partido, mandato, vice
+  domain: legislativo_executivo
+  publisher: GusFurtado/dab_assets (GitHub, terceiro)
+  official_source: false
+  modality: rest_passthrough
+  base_url: https://raw.githubusercontent.com/GusFurtado/dab_assets
+  protocol: file_download
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    GOV_JSON_URL: https://raw.githubusercontent.com/GusFurtado/dab_assets/main/data/governadores.json
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - governadores
+  - ufs
+  - executivo
+  - estados
+  - politica
+  tests:
+    path: tests/data/governadores
+    files:
+    - test_integration.py
+    test_count: 5
+    passed: 5
+    failed: 0
+    skipped: 0
+    duration_s: 0.12
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - respx
+    hits_live_upstream: false
+    line_coverage_pct: 85.0
+    run_command: make test-feature F=governadores
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Governador
+      returned_by:
+      - governadores.client.listar_todos
+      - governadores.client.por_uf
+      fields:
+      - name: uf
+        type: str
+        required: true
+      - name: nome
+        type: str
+        required: true
+      - name: nome_completo
+        type: str | null
+        required: false
+      - name: ano_eleicao
+        type: int | null
+        required: false
+      - name: mandato_inicio
+        type: str | null
+        required: false
+      - name: mandato_fim
+        type: str | null
+        required: false
+      - name: partido
+        type: str | null
+        required: false
+      - name: partido_sigla
+        type: str | null
+        required: false
+      - name: vice_governador
+        type: str | null
+        required: false
+  notes: Fonte é um JSON estático num repo GitHub de terceiro — não oficial, frescor depende do mantenedor.
+  repo_path: src/mcp_brasil/data/governadores
+- id: senado
+  name: Senado Federal
+  description: 'Senado Federal: senadores, matérias, votações, comissões, agenda plenária'
+  domain: legislativo_executivo
+  publisher: Senado Federal
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://legis.senado.leg.br/dadosabertos
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    SENADO_API_BASE: https://legis.senado.leg.br/dadosabertos
+    SENADORES_LISTA_URL: https://legis.senado.leg.br/dadosabertos/senador/lista/atual
+    SENADORES_URL: https://legis.senado.leg.br/dadosabertos/senador
+    MATERIAS_URL: https://legis.senado.leg.br/dadosabertos/materia/pesquisa/lista
+    MATERIA_URL: https://legis.senado.leg.br/dadosabertos/materia
+    VOTACOES_URL: https://legis.senado.leg.br/dadosabertos/votacao
+    COMISSOES_URL: https://legis.senado.leg.br/dadosabertos/comissao/lista/colegiados
+    COMISSAO_URL: https://legis.senado.leg.br/dadosabertos/comissao
+    AGENDA_URL: https://legis.senado.leg.br/dadosabertos/plenario/agenda/mes
+    AGENDA_COMISSOES_URL: https://legis.senado.leg.br/dadosabertos/agenda/lista/comissoes
+    EMENDAS_URL: https://legis.senado.leg.br/dadosabertos/processo/emenda
+    RELATORIAS_URL: https://legis.senado.leg.br/dadosabertos/processo/relatoria
+    BLOCOS_URL: https://legis.senado.leg.br/dadosabertos/composicao/lista/blocos
+    LIDERANCAS_URL: https://legis.senado.leg.br/dadosabertos/composicao/lideranca
+    LEGISLATURA_URL: https://legis.senado.leg.br/dadosabertos/legislatura
+  client_rate_limit: 60/60s
+  tools_count: 26
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - legislativo
+  - senadores
+  - matérias
+  - votações
+  - comissões
+  - agenda
+  tests:
+    path: tests/data/senado
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_prompts.py
+    - test_resources.py
+    - test_tools.py
+    test_count: 142
+    passed: 142
+    failed: 0
+    skipped: 0
+    duration_s: 1.04
+    test_types:
+    - client_unit
+    - mcp_integration
+    - prompts
+    - resources
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 91.7
+    run_command: make test-feature F=senado
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: BlocoParlamentar
+      returned_by:
+      - senado.client.listar_blocos
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: apelido
+        type: str | null
+        required: false
+      - name: data_criacao
+        type: str | null
+        required: false
+      - name: partidos
+        type: list[str] | null
+        required: false
+    - model: ComissaoDetalhe
+      returned_by:
+      - senado.client.obter_comissao
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: sigla
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: finalidade
+        type: str | null
+        required: false
+      - name: data_criacao
+        type: str | null
+        required: false
+      - name: data_extincao
+        type: str | null
+        required: false
+    - model: ComissaoResumo
+      returned_by:
+      - senado.client.listar_comissoes
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: sigla
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+    - model: Emenda
+      returned_by:
+      - senado.client.emendas_materia
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: identificacao
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: data_apresentacao
+        type: str | null
+        required: false
+      - name: autor
+        type: str | null
+        required: false
+      - name: colegiado
+        type: str | null
+        required: false
+      - name: decisao
+        type: str | null
+        required: false
+      - name: data_decisao
+        type: str | null
+        required: false
+      - name: url_documento
+        type: str | null
+        required: false
+    - model: LegislaturaInfo
+      returned_by:
+      - senado.client.legislatura_atual
+      fields:
+      - name: numero
+        type: int | null
+        required: false
+      - name: data_inicio
+        type: str | null
+        required: false
+      - name: data_fim
+        type: str | null
+        required: false
+    - model: Lideranca
+      returned_by:
+      - senado.client.listar_liderancas
+      fields:
+      - name: codigo_parlamentar
+        type: str | null
+        required: false
+      - name: nome_parlamentar
+        type: str | null
+        required: false
+      - name: partido
+        type: str | null
+        required: false
+      - name: tipo_lideranca
+        type: str | null
+        required: false
+      - name: unidade_lideranca
+        type: str | null
+        required: false
+      - name: data_designacao
+        type: str | null
+        required: false
+    - model: MateriaDetalhe
+      returned_by:
+      - senado.client.obter_materia
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: sigla_tipo
+        type: str | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: ano
+        type: str | null
+        required: false
+      - name: ementa
+        type: str | null
+        required: false
+      - name: ementa_completa
+        type: str | null
+        required: false
+      - name: data_apresentacao
+        type: str | null
+        required: false
+      - name: autor
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: casa_origem
+        type: str | null
+        required: false
+    - model: MateriaResumo
+      returned_by:
+      - senado.client.buscar_materias
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: sigla_tipo
+        type: str | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: ano
+        type: str | null
+        required: false
+      - name: ementa
+        type: str | null
+        required: false
+      - name: data_apresentacao
+        type: str | null
+        required: false
+      - name: autor
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+    - model: MembroComissao
+      returned_by:
+      - senado.client.membros_comissao
+      fields:
+      - name: codigo_senador
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: partido
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: cargo
+        type: str | null
+        required: false
+    - model: Relatoria
+      returned_by:
+      - senado.client.relatorias_senador
+      fields:
+      - name: codigo_materia
+        type: str | null
+        required: false
+      - name: identificacao
+        type: str | null
+        required: false
+      - name: ementa
+        type: str | null
+        required: false
+      - name: autor
+        type: str | null
+        required: false
+      - name: tipo_relator
+        type: str | null
+        required: false
+      - name: data_designacao
+        type: str | null
+        required: false
+      - name: colegiado
+        type: str | null
+        required: false
+      - name: tramitando
+        type: bool | null
+        required: false
+    - model: ReuniaoComissao
+      returned_by:
+      - senado.client.agenda_comissoes
+      - senado.client.reunioes_comissao
+      fields:
+      - name: data
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: comissao
+        type: str | null
+        required: false
+      - name: pauta
+        type: str | null
+        required: false
+      - name: local
+        type: str | null
+        required: false
+    - model: SenadorDetalhe
+      returned_by:
+      - senado.client.obter_senador
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: nome_completo
+        type: str | null
+        required: false
+      - name: partido
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: email
+        type: str | null
+        required: false
+      - name: foto
+        type: str | null
+        required: false
+      - name: telefone
+        type: str | null
+        required: false
+      - name: mandato_inicio
+        type: str | null
+        required: false
+      - name: mandato_fim
+        type: str | null
+        required: false
+    - model: SenadorResumo
+      returned_by:
+      - senado.client.buscar_senador_por_nome
+      - senado.client.listar_senadores
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: nome_completo
+        type: str | null
+        required: false
+      - name: partido
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: foto
+        type: str | null
+        required: false
+      - name: em_exercicio
+        type: bool | null
+        required: false
+    - model: SessaoPlenario
+      returned_by:
+      - senado.client.agenda_plenario
+      fields:
+      - name: data
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+    - model: Tramitacao
+      returned_by:
+      - senado.client.tramitacao_materia
+      fields:
+      - name: data
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: local
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+    - model: VotacaoDetalhe
+      returned_by:
+      - senado.client.obter_votacao
+      - senado.client.votos_materia
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: data
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: resultado
+        type: str | null
+        required: false
+      - name: materia_codigo
+        type: str | null
+        required: false
+      - name: materia_descricao
+        type: str | null
+        required: false
+      - name: sim
+        type: int | null
+        required: false
+      - name: nao
+        type: int | null
+        required: false
+      - name: abstencao
+        type: int | null
+        required: false
+    - model: VotacaoResumo
+      returned_by:
+      - senado.client.listar_votacoes
+      - senado.client.votacoes_recentes
+      - senado.client.votacoes_senador
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: data
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: resultado
+        type: str | null
+        required: false
+    - model: VotoNominal
+      fields:
+      - name: senador_codigo
+        type: str | null
+        required: false
+      - name: senador_nome
+        type: str | null
+        required: false
+      - name: partido
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: voto
+        type: str | null
+        required: false
+  notes: API nativa responde XML; o client força JSON via header Accept.
+  repo_path: src/mcp_brasil/data/senado

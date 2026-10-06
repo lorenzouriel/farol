@@ -6,3 +6,5 @@ model-paths: [models]
 models:
   farol:
     +materialized: table
+    silver:
+      +schema: silver

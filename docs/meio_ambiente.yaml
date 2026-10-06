@@ -1,0 +1,402 @@
+catalog: mcp-brasil — meio_ambiente
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio meio_ambiente no catálogo original.
+  includes:
+  - ana
+  - ibama
+  - inpe
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 3
+  tools: 11
+  keys_required: []
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: ana
+  name: ANA
+  description: 'ANA — Agência Nacional de Águas: estações hidrológicas, telemetria fluviométrica e monitoramento de reservatórios.'
+  domain: meio_ambiente
+  publisher: ANA
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://www.snirh.gov.br/hidroweb/rest/api
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    HIDROWEB_API: https://www.snirh.gov.br/hidroweb/rest/api
+    SAR_API: https://www.ana.gov.br/sar0
+    ESTACOES_URL: https://www.snirh.gov.br/hidroweb/rest/api/estacao/codigoestacao
+    TELEMETRIA_URL: https://www.snirh.gov.br/hidroweb/rest/api/estacao/telemetrica
+    RESERVATORIOS_URL: https://www.ana.gov.br/sar0/Medicao
+  tools_count: 3
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - agua
+  - hidrologia
+  - reservatorios
+  - rios
+  - chuva
+  tests:
+    path: tests/data/ana
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 30
+    passed: 30
+    failed: 0
+    skipped: 0
+    duration_s: 0.48
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 96.1
+    run_command: make test-feature F=ana
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: DadoTelemetria
+      returned_by:
+      - ana.client.consultar_telemetria
+      fields:
+      - name: codigo_estacao
+        type: str
+        required: true
+      - name: data_hora
+        type: str
+        required: true
+      - name: nivel
+        type: float | null
+        required: false
+      - name: vazao
+        type: float | null
+        required: false
+      - name: chuva
+        type: float | null
+        required: false
+    - model: Estacao
+      returned_by:
+      - ana.client.buscar_estacoes
+      fields:
+      - name: codigo_estacao
+        type: str
+        required: true
+      - name: nome_estacao
+        type: str
+        required: true
+      - name: codigo_rio
+        type: str
+        required: false
+      - name: nome_rio
+        type: str
+        required: false
+      - name: bacia
+        type: str
+        required: false
+      - name: sub_bacia
+        type: str
+        required: false
+      - name: municipio
+        type: str
+        required: false
+      - name: estado
+        type: str
+        required: false
+      - name: latitude
+        type: float | null
+        required: false
+      - name: longitude
+        type: float | null
+        required: false
+      - name: tipo_estacao
+        type: str
+        required: false
+      - name: responsavel
+        type: str
+        required: false
+    - model: Reservatorio
+      returned_by:
+      - ana.client.monitorar_reservatorios
+      fields:
+      - name: nome_reservatorio
+        type: str
+        required: true
+      - name: rio
+        type: str
+        required: false
+      - name: estado
+        type: str
+        required: false
+      - name: data
+        type: str
+        required: false
+      - name: volume_util
+        type: float | null
+        required: false
+      - name: cota_atual
+        type: float | null
+        required: false
+      - name: vazao_afluente
+        type: float | null
+        required: false
+      - name: vazao_defluente
+        type: float | null
+        required: false
+  repo_path: src/mcp_brasil/data/ana
+- id: ibama
+  name: IBAMA
+  description: IBAMA — autuações ambientais, CTF, ADA, arrecadação TCFA, biomas extra-amazônicos
+  domain: meio_ambiente
+  publisher: IBAMA
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://dadosabertos.ibama.gov.br/api/3
+  protocol: ckan_action_api
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    IBAMA_CKAN_BASE: https://dadosabertos.ibama.gov.br/api/3/action
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - ibama
+  - meio-ambiente
+  - multas
+  - fiscalizacao
+  - biomas
+  - desmatamento
+  tests:
+    path: tests/data/ibama
+    files:
+    - test_integration.py
+    test_count: 3
+    passed: 3
+    failed: 0
+    skipped: 0
+    duration_s: 0.05
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - respx
+    hits_live_upstream: false
+    line_coverage_pct: 65.8
+    run_command: make test-feature F=ibama
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred dict keys (untyped client, returns dict[str, Any])
+    complete: false
+    fields:
+    - name: count
+      type: Any
+    - name: format
+      type: Any
+    - name: name
+      type: Any
+    - name: notes
+      type: Any
+    - name: resources
+      type: Any
+    - name: results
+      type: Any
+    - name: title
+      type: Any
+    - name: url
+      type: Any
+    note: 'Sem modelo Pydantic: campos são as chaves que client/tools leem do payload upstream. Tipos não declarados no código.'
+  repo_path: src/mcp_brasil/data/ibama
+- id: inpe
+  name: INPE
+  description: 'INPE — Instituto Nacional de Pesquisas Espaciais: focos de queimadas, alertas de desmatamento DETER, dados
+    históricos PRODES e satélites.'
+  domain: meio_ambiente
+  publisher: INPE
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://terrabrasilis.dpi.inpe.br
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    QUEIMADAS_API: https://terrabrasilis.dpi.inpe.br/queimadas/bdqueimadas-data-service
+    TERRABRASILIS_API: https://terrabrasilis.dpi.inpe.br/business-api
+    FOCOS_URL: https://terrabrasilis.dpi.inpe.br/queimadas/bdqueimadas-data-service/focos
+    SATELITES_URL: https://terrabrasilis.dpi.inpe.br/queimadas/bdqueimadas-data-service/satelites
+    DETER_URL: https://terrabrasilis.dpi.inpe.br/business-api/deter
+    PRODES_URL: https://terrabrasilis.dpi.inpe.br/business-api/prodes
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - queimadas
+  - desmatamento
+  - amazonia
+  - meio-ambiente
+  - inpe
+  tests:
+    path: tests/data/inpe
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 31
+    passed: 31
+    failed: 0
+    skipped: 0
+    duration_s: 0.46
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 90.7
+    run_command: make test-feature F=inpe
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: AlertaDeter
+      returned_by:
+      - inpe.client.buscar_alertas_deter
+      fields:
+      - name: id
+        type: str
+        required: false
+      - name: data
+        type: str
+        required: false
+      - name: area_km2
+        type: float
+        required: false
+      - name: municipio
+        type: str
+        required: false
+      - name: estado
+        type: str
+        required: false
+      - name: bioma
+        type: str
+        required: false
+      - name: classe
+        type: str
+        required: false
+      - name: satelite
+        type: str
+        required: false
+    - model: DadosProdes
+      returned_by:
+      - inpe.client.buscar_dados_prodes
+      fields:
+      - name: ano
+        type: int
+        required: false
+      - name: bioma
+        type: str
+        required: false
+      - name: area_km2
+        type: float
+        required: false
+      - name: estado
+        type: str
+        required: false
+      - name: municipio
+        type: str
+        required: false
+    - model: FocoQueimada
+      returned_by:
+      - inpe.client.buscar_focos
+      fields:
+      - name: id
+        type: str
+        required: false
+      - name: latitude
+        type: float
+        required: false
+      - name: longitude
+        type: float
+        required: false
+      - name: data_hora
+        type: str
+        required: false
+      - name: satelite
+        type: str
+        required: false
+      - name: municipio
+        type: str
+        required: false
+      - name: estado
+        type: str
+        required: false
+      - name: bioma
+        type: str
+        required: false
+      - name: dias_sem_chuva
+        type: int | null
+        required: false
+      - name: risco_fogo
+        type: float | null
+        required: false
+      - name: frp
+        type: float | null
+        required: false
+        description: Fire Radiative Power (MW)
+    - model: Satelite
+      returned_by:
+      - inpe.client.listar_satelites
+      fields:
+      - name: nome
+        type: str
+        required: true
+      - name: descricao
+        type: str
+        required: false
+  repo_path: src/mcp_brasil/data/inpe

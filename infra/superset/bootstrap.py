@@ -23,6 +23,9 @@ def main():
     }, timeout=30)
     response.raise_for_status()
     session.headers["Authorization"] = "Bearer " + response.json()["access_token"]
+    response = session.get(base + "/api/v1/security/csrf_token/", timeout=30)
+    response.raise_for_status()
+    session.headers["X-CSRFToken"] = response.json()["result"]
     response = session.get(base + "/api/v1/database/", timeout=30)
     response.raise_for_status()
     if any(d["database_name"] == "Farol" for d in response.json()["result"]):

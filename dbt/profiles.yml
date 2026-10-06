@@ -8,5 +8,5 @@ farol:
       host: "{{ env_var('TRINO_HOST', '127.0.0.1') }}"
       port: "{{ env_var('TRINO_PORT', '18080') | int }}"
       database: lake
-      schema: gold
+      schema: "{{ env_var('FAROL_RELEASE_SCHEMA', 'gold') }}"
       threads: 2

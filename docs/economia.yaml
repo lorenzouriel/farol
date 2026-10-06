@@ -1,0 +1,533 @@
+catalog: mcp-brasil — economia
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio economia no catálogo original.
+  includes:
+  - bacen
+  - bcb_olinda
+  - bndes
+  - ipeadata
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 4
+  tools: 26
+  keys_required: []
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: bacen
+  name: Banco Central — SGS
+  description: 'Séries temporais do BCB: juros, inflação, câmbio, PIB, emprego e +190 indicadores'
+  domain: economia
+  publisher: Banco Central do Brasil
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://api.bcb.gov.br/dados/serie/bcdata.sgs
+  protocol: rest+odata
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    BCB_API_BASE: https://api.bcb.gov.br/dados/serie/bcdata.sgs
+    FOCUS_API_BASE: https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata
+    FOCUS_ENDPOINT: https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais
+  tools_count: 9
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - economia
+  - juros
+  - inflacao
+  - cambio
+  - pib
+  - selic
+  tests:
+    path: tests/data/bacen
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_prompts.py
+    - test_resources.py
+    - test_tools.py
+    test_count: 75
+    passed: 75
+    failed: 0
+    skipped: 0
+    duration_s: 1.14
+    test_types:
+    - client_unit
+    - mcp_integration
+    - prompts
+    - resources
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 99.4
+    run_command: make test-feature F=bacen
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: ExpectativaFocus
+      returned_by:
+      - bacen.client.buscar_expectativas_focus
+      fields:
+      - name: indicador
+        type: str
+        required: true
+      - name: data
+        type: str
+        required: true
+      - name: data_referencia
+        type: str
+        required: true
+      - name: media
+        type: float | null
+        required: false
+      - name: mediana
+        type: float | null
+        required: false
+      - name: desvio_padrao
+        type: float | null
+        required: false
+      - name: minimo
+        type: float | null
+        required: false
+      - name: maximo
+        type: float | null
+        required: false
+      - name: base_calculo
+        type: int | null
+        required: false
+    - model: SerieMetadados
+      returned_by:
+      - bacen.client.buscar_metadados
+      fields:
+      - name: codigo
+        type: int
+        required: true
+      - name: nome
+        type: str
+        required: true
+      - name: unidade
+        type: str
+        required: false
+      - name: periodicidade
+        type: str
+        required: false
+      - name: fonte
+        type: str
+        required: false
+      - name: especial
+        type: bool
+        required: false
+    - model: SerieValor
+      returned_by:
+      - bacen.client.buscar_ultimos
+      - bacen.client.buscar_valores
+      fields:
+      - name: data
+        type: str
+        required: true
+      - name: valor
+        type: float
+        required: true
+  repo_path: src/mcp_brasil/data/bacen
+- id: bcb_olinda
+  name: Banco Central — Olinda (PTAX, Focus, juros)
+  description: BCB Olinda — PTAX (câmbio oficial), Expectativas Focus (Selic/IPCA/PIB), taxas de juros bancárias
+  domain: economia
+  publisher: Banco Central do Brasil
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://olinda.bcb.gov.br/olinda/servico
+  protocol: odata
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    PTAX_BASE: https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata
+    EXPECT_BASE: https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata
+    TAXA_JUROS_BASE: https://olinda.bcb.gov.br/olinda/servico/taxaJuros/versao/v2/odata
+  tools_count: 8
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - bcb
+  - ptax
+  - cambio
+  - focus
+  - expectativas
+  - selic
+  - ipca
+  - juros
+  tests:
+    path: tests/data/bcb_olinda
+    files:
+    - test_integration.py
+    test_count: 6
+    passed: 6
+    failed: 0
+    skipped: 0
+    duration_s: 0.11
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - respx
+    hits_live_upstream: false
+    line_coverage_pct: 60.7
+    run_command: make test-feature F=bcb_olinda
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred dict keys (untyped client, returns dict[str, Any])
+    complete: false
+    fields:
+    - name: Data
+      type: Any
+    - name: DataReferencia
+      type: Any
+    - name: DesvioPadrao
+      type: Any
+    - name: Maximo
+      type: Any
+    - name: Media
+      type: Any
+    - name: Mediana
+      type: Any
+    - name: Minimo
+      type: Any
+    - name: Reuniao
+      type: Any
+    - name: cotacaoCompra
+      type: Any
+    - name: cotacaoVenda
+      type: Any
+    - name: dataHoraCotacao
+      type: Any
+    - name: nomeFormatado
+      type: Any
+    - name: numeroRespondentes
+      type: Any
+    - name: simbolo
+      type: Any
+    - name: tipoBoletim
+      type: Any
+    - name: tipoMoeda
+      type: Any
+    - name: value
+      type: Any
+    note: 'Sem modelo Pydantic: campos são as chaves que client/tools leem do payload upstream. Tipos não declarados no código.'
+  repo_path: src/mcp_brasil/data/bcb_olinda
+- id: bndes
+  name: BNDES dados abertos
+  description: 'BNDES dados abertos: operações de financiamento, exportação, desembolsos, instituições credenciadas e datasets
+    via CKAN API.'
+  domain: economia
+  publisher: BNDES
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://dadosabertos.bndes.gov.br/api/3/action
+  protocol: ckan_action_api
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    API_BASE: https://dadosabertos.bndes.gov.br/api/3/action
+    PACKAGE_LIST_URL: https://dadosabertos.bndes.gov.br/api/3/action/package_list
+    PACKAGE_SHOW_URL: https://dadosabertos.bndes.gov.br/api/3/action/package_show
+    PACKAGE_SEARCH_URL: https://dadosabertos.bndes.gov.br/api/3/action/package_search
+    DATASTORE_SEARCH_URL: https://dadosabertos.bndes.gov.br/api/3/action/datastore_search
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - bndes
+  - financiamento
+  - desenvolvimento
+  - ckan
+  - dados-abertos
+  tests:
+    path: tests/data/bndes
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 15
+    passed: 15
+    failed: 0
+    skipped: 0
+    duration_s: 0.31
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 94.5
+    run_command: make test-feature F=bndes
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Dataset
+      returned_by:
+      - bndes.client.buscar_datasets
+      - bndes.client.detalhar_dataset
+      fields:
+      - name: name
+        type: str | null
+        required: false
+      - name: title
+        type: str | null
+        required: false
+      - name: notes
+        type: str | null
+        required: false
+      - name: num_resources
+        type: int | null
+        required: false
+      - name: resources
+        type: list[DatasetResource]
+        required: false
+    - model: DatastoreResult
+      returned_by:
+      - bndes.client.consultar_operacoes
+      fields:
+      - name: total
+        type: int
+        required: false
+      - name: fields
+        type: list[str]
+        required: false
+      - name: records
+        type: list[dict[str, object]]
+        required: false
+    - model: InstituicaoCredenciada
+      returned_by:
+      - bndes.client.listar_instituicoes_credenciadas
+      fields:
+      - name: cnpj
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: pagina_na_internet
+        type: str | null
+        required: false
+    - model: DatasetResource
+      fields:
+      - name: id
+        type: str | null
+        required: false
+      - name: name
+        type: str | null
+        required: false
+      - name: description
+        type: str | null
+        required: false
+      - name: format
+        type: str | null
+        required: false
+      - name: url
+        type: str | null
+        required: false
+      nested_in:
+      - Dataset
+    - model: OperacaoFinanciamento
+      fields:
+      - name: cliente
+        type: str | null
+        required: false
+      - name: cnpj
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: municipio
+        type: str | null
+        required: false
+      - name: setor_cnae
+        type: str | null
+        required: false
+      - name: subsetor_cnae
+        type: str | null
+        required: false
+      - name: porte_do_cliente
+        type: str | null
+        required: false
+      - name: produto
+        type: str | null
+        required: false
+      - name: instrumento_financeiro
+        type: str | null
+        required: false
+      - name: valor_da_operacao_em_reais
+        type: float | null
+        required: false
+      - name: custo_financeiro
+        type: str | null
+        required: false
+      - name: juros
+        type: float | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: data_da_contratacao
+        type: str | null
+        required: false
+  repo_path: src/mcp_brasil/data/bndes
+- id: ipeadata
+  name: IPEADATA
+  description: IPEADATA — base macro, regional e social do Ipea com milhares de séries históricas
+  domain: economia
+  publisher: IPEA
+  official_source: true
+  modality: rest_passthrough
+  base_url: http://ipeadata.gov.br/api/odata4
+  protocol: odata
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    IPEADATA_API_BASE: http://ipeadata.gov.br/api/odata4
+  tools_count: 5
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - economia
+  - macro
+  - series
+  - historicas
+  - ipea
+  - regional
+  - social
+  tests:
+    path: tests/data/ipeadata
+    files:
+    - test_client.py
+    - test_integration.py
+    test_count: 6
+    passed: 6
+    failed: 0
+    skipped: 0
+    duration_s: 0.1
+    test_types:
+    - client_unit
+    - mcp_integration
+    http_mocking:
+    - respx
+    hits_live_upstream: false
+    line_coverage_pct: 77.4
+    run_command: make test-feature F=ipeadata
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: SerieMetadado
+      returned_by:
+      - ipeadata.client.listar_series
+      - ipeadata.client.metadados_serie
+      fields:
+      - name: SERCODIGO
+        type: str
+        required: true
+      - name: SERNOME
+        type: str | null
+        required: false
+      - name: SERCOMENTARIO
+        type: str | null
+        required: false
+      - name: PERNOME
+        type: str | null
+        required: false
+      - name: UNINOME
+        type: str | null
+        required: false
+      - name: BASNOME
+        type: str | null
+        required: false
+      - name: TEMCODIGO
+        type: int | null
+        required: false
+      - name: FNTNOME
+        type: str | null
+        required: false
+      - name: MULNOME
+        type: str | null
+        required: false
+      - name: SERATUALIZACAO
+        type: str | null
+        required: false
+      - name: SERSTATUS
+        type: str | null
+        required: false
+      - name: SERATUALIZACAO_ANT
+        type: str | null
+        required: false
+    - model: SerieValor
+      returned_by:
+      - ipeadata.client.valores_serie
+      fields:
+      - name: SERCODIGO
+        type: str
+        required: true
+      - name: VALDATA
+        type: str | null
+        required: false
+      - name: VALVALOR
+        type: float | null
+        required: false
+      - name: NIVNOME
+        type: str | null
+        required: false
+      - name: TERCODIGO
+        type: str | null
+        required: false
+  repo_path: src/mcp_brasil/data/ipeadata

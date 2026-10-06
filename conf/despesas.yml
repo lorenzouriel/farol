@@ -1,0 +1,213 @@
+version: 1
+# Explicit, bounded pilot scope. Expanding a year/entity requires editing this file.
+defaults:
+  max_pages: 30
+  max_page_bytes: 16777216
+  request_interval_s: 1.1
+  timeout_s: 40
+resources:
+  camara_deputados:
+    source: camara
+    url: https://dadosabertos.camara.leg.br/api/v2/deputados
+    params: {itens: 100}
+    pagination: links
+    records: dados
+    kind: lookup
+    partition: legislatura-atual
+    capabilities: [listar_deputados]
+  camara_despesas:
+    source: camara
+    url: https://dadosabertos.camara.leg.br/api/v2/deputados/204379/despesas
+    params: {ano: 2025, mes: 1, itens: 100}
+    pagination: links
+    records: dados
+    kind: ceap
+    entity: '204379'
+    year: 2025
+    month: 1
+    partition: deputado-204379/2025-01
+    capabilities: [despesas_deputado]
+  cgu_execucao_orgao:
+    source: transparencia
+    url: https://api.portaldatransparencia.gov.br/api-de-dados/despesas/por-orgao
+    params: {ano: 2025, orgaoSuperior: '26000', pagina: 1}
+    auth_env: TRANSPARENCIA_API_KEY
+    auth_header: chave-api-dados
+    pagination: empty_page
+    page_param: pagina
+    kind: cgu_orgao
+    year: 2025
+    partition: orgao-superior-26000/2025
+    capabilities: [consultar_despesas_orgao]
+  cgu_orgaos:
+    source: transparencia
+    url: https://api.portaldatransparencia.gov.br/api-de-dados/orgaos-siafi
+    params: {pagina: 1}
+    auth_env: TRANSPARENCIA_API_KEY
+    auth_header: chave-api-dados
+    pagination: empty_page
+    page_param: pagina
+    max_pages: 150
+    kind: lookup
+    enabled: false
+    blocked_reason: Full lookup pagination deferred; pilot organization was validated by expense response.
+    partition: siafi
+    capabilities: [listar_orgaos]
+  tce_sp_despesas:
+    source: tce_sp
+    url: https://transparencia.tce.sp.gov.br/api/json/despesas/adamantina/2025/1
+    pagination: single
+    kind: tce_sp
+    entity: adamantina
+    year: 2025
+    month: 1
+    partition: adamantina/2025-01
+    capabilities: [consultar_despesas_sp]
+  tce_sp_municipios:
+    source: tce_sp
+    url: https://transparencia.tce.sp.gov.br/api/json/municipios
+    pagination: single
+    kind: lookup
+    partition: municipios
+    capabilities: [listar_municipios_sp]
+  siconfi_rreo:
+    source: siconfi
+    url: https://apidatalake.tesouro.gov.br/ords/siconfi/tt/rreo
+    params: {an_exercicio: 2025, nr_periodo: 1, co_tipo_demonstrativo: RREO, id_ente: 3550308}
+    records: items
+    pagination: links
+    kind: rreo
+    year: 2025
+    period: 1
+    entity: '3550308'
+    partition: ente-3550308/2025/bimestre-1
+    capabilities: [consultar_rreo]
+  tce_pi_totais:
+    source: tce_pi
+    url: https://sistemas.tce.pi.gov.br/api/portaldacidadania/despesas/1473
+    pagination: single
+    kind: tce_pi_totais
+    year: 2025
+    entity: '1473'
+    partition: prefeitura-1473/2025
+    # This endpoint is NOT the catalog's detailed-expense capability.
+    capabilities: []
+  siconfi_rgf:
+    source: siconfi
+    url: https://apidatalake.tesouro.gov.br/ords/siconfi/tt/rgf
+    params: {an_exercicio: 2025, nr_periodo: 1, co_tipo_demonstrativo: RGF, id_ente: 3550308, co_poder: E, in_periodicidade: Q}
+    records: items
+    pagination: links
+    kind: rgf
+    year: 2025
+    period: 1
+    entity: '3550308'
+    partition: ente-3550308/2025/quadrimestre-1/executivo
+    capabilities: [consultar_rgf]
+  siconfi_dca:
+    source: siconfi
+    url: https://apidatalake.tesouro.gov.br/ords/siconfi/tt/dca
+    params: {an_exercicio: 2025, id_ente: 3550308}
+    records: items
+    pagination: links
+    kind: dca
+    year: 2025
+    entity: '3550308'
+    partition: ente-3550308/2025/anual
+    capabilities: [consultar_dca]
+  tce_pi_prefeituras:
+    source: tce_pi
+    url: https://sistemas.tce.pi.gov.br/api/portaldacidadania/prefeituras
+    pagination: single
+    kind: lookup
+    partition: prefeituras
+    capabilities: [listar_prefeituras_pi]
+  tce_pe_unidades:
+    source: tce_pe
+    url: https://sistemas.tce.pe.gov.br/DadosAbertos/UnidadesJurisdicionadas!json
+    records: resposta.conteudo
+    pagination: single
+    kind: lookup
+    partition: unidades
+    capabilities: [buscar_unidades_pe]
+  tce_pe_despesas:
+    source: tce_pe
+    url: https://sistemas.tce.pe.gov.br/DadosAbertos/DespesasMunicipais!json
+    enabled: false
+    blocked_reason: Pilot timed out; parameter names and pagination require a verified contract.
+    partition: unresolved
+    kind: unverified
+    capabilities: [buscar_despesas_pe]
+  tce_rn_despesas:
+    source: tce_rn
+    url: https://apidadosabertos.tce.rn.gov.br/api/BalancoOrcamentarioApi/Despesa/Json/2025/1/1
+    enabled: false
+    blocked_reason: Parameterized route returned an empty array; jurisdiction and financial grain unverified.
+    partition: unresolved
+    kind: unverified
+    capabilities: [buscar_despesas_rn]
+  tce_ce_despesas:
+    source: tce_ce
+    url: https://api-dados-abertos.tce.ce.gov.br/notas_empenhos
+    enabled: false
+    blocked_reason: Catalog routes returned HTTP 404; replacement upstream contract required.
+    partition: unresolved
+    kind: unverified
+    capabilities: [buscar_empenhos_ce]
+  tce_rs_educacao:
+    source: tce_rs
+    url: https://dados.tce.rs.gov.br/dados/municipal/educacao-indice/2025.json
+    records: educacao-indice
+    pagination: single
+    kind: indicador
+    indicator: MDE
+    year: 2025
+    partition: rs/2025/mde
+    capabilities: [buscar_indices_educacao_rs]
+  compras_execucao:
+    source: compras
+    url: https://contratos.comprasnet.gov.br/api/contrato/ug/153001
+    pagination: single
+    partition: ug-153001/contracts
+    kind: lookup
+    capabilities: [contratosgovbr_listar_contratos_unidade]
+  compras_empenhos:
+    source: compras
+    url: https://contratos.comprasnet.gov.br/api/contrato/474056/empenhos
+    pagination: single
+    kind: contrato_empenho
+    entity: '474056'
+    partition: contrato-474056/linked-commitments
+    capabilities: [contratosgovbr_consultar_empenhos_contrato]
+  compras_faturas:
+    source: compras
+    url: https://contratos.comprasnet.gov.br/api/contrato/474056/faturas
+    pagination: single
+    kind: contrato_fatura
+    entity: '474056'
+    partition: contrato-474056/invoices
+    capabilities: [contratosgovbr_consultar_faturas_contrato]
+  cgu_funcional:
+    source: transparencia
+    url: https://api.portaldatransparencia.gov.br/api-de-dados/despesas/por-funcional-programatica
+    params: {ano: 2025, funcao: '12', acao: '20RZ', pagina: 1}
+    auth_env: TRANSPARENCIA_API_KEY
+    auth_header: chave-api-dados
+    pagination: empty_page
+    page_param: pagina
+    kind: cgu_funcional
+    year: 2025
+    partition: funcao-12/acao-20RZ/2025
+    capabilities: [consultar_despesas_funcional]
+  cgu_emendas:
+    source: transparencia
+    url: https://api.portaldatransparencia.gov.br/api-de-dados/emendas
+    params: {ano: 2025, codigoEmenda: '202542900005', pagina: 1}
+    auth_env: TRANSPARENCIA_API_KEY
+    auth_header: chave-api-dados
+    pagination: empty_page
+    page_param: pagina
+    kind: cgu_emenda
+    year: 2025
+    partition: emenda-202542900005/2025
+    capabilities: [buscar_emendas]

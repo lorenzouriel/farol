@@ -1,0 +1,397 @@
+catalog: mcp-brasil — energia_infraestrutura
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio energia_infraestrutura no catálogo original.
+  includes:
+  - aneel
+  - antt
+  - anp_precos
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 3
+  tools: 15
+  keys_required: []
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: aneel
+  name: ANEEL
+  description: 'ANEEL — setor elétrico: geração (SIGA), mini/micro geração distribuída, tarifas, bandeiras, autos de infração'
+  domain: energia_infraestrutura
+  publisher: ANEEL
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://dadosabertos.aneel.gov.br/api/3
+  protocol: ckan_action_api
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    ANEEL_CKAN_BASE: https://dadosabertos.aneel.gov.br/api/3/action
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - aneel
+  - energia
+  - eletricidade
+  - solar
+  - eolica
+  - tarifas
+  - geracao
+  tests:
+    path: tests/data/aneel
+    files:
+    - test_integration.py
+    test_count: 5
+    passed: 5
+    failed: 0
+    skipped: 0
+    duration_s: 0.1
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - respx
+    hits_live_upstream: false
+    line_coverage_pct: 75.0
+    run_command: make test-feature F=aneel
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred dict keys (untyped client, returns dict[str, Any])
+    complete: false
+    fields:
+    - name: count
+      type: Any
+    - name: format
+      type: Any
+    - name: name
+      type: Any
+    - name: notes
+      type: Any
+    - name: resources
+      type: Any
+    - name: results
+      type: Any
+    - name: title
+      type: Any
+    - name: url
+      type: Any
+    note: 'Sem modelo Pydantic: campos são as chaves que client/tools leem do payload upstream. Tipos não declarados no código.'
+  repo_path: src/mcp_brasil/data/aneel
+- id: antt
+  name: ANTT
+  description: ANTT — rodovias concedidas, acidentes, transporte de cargas e passageiros, pedágios
+  domain: energia_infraestrutura
+  publisher: ANTT
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://dados.antt.gov.br/api/3
+  protocol: ckan_action_api
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    ANTT_CKAN_BASE: https://dados.antt.gov.br/api/3/action
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: baixo
+  tags:
+  - antt
+  - transporte
+  - rodovias
+  - passageiros
+  - cargas
+  - pedagio
+  - acidentes
+  tests:
+    path: tests/data/antt
+    files:
+    - test_integration.py
+    test_count: 3
+    passed: 3
+    failed: 0
+    skipped: 0
+    duration_s: 0.05
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - respx
+    hits_live_upstream: false
+    line_coverage_pct: 63.2
+    run_command: make test-feature F=antt
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred dict keys (untyped client, returns dict[str, Any])
+    complete: false
+    fields:
+    - name: count
+      type: Any
+    - name: format
+      type: Any
+    - name: name
+      type: Any
+    - name: notes
+      type: Any
+    - name: resources
+      type: Any
+    - name: results
+      type: Any
+    - name: title
+      type: Any
+    - name: url
+      type: Any
+    note: 'Sem modelo Pydantic: campos são as chaves que client/tools leem do payload upstream. Tipos não declarados no código.'
+  repo_path: src/mcp_brasil/data/antt
+- id: anp_precos
+  name: ANP
+  description: 'ANP — preços semanais de combustíveis por posto/município/bandeira (cobertura 2024). Consulta SQL via DuckDB
+    local. Opt-in: MCP_BRASIL_DATASETS=anp_precos.'
+  domain: energia_infraestrutura
+  publisher: ANP
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://www.gov.br/anp
+  protocol: file_download
+  response_format: csv
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=anp_precos
+    table: precos_combustiveis
+    ttl_days: 30
+    approx_size_mb: 25
+    source_encoding: utf-8
+    delimiter: ;
+    zip_member: null
+    null_markers: null
+    all_varchar: false
+    pii_columns:
+    - cnpj_revenda
+    partitioning: union_all_by_name view over per-partition tables
+    sources:
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-gasolina-etanol-01.csv
+      zip_member: null
+      partition: gasolina_etanol_2024_01
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-gasolina-etanol-02.csv
+      zip_member: null
+      partition: gasolina_etanol_2024_02
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-gasolina-etanol-03.csv
+      zip_member: null
+      partition: gasolina_etanol_2024_03
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-gasolina-etanol-04.csv
+      zip_member: null
+      partition: gasolina_etanol_2024_04
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-gasolina-etanol-05.csv
+      zip_member: null
+      partition: gasolina_etanol_2024_05
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-gasolina-etanol-06.csv
+      zip_member: null
+      partition: gasolina_etanol_2024_06
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-gasolina-etanol-07.csv
+      zip_member: null
+      partition: gasolina_etanol_2024_07
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-gasolina-etanol-08.csv
+      zip_member: null
+      partition: gasolina_etanol_2024_08
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-gasolina-etanol-09.csv
+      zip_member: null
+      partition: gasolina_etanol_2024_09
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-gasolina-etanol-10.csv
+      zip_member: null
+      partition: gasolina_etanol_2024_10
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-gasolina-etanol-11.csv
+      zip_member: null
+      partition: gasolina_etanol_2024_11
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-gasolina-etanol-12.csv
+      zip_member: null
+      partition: gasolina_etanol_2024_12
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-diesel-gnv-01.csv
+      zip_member: null
+      partition: diesel_gnv_2024_01
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-diesel-gnv-02.csv
+      zip_member: null
+      partition: diesel_gnv_2024_02
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-diesel-gnv-03.csv
+      zip_member: null
+      partition: diesel_gnv_2024_03
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-diesel-gnv-04.csv
+      zip_member: null
+      partition: diesel_gnv_2024_04
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-diesel-gnv-05.csv
+      zip_member: null
+      partition: diesel_gnv_2024_05
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-diesel-gnv-06.csv
+      zip_member: null
+      partition: diesel_gnv_2024_06
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-diesel-gnv-07.csv
+      zip_member: null
+      partition: diesel_gnv_2024_07
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-diesel-gnv-08.csv
+      zip_member: null
+      partition: diesel_gnv_2024_08
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-diesel-gnv-09.csv
+      zip_member: null
+      partition: diesel_gnv_2024_09
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-diesel-gnv-10.csv
+      zip_member: null
+      partition: diesel_gnv_2024_10
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-diesel-gnv-11.csv
+      zip_member: null
+      partition: diesel_gnv_2024_11
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-diesel-gnv-12.csv
+      zip_member: null
+      partition: diesel_gnv_2024_12
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-glp-01.csv
+      zip_member: null
+      partition: glp_2024_01
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-glp-02.csv
+      zip_member: null
+      partition: glp_2024_02
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-glp-03.csv
+      zip_member: null
+      partition: glp_2024_03
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-glp-04.csv
+      zip_member: null
+      partition: glp_2024_04
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-glp-05.csv
+      zip_member: null
+      partition: glp_2024_05
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-glp-06.csv
+      zip_member: null
+      partition: glp_2024_06
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-glp-07.csv
+      zip_member: null
+      partition: glp_2024_07
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-glp-08.csv
+      zip_member: null
+      partition: glp_2024_08
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-glp-09.csv
+      zip_member: null
+      partition: glp_2024_09
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-glp-10.csv
+      zip_member: null
+      partition: glp_2024_10
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-glp-11.csv
+      zip_member: null
+      partition: glp_2024_11
+    - url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsan/2024/precos-glp-12.csv
+      zip_member: null
+      partition: glp_2024_12
+  tools_count: 7
+  license: open data; atribuição
+  legal_risk: baixo
+  lgpd_notes: cnpj_revenda mascarado
+  tags:
+  - anp
+  - combustiveis
+  - precos
+  - gasolina
+  - etanol
+  - diesel
+  - glp
+  - dataset
+  - duckdb
+  tests:
+    path: tests/datasets/anp_precos
+    files:
+    - test_integration.py
+    test_count: 6
+    passed: 6
+    failed: 0
+    skipped: 0
+    duration_s: 0.41
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 80.4
+    run_command: uv run pytest tests/datasets/anp_precos
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: schema_tabela resource (curated subset)
+    table: precos_combustiveis
+    complete: false
+    fields:
+    - name: regiao
+      type: VARCHAR
+      description: Sigla da região (N, NE, SE, S, CO)
+    - name: estado
+      type: VARCHAR
+      description: Sigla da UF
+    - name: municipio
+      type: VARCHAR
+      description: Nome do município
+    - name: revenda
+      type: VARCHAR
+      description: Razão social do posto
+    - name: cnpj_revenda
+      type: VARCHAR
+      description: CNPJ (PII — mascarado)
+    - name: rua
+      type: VARCHAR
+      description: Nome da rua
+    - name: numero
+      type: VARCHAR
+      description: Número
+    - name: complemento
+      type: VARCHAR
+      description: Complemento do endereço
+    - name: bairro
+      type: VARCHAR
+      description: Bairro
+    - name: cep
+      type: VARCHAR
+      description: CEP
+    - name: produto
+      type: VARCHAR
+      description: Tipo de combustível
+    - name: data_coleta
+      type: VARCHAR
+      description: Data (DD/MM/YYYY)
+    - name: valor_venda
+      type: DOUBLE
+      description: Preço de venda ao consumidor
+    - name: valor_compra
+      type: DOUBLE
+      description: Preço de aquisição pela revenda
+    - name: unidade
+      type: VARCHAR
+      description: R$/litro ou R$/13kg
+    - name: bandeira
+      type: VARCHAR
+      description: Bandeira do posto
+    note: Subset curado; DESCRIBE na tabela DuckDB para schema completo.
+  repo_path: src/mcp_brasil/datasets/anp_precos

@@ -149,6 +149,15 @@ services:
       DBT_TARGET_PATH: /tmp/dbt-target
       DBT_LOG_PATH: /tmp/dbt-logs
       EXTRACT_POOL_SLOTS: ${EXTRACT_POOL_SLOTS:-2}
+      FAROL_ROOT: /opt/lakehouse
+      OPS_HOST: meta-db
+      META_DB_PASSWORD: ${META_DB_PASSWORD:-lakehouse}
+      S3_ENDPOINT: http://seaweedfs:8333
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-lakehouse}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-lakehouse123}
+      TRANSPARENCIA_API_KEY: ${TRANSPARENCIA_API_KEY:-}
+      SUPERSET_URL: http://superset:8088
+      SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:-admin}
       AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'True'
     ports:
     - 127.0.0.1:${AIRFLOW_PORT:-18081}:8080
@@ -156,6 +165,9 @@ services:
     - ./src:/opt/lakehouse/src:ro
     - ./orchestration:/opt/lakehouse/orchestration:ro
     - ./dbt:/opt/lakehouse/dbt:ro
+    - ./conf:/opt/lakehouse/conf:ro
+    - ./docs:/opt/lakehouse/docs:ro
+    - ./tests:/opt/lakehouse/tests:ro
     - airflow_logs:/opt/airflow/logs
     mem_limit: ${AIRFLOW_MEM:-1536m}
     depends_on:
@@ -177,12 +189,19 @@ services:
     build: infra/superset
     image: farol/superset:5.0.0
     environment:
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
       SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-change-me-local-lab-only}
       SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:-admin}
       META_DB_PASSWORD: ${META_DB_PASSWORD:-lakehouse}
       SUPERSET_URL: http://127.0.0.1:8088
+      TRINO_HOST: trino
+      TRINO_PORT: '8080'
+      OPS_HOST: meta-db
+      PYTHONPATH: /opt/lakehouse/src
     ports:
     - 127.0.0.1:${SUPERSET_PORT:-18088}:8088
+    volumes:
+    - ./src:/opt/lakehouse/src:ro
     mem_limit: ${SUPERSET_MEM:-768m}
     depends_on:
       meta-db:

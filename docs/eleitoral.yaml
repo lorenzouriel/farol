@@ -1,0 +1,1256 @@
+catalog: mcp-brasil — eleitoral
+version: v1
+derived_from: sources.yaml
+generated_from_commit: main @ 2026-09-22 (depth-1 clone)
+scope:
+  definition: Fontes classificadas no domínio eleitoral no catálogo original.
+  includes:
+  - anuncios_eleitorais
+  - tse
+  - tse_bens
+  - tse_candidatos
+  - tse_fefc
+  - tse_redes_sociais
+  - tse_votacao
+  excludes: Fontes classificadas em outros domínios.
+  classification: source.domain; uma categoria por fonte
+totals:
+  sources: 7
+  tools: 48
+  keys_required:
+  - META_ACCESS_TOKEN
+  keys_conditional: []
+  note: Contagens declaradas no catálogo; não indicam endpoints testados ou dados carregados.
+global_settings:
+  MCP_BRASIL_HTTP_TIMEOUT: 30.0
+  MCP_BRASIL_HTTP_MAX_RETRIES: 3
+  MCP_BRASIL_HTTP_BACKOFF_BASE: 1.0
+  MCP_BRASIL_USER_AGENT: mcp-brasil/0.1.0
+  MCP_BRASIL_DATASET_CACHE_DIR: ~/.cache/mcp-brasil
+  MCP_BRASIL_DATASET_REFRESH: auto
+  MCP_BRASIL_DATASET_TIMEOUT: 600
+  MCP_BRASIL_DATASET_MAX_CACHE_GB: 20
+  default_accept: application/json
+known_gaps:
+- O catálogo original não enumera ferramentas, parâmetros ou question_router por fonte.
+- Resultados de testes herdados não comprovam disponibilidade atual dos endpoints.
+sources:
+- id: anuncios_eleitorais
+  name: Biblioteca de Anúncios da Meta
+  description: Biblioteca de Anúncios da Meta — busca e análise de anúncios eleitorais e sobre temas sociais, eleições ou
+    política veiculados no Brasil
+  domain: eleitoral
+  publisher: Meta Platforms (terceiro)
+  official_source: false
+  modality: rest_passthrough
+  base_url: https://graph.facebook.com/v25.0
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: true
+    type: query_param
+    param: access_token
+    env_var: META_ACCESS_TOKEN
+    env_var_alt: META_AD_LIBRARY_TOKEN
+    signup_url: https://www.facebook.com/ads/library/api/
+    cost: free (verificação de identidade Meta)
+  endpoints:
+    META_GRAPH_API_BASE: https://graph.facebook.com/v25.0
+    ADS_ARCHIVE_URL: https://graph.facebook.com/v25.0/ads_archive
+  tools_count: 6
+  license: Meta Ad Library API ToS
+  legal_risk: alto
+  tags:
+  - eleicoes
+  - politica
+  - anuncios
+  - meta
+  - facebook
+  - instagram
+  - transparencia
+  tests:
+    path: tests/data/anuncios_eleitorais
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_prompts.py
+    - test_resources.py
+    - test_tools.py
+    test_count: 53
+    passed: 53
+    failed: 0
+    skipped: 0
+    duration_s: 0.49
+    test_types:
+    - client_unit
+    - mcp_integration
+    - prompts
+    - resources
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 87.5
+    run_command: make test-feature F=anuncios_eleitorais
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: RespostaAnuncios
+      returned_by:
+      - anuncios_eleitorais.client.buscar_anuncios
+      - anuncios_eleitorais.client.buscar_proxima_pagina
+      fields:
+      - name: data
+        type: list[AnuncioEleitoral]
+        required: false
+      - name: paging
+        type: Paginacao | null
+        required: false
+    - model: AnuncioEleitoral
+      fields:
+      - name: id
+        type: str
+        required: true
+        description: ID da biblioteca do anúncio
+      - name: ad_creation_time
+        type: str | null
+        required: false
+        description: Data/hora de criação do anúncio (UTC)
+      - name: ad_creative_bodies
+        type: list[str] | null
+        required: false
+        description: Textos do criativo do anúncio
+      - name: ad_creative_link_captions
+        type: list[str] | null
+        required: false
+        description: Legendas dos links
+      - name: ad_creative_link_descriptions
+        type: list[str] | null
+        required: false
+        description: Descrições dos links
+      - name: ad_creative_link_titles
+        type: list[str] | null
+        required: false
+        description: Títulos dos links
+      - name: ad_delivery_start_time
+        type: str | null
+        required: false
+        description: Data/hora de início da veiculação
+      - name: ad_delivery_stop_time
+        type: str | null
+        required: false
+        description: Data/hora de parada da veiculação
+      - name: ad_snapshot_url
+        type: str | null
+        required: false
+        description: URL para visualizar o anúncio arquivado
+      - name: bylines
+        type: str | null
+        required: false
+        description: Nome do financiador do anúncio
+      - name: currency
+        type: str | null
+        required: false
+        description: Moeda (ISO)
+      - name: spend
+        type: FaixaValor | null
+        required: false
+        description: Gasto total (faixa)
+      - name: impressions
+        type: FaixaValor | null
+        required: false
+        description: Impressões (faixa)
+      - name: demographic_distribution
+        type: list[DistribuicaoDemografica] | null
+        required: false
+        description: Distribuição demográfica (idade/gênero)
+      - name: delivery_by_region
+        type: list[DistribuicaoRegional] | null
+        required: false
+        description: Distribuição regional do alcance
+      - name: estimated_audience_size
+        type: FaixaValor | null
+        required: false
+        description: Tamanho estimado da audiência
+      - name: br_total_reach
+        type: int | null
+        required: false
+        description: Alcance estimado no Brasil
+      - name: languages
+        type: list[str] | null
+        required: false
+        description: Idiomas do anúncio
+      - name: page_id
+        type: str | null
+        required: false
+        description: ID da página do Facebook
+      - name: page_name
+        type: str | null
+        required: false
+        description: Nome da página do Facebook
+      - name: publisher_platforms
+        type: list[str] | null
+        required: false
+        description: Plataformas onde o anúncio apareceu
+      - name: target_ages
+        type: list[str] | null
+        required: false
+        description: Faixas etárias do direcionamento
+      - name: target_gender
+        type: str | null
+        required: false
+        description: Gênero do direcionamento (Women, Men, All)
+      - name: target_locations
+        type: list[LocalizacaoAlvo] | null
+        required: false
+        description: Localizações do direcionamento
+      - name: age_country_gender_reach_breakdown
+        type: list[dict[str, object]] | null
+        required: false
+        description: Detalhamento do alcance por idade/país/gênero
+      nested_in:
+      - RespostaAnuncios
+    - model: CursorPaginacao
+      fields:
+      - name: before
+        type: str | null
+        required: false
+      - name: after
+        type: str | null
+        required: false
+      nested_in:
+      - Paginacao
+    - model: DistribuicaoDemografica
+      fields:
+      - name: age
+        type: str | null
+        required: false
+        description: 'Faixa etária (ex: 18-24, 25-34)'
+      - name: gender
+        type: str | null
+        required: false
+        description: Gênero (Male, Female, Unknown)
+      - name: percentage
+        type: str | null
+        required: false
+        description: Percentual do alcance
+      nested_in:
+      - AnuncioEleitoral
+    - model: DistribuicaoRegional
+      fields:
+      - name: region
+        type: str | null
+        required: false
+        description: Nome da região/estado
+      - name: percentage
+        type: str | null
+        required: false
+        description: Percentual do alcance
+      nested_in:
+      - AnuncioEleitoral
+    - model: FaixaValor
+      fields:
+      - name: lower_bound
+        type: str | null
+        required: false
+        description: Limite inferior da faixa
+      - name: upper_bound
+        type: str | null
+        required: false
+        description: Limite superior da faixa
+      nested_in:
+      - AnuncioEleitoral
+    - model: LocalizacaoAlvo
+      fields:
+      - name: name
+        type: str | null
+        required: false
+        description: Nome da localização
+      - name: num_obfuscated
+        type: int | null
+        required: false
+        description: Número de localizações ofuscadas
+      - name: excluded
+        type: bool | null
+        required: false
+        description: Se é uma exclusão
+      nested_in:
+      - AnuncioEleitoral
+    - model: Paginacao
+      fields:
+      - name: cursors
+        type: CursorPaginacao | null
+        required: false
+      - name: next
+        type: str | null
+        required: false
+        description: URL da próxima página
+      nested_in:
+      - RespostaAnuncios
+  repo_path: src/mcp_brasil/data/anuncios_eleitorais
+- id: tse
+  name: TSE
+  description: 'TSE: eleições, candidatos, prestação de contas, cargos eleitorais'
+  domain: eleitoral
+  publisher: TSE
+  official_source: true
+  modality: rest_passthrough
+  base_url: https://divulgacandcontas.tse.jus.br/divulga/rest/v1
+  protocol: rest
+  response_format: json
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  endpoints:
+    TSE_API_BASE: https://divulgacandcontas.tse.jus.br/divulga/rest/v1
+    ELEICAO_URL: https://divulgacandcontas.tse.jus.br/divulga/rest/v1/eleicao
+    CANDIDATURA_URL: https://divulgacandcontas.tse.jus.br/divulga/rest/v1/candidatura
+    PRESTADOR_URL: https://divulgacandcontas.tse.jus.br/divulga/rest/v1/prestador
+    RESULTADOS_CDN_BASE: https://resultados.tse.jus.br/oficial
+    RESULTADOS_CONFIG_URL: https://resultados.tse.jus.br/oficial/comum/config/ele-c.json
+  client_rate_limit: 30/60s
+  tools_count: 15
+  license: open data; atribuição
+  legal_risk: alto
+  tags:
+  - eleitoral
+  - candidatos
+  - eleicoes
+  - tse
+  - prestacao-contas
+  tests:
+    path: tests/data/tse
+    files:
+    - test_client.py
+    - test_integration.py
+    - test_tools.py
+    test_count: 102
+    passed: 102
+    failed: 0
+    skipped: 0
+    duration_s: 61.06
+    test_types:
+    - client_unit
+    - mcp_integration
+    - tool_unit
+    http_mocking:
+    - respx
+    - unittest.mock
+    hits_live_upstream: false
+    line_coverage_pct: 93.9
+    run_command: make test-feature F=tse
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: pydantic_schemas
+    note: Tools return formatted markdown; these are the typed models the client parses upstream payloads into.
+    models:
+    - model: Candidato
+      returned_by:
+      - tse.client.buscar_candidato
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: nome_urna
+        type: str | null
+        required: false
+      - name: nome_completo
+        type: str | null
+        required: false
+      - name: numero
+        type: int | null
+        required: false
+      - name: cpf
+        type: str | null
+        required: false
+      - name: data_nascimento
+        type: str | null
+        required: false
+      - name: sexo
+        type: str | null
+        required: false
+      - name: estado_civil
+        type: str | null
+        required: false
+      - name: cor_raca
+        type: str | null
+        required: false
+      - name: nacionalidade
+        type: str | null
+        required: false
+      - name: grau_instrucao
+        type: str | null
+        required: false
+      - name: ocupacao
+        type: str | null
+        required: false
+      - name: uf_nascimento
+        type: str | null
+        required: false
+      - name: municipio_nascimento
+        type: str | null
+        required: false
+      - name: partido
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: situacao_candidato
+        type: str | null
+        required: false
+      - name: coligacao
+        type: str | null
+        required: false
+      - name: composicao_coligacao
+        type: str | null
+        required: false
+      - name: descricao_totalizacao
+        type: str | null
+        required: false
+      - name: total_votos
+        type: int | null
+        required: false
+      - name: gasto_campanha
+        type: float | null
+        required: false
+      - name: total_bens
+        type: float | null
+        required: false
+      - name: emails
+        type: list[str] | null
+        required: false
+      - name: sites
+        type: list[str] | null
+        required: false
+      - name: foto_url
+        type: str | null
+        required: false
+      - name: candidato_inapto
+        type: bool | null
+        required: false
+      - name: motivo_ficha_limpa
+        type: bool | null
+        required: false
+    - model: CandidatoResumo
+      returned_by:
+      - tse.client.listar_candidatos
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: nome_urna
+        type: str | null
+        required: false
+      - name: numero
+        type: int | null
+        required: false
+      - name: partido
+        type: str | null
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: foto_url
+        type: str | null
+        required: false
+    - model: Cargo
+      returned_by:
+      - tse.client.listar_cargos
+      fields:
+      - name: codigo
+        type: int | null
+        required: false
+      - name: sigla
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: titular
+        type: bool | null
+        required: false
+      - name: contagem
+        type: int | null
+        required: false
+    - model: Eleicao
+      returned_by:
+      - tse.client.listar_eleicoes
+      - tse.client.listar_eleicoes_suplementares
+      fields:
+      - name: id
+        type: int | null
+        required: false
+      - name: sigla_uf
+        type: str | null
+        required: false
+      - name: ano
+        type: int | null
+        required: false
+      - name: codigo
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: turno
+        type: str | null
+        required: false
+      - name: tipo_abrangencia
+        type: str | null
+        required: false
+      - name: data_eleicao
+        type: str | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+    - model: MunicipioEleitoral
+      returned_by:
+      - tse.client.listar_municipios_eleitorais
+      fields:
+      - name: codigo_tse
+        type: str | null
+        required: false
+      - name: codigo_ibge
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: capital
+        type: bool
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+    - model: PrestaContas
+      returned_by:
+      - tse.client.consultar_prestacao_contas
+      fields:
+      - name: candidato_id
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: partido
+        type: str | null
+        required: false
+      - name: cnpj
+        type: str | null
+        required: false
+      - name: total_recebido
+        type: float | null
+        required: false
+      - name: total_despesas
+        type: float | null
+        required: false
+      - name: total_bens
+        type: float | null
+        required: false
+      - name: limite_gastos
+        type: float | null
+        required: false
+      - name: divida_campanha
+        type: str | null
+        required: false
+      - name: sobra_financeira
+        type: str | null
+        required: false
+      - name: total_receita_pf
+        type: float | null
+        required: false
+      - name: total_receita_pj
+        type: float | null
+        required: false
+      - name: total_fundo_partidario
+        type: float | null
+        required: false
+      - name: total_fundo_especial
+        type: float | null
+        required: false
+    - model: ResultadoCandidato
+      returned_by:
+      - tse.client.resultado_eleicao
+      fields:
+      - name: nome_urna
+        type: str | null
+        required: false
+      - name: numero
+        type: int | null
+        required: false
+      - name: partido
+        type: str | null
+        required: false
+      - name: total_votos
+        type: int | null
+        required: false
+      - name: percentual
+        type: str | null
+        required: false
+      - name: descricao_totalizacao
+        type: str | null
+        required: false
+    - model: ResultadoRegiao
+      returned_by:
+      - tse.client.resultado_municipio
+      - tse.client.resultado_simplificado
+      - tse.client.resultado_todos_estados
+      fields:
+      - name: codigo
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: uf
+        type: str | null
+        required: false
+      - name: data_eleicao
+        type: str | null
+        required: false
+      - name: total_secoes
+        type: int | null
+        required: false
+      - name: pct_apurado
+        type: str | null
+        required: false
+      - name: total_eleitores
+        type: int | null
+        required: false
+      - name: total_comparecimento
+        type: int | null
+        required: false
+      - name: total_abstencoes
+        type: int | null
+        required: false
+      - name: candidatos
+        type: list[ResultadoCDN]
+        required: false
+    - model: BemCandidato
+      fields:
+      - name: ordem
+        type: int | null
+        required: false
+      - name: descricao
+        type: str | null
+        required: false
+      - name: tipo
+        type: str | null
+        required: false
+      - name: valor
+        type: float | null
+        required: false
+    - model: ResultadoCDN
+      fields:
+      - name: sequencia
+        type: str | null
+        required: false
+      - name: nome
+        type: str | null
+        required: false
+      - name: numero
+        type: str | null
+        required: false
+      - name: nome_vice
+        type: str | null
+        required: false
+      - name: coligacao
+        type: str | null
+        required: false
+      - name: votos
+        type: int | null
+        required: false
+      - name: percentual
+        type: str | null
+        required: false
+      - name: eleito
+        type: bool
+        required: false
+      - name: situacao
+        type: str | null
+        required: false
+      - name: validade_voto
+        type: str | null
+        required: false
+      nested_in:
+      - ResultadoRegiao
+  repo_path: src/mcp_brasil/data/tse
+- id: tse_bens
+  name: TSE bens declarados 2014-2024
+  description: 'TSE bens declarados 2014-2024 — histórico de patrimônio de candidatos com consulta SQL via DuckDB. Join key:
+    sq_candidato. Opt-in: MCP_BRASIL_DATASETS=tse_bens.'
+  domain: eleitoral
+  publisher: TSE
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://cdn.tse.jus.br
+  protocol: file_download
+  response_format: zip(csv)
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=tse_bens
+    table: bens_candidatos
+    ttl_days: 30
+    approx_size_mb: 205
+    source_encoding: cp1252
+    delimiter: ;
+    zip_member: null
+    null_markers:
+    - '#NULO'
+    - '#NE'
+    - '-4'
+    - '-3'
+    - '-1'
+    all_varchar: true
+    pii_columns: []
+    partitioning: union_all_by_name view over per-partition tables
+    sources:
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/bem_candidato/bem_candidato_2014.zip
+      zip_member: bem_candidato_2014_BRASIL.csv
+      partition: '2014'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/bem_candidato/bem_candidato_2016.zip
+      zip_member: bem_candidato_2016_BRASIL.csv
+      partition: '2016'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/bem_candidato/bem_candidato_2018.zip
+      zip_member: bem_candidato_2018_BRASIL.csv
+      partition: '2018'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/bem_candidato/bem_candidato_2020.zip
+      zip_member: bem_candidato_2020_BRASIL.csv
+      partition: '2020'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/bem_candidato/bem_candidato_2022.zip
+      zip_member: bem_candidato_2022_BRASIL.csv
+      partition: '2022'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/bem_candidato/bem_candidato_2024.zip
+      zip_member: bem_candidato_2024_BRASIL.csv
+      partition: '2024'
+  tools_count: 5
+  license: open data; atribuição
+  legal_risk: alto
+  tags:
+  - tse
+  - eleicoes
+  - patrimonio
+  - bens
+  - historico
+  - duckdb
+  - dataset
+  tests:
+    path: tests/datasets/tse_bens
+    files:
+    - test_integration.py
+    test_count: 4
+    passed: 4
+    failed: 0
+    skipped: 0
+    duration_s: 0.96
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 65.8
+    run_command: uv run pytest tests/datasets/tse_bens
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: schema_tabela resource (curated subset)
+    table: bens_candidatos
+    complete: false
+    fields:
+    - name: sq_candidato
+      type: VARCHAR
+      description: ID do candidato (join com candidatos_2024)
+    - name: nr_ordem_bem_candidato
+      type: INTEGER
+      physical_type: VARCHAR
+      description: Ordem do bem na declaração
+    - name: ds_tipo_bem_candidato
+      type: VARCHAR
+      description: Categoria — imóvel, veículo, ação…
+    - name: ds_bem_candidato
+      type: VARCHAR
+      description: Descrição livre do bem
+    - name: vr_bem_candidato
+      type: DOUBLE
+      physical_type: VARCHAR
+      description: Valor declarado em R$
+    - name: sg_uf
+      type: VARCHAR
+      description: UF da eleição
+    - name: nm_ue
+      type: VARCHAR
+      description: Município
+    note: Subset curado; DESCRIBE na tabela DuckDB para schema completo.
+  repo_path: src/mcp_brasil/datasets/tse_bens
+- id: tse_candidatos
+  name: TSE candidatos 2014-2024
+  description: 'TSE candidatos 2014-2024 — ~4M candidatos de 6 eleições com consulta SQL via DuckDB. Inclui prefeitos, vereadores,
+    deputados, senadores, governadores e presidente. Filtro por ano disponível. Opt-in: MCP_BRASIL_DATASETS=tse_candidatos.'
+  domain: eleitoral
+  publisher: TSE
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://cdn.tse.jus.br
+  protocol: file_download
+  response_format: zip(csv)
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=tse_candidatos
+    table: candidatos
+    ttl_days: 30
+    approx_size_mb: 290
+    source_encoding: cp1252
+    delimiter: ;
+    zip_member: null
+    null_markers:
+    - '#NULO'
+    - '#NULO#'
+    - '#NE'
+    - '-4'
+    - '-3'
+    - '-1'
+    all_varchar: true
+    pii_columns:
+    - ds_email
+    - nm_email
+    - nr_cpf_candidato
+    - nr_titulo_eleitoral_candidato
+    partitioning: union_all_by_name view over per-partition tables
+    sources:
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2014.zip
+      zip_member: consulta_cand_2014_BRASIL.csv
+      partition: '2014'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2016.zip
+      zip_member: consulta_cand_2016_BRASIL.csv
+      partition: '2016'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2018.zip
+      zip_member: consulta_cand_2018_BRASIL.csv
+      partition: '2018'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2020.zip
+      zip_member: consulta_cand_2020_BRASIL.csv
+      partition: '2020'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2022.zip
+      zip_member: consulta_cand_2022_BRASIL.csv
+      partition: '2022'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2024.zip
+      zip_member: consulta_cand_2024_BRASIL.csv
+      partition: '2024'
+  tools_count: 8
+  license: open data; atribuição
+  legal_risk: alto
+  lgpd_notes: CPF, título, e-mail (mascarados salvo MCP_BRASIL_LGPD_ALLOW_PII)
+  tags:
+  - tse
+  - eleicoes
+  - candidatos
+  - politica
+  - historico
+  - duckdb
+  - dataset
+  tests:
+    path: tests/datasets/tse_candidatos
+    files:
+    - test_integration.py
+    test_count: 7
+    passed: 7
+    failed: 0
+    skipped: 0
+    duration_s: 1.4
+    test_types:
+    - mcp_integration
+    http_mocking:
+    - unittest.mock
+    - monkeypatch
+    hits_live_upstream: false
+    line_coverage_pct: 65.5
+    run_command: uv run pytest tests/datasets/tse_candidatos
+    status: passing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: schema_tabela resource (curated subset)
+    table: candidatos
+    complete: false
+    fields:
+    - name: ano_eleicao
+      type: INTEGER
+      physical_type: VARCHAR
+      description: Ano (2024)
+    - name: ds_eleicao
+      type: VARCHAR
+      description: Descrição da eleição
+    - name: nr_turno
+      type: INTEGER
+      physical_type: VARCHAR
+      description: 1 ou 2 (2º turno em capitais)
+    - name: sg_uf
+      type: VARCHAR
+      description: UF (SP, RJ…)
+    - name: sg_ue
+      type: VARCHAR
+      description: Código IBGE da unidade eleitoral (município)
+    - name: nm_ue
+      type: VARCHAR
+      description: Nome do município
+    - name: ds_cargo
+      type: VARCHAR
+      description: PREFEITO / VICE-PREFEITO / VEREADOR
+    - name: sq_candidato
+      type: VARCHAR
+      description: ID único do candidato (use para joins)
+    - name: nr_candidato
+      type: INTEGER
+      physical_type: VARCHAR
+      description: Número na urna
+    - name: nm_candidato
+      type: VARCHAR
+      description: Nome completo
+    - name: nm_urna_candidato
+      type: VARCHAR
+      description: Nome de urna
+    - name: nr_cpf_candidato
+      type: VARCHAR
+      description: CPF (PII — mascarado por padrão)
+    - name: ds_email
+      type: VARCHAR
+      description: E-mail (PII — mascarado)
+    - name: sg_partido
+      type: VARCHAR
+      description: Sigla do partido
+    - name: nm_partido
+      type: VARCHAR
+      description: Nome completo do partido
+    - name: ds_sit_tot_turno
+      type: VARCHAR
+      description: ELEITO / NÃO ELEITO / SUPLENTE etc.
+    - name: ds_genero
+      type: VARCHAR
+      description: MASCULINO / FEMININO
+    - name: ds_grau_instrucao
+      type: VARCHAR
+      description: Escolaridade
+    - name: ds_cor_raca
+      type: VARCHAR
+      description: Raça/cor declarada
+    - name: ds_ocupacao
+      type: VARCHAR
+      description: Ocupação declarada
+    - name: ds_estado_civil
+      type: VARCHAR
+      description: Estado civil
+    note: Existem 50 colunas no total; use DESCRIBE na query para ver todas.
+  repo_path: src/mcp_brasil/datasets/tse_candidatos
+- id: tse_fefc
+  name: TSE FEFC 2020/2024
+  description: 'TSE FEFC 2020/2024 — distribuição do Fundo Eleitoral por partido e gênero com consulta SQL via DuckDB. Opt-in:
+    MCP_BRASIL_DATASETS=tse_fefc.'
+  domain: eleitoral
+  publisher: TSE
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://cdn.tse.jus.br
+  protocol: file_download
+  response_format: zip(csv)
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=tse_fefc
+    table: fefc_genero
+    ttl_days: 30
+    approx_size_mb: 5
+    source_encoding: cp1252
+    delimiter: ;
+    zip_member: null
+    null_markers:
+    - '#NULO'
+    - '#NE'
+    all_varchar: true
+    pii_columns: []
+    partitioning: union_all_by_name view over per-partition tables
+    sources:
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/fefc_fp/fefc_fp_2020.zip
+      zip_member: fefc_genero_2020.csv
+      partition: '2020'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/fefc_fp/fefc_fp_2024.zip
+      zip_member: fefc_genero_2024.csv
+      partition: '2024'
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: alto
+  tags:
+  - tse
+  - eleicoes
+  - financiamento
+  - fundo-eleitoral
+  - fefc
+  - duckdb
+  - dataset
+  tests:
+    test_count: 0
+    passed: 0
+    failed: 0
+    skipped: 0
+    duration_s: 0
+    hits_live_upstream: false
+    line_coverage_pct: 11.4
+    run_command: uv run pytest tests/datasets/tse_fefc
+    status: missing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred from SQL in tools.py (sqlglot)
+    table: fefc_genero
+    complete: false
+    fields:
+    - name: aa_eleicao
+      type: VARCHAR
+    - name: ds_genero
+      type: VARCHAR
+    - name: qt_candidato
+      type: VARCHAR
+    - name: sg_partido
+      type: VARCHAR
+    note: Sem schema documentado no código; apenas colunas referenciadas pelas tools. Rode DESCRIBE após o primeiro load.
+  repo_path: src/mcp_brasil/datasets/tse_fefc
+- id: tse_redes_sociais
+  name: TSE redes sociais 2018-2024
+  description: 'TSE redes sociais 2018-2024 — Instagram/Facebook/Twitter dos candidatos com consulta SQL via DuckDB. Join
+    com tse_candidatos via sq_candidato. Opt-in: MCP_BRASIL_DATASETS=tse_redes_sociais.'
+  domain: eleitoral
+  publisher: TSE
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://cdn.tse.jus.br
+  protocol: file_download
+  response_format: zip(csv)
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=tse_redes_sociais
+    table: redes_sociais
+    ttl_days: 30
+    approx_size_mb: 34
+    source_encoding: cp1252
+    delimiter: ;
+    zip_member: null
+    null_markers:
+    - '#NULO'
+    - '#NE'
+    - '-4'
+    - '-3'
+    - '-1'
+    all_varchar: true
+    pii_columns: []
+    partitioning: union_all_by_name view over per-partition tables
+    sources:
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/rede_social_candidato_2018.zip
+      zip_member: rede_social_candidato_2018_BRASIL.csv
+      partition: '2018'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/rede_social_candidato_2020.zip
+      zip_member: rede_social_candidato_2020_BRASIL.csv
+      partition: '2020'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/rede_social_candidato_2022.zip
+      zip_member: rede_social_candidato_2022_BRASIL.csv
+      partition: '2022'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/rede_social_candidato_2024.zip
+      zip_member: rede_social_candidato_2024_BRASIL.csv
+      partition: '2024'
+  tools_count: 4
+  license: open data; atribuição
+  legal_risk: alto
+  tags:
+  - tse
+  - eleicoes
+  - redes-sociais
+  - instagram
+  - facebook
+  - twitter
+  - duckdb
+  - dataset
+  tests:
+    test_count: 0
+    passed: 0
+    failed: 0
+    skipped: 0
+    duration_s: 0
+    hits_live_upstream: false
+    line_coverage_pct: 9.8
+    run_command: uv run pytest tests/datasets/tse_redes_sociais
+    status: missing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: inferred from SQL in tools.py (sqlglot)
+    table: redes_sociais
+    complete: false
+    fields:
+    - name: aa_eleicao
+      type: VARCHAR
+    - name: ds_url
+      type: VARCHAR
+    - name: sq_candidato
+      type: VARCHAR
+    note: Sem schema documentado no código; apenas colunas referenciadas pelas tools. Rode DESCRIBE após o primeiro load.
+  repo_path: src/mcp_brasil/datasets/tse_redes_sociais
+- id: tse_votacao
+  name: TSE votação por candidato x município x zona (2014-2024) com consulta SQL via Du
+  description: 'TSE votação por candidato x município x zona (2014-2024) com consulta SQL via DuckDB. Tools: votos_candidato,
+    top_votados_ano, ranking_municipio, evolucao_partido_ano. Opt-in: MCP_BRASIL_DATASETS=tse_votacao (~1.6GB, 5-10min primeira
+    carga).'
+  domain: eleitoral
+  publisher: TSE
+  official_source: true
+  modality: local_dataset_duckdb
+  base_url: https://cdn.tse.jus.br
+  protocol: file_download
+  response_format: zip(csv)
+  http_methods:
+  - GET
+  auth:
+    required: false
+    type: none
+    env_var: null
+  dataset:
+    enable_via: MCP_BRASIL_DATASETS=tse_votacao
+    table: votacao
+    ttl_days: 30
+    approx_size_mb: 1600
+    source_encoding: cp1252
+    delimiter: ;
+    zip_member: null
+    null_markers:
+    - '#NULO'
+    - '#NULO#'
+    - '#NE'
+    - '-4'
+    - '-3'
+    - '-1'
+    all_varchar: true
+    pii_columns: []
+    partitioning: union_all_by_name view over per-partition tables
+    sources:
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2014.zip
+      zip_member: votacao_candidato_munzona_2014_BRASIL.csv
+      partition: '2014'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2016.zip
+      zip_member: votacao_candidato_munzona_2016_BRASIL.csv
+      partition: '2016'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2018.zip
+      zip_member: votacao_candidato_munzona_2018_BRASIL.csv
+      partition: '2018'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2020.zip
+      zip_member: votacao_candidato_munzona_2020_BRASIL.csv
+      partition: '2020'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2022.zip
+      zip_member: votacao_candidato_munzona_2022_BRASIL.csv
+      partition: '2022'
+    - url: https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2024.zip
+      zip_member: votacao_candidato_munzona_2024_BRASIL.csv
+      partition: '2024'
+  tools_count: 6
+  license: open data; atribuição
+  legal_risk: alto
+  tags:
+  - tse
+  - eleicoes
+  - votacao
+  - votos
+  - historico
+  - duckdb
+  - dataset
+  tests:
+    test_count: 0
+    passed: 0
+    failed: 0
+    skipped: 0
+    duration_s: 0
+    hits_live_upstream: false
+    line_coverage_pct: 9.3
+    run_command: uv run pytest tests/datasets/tse_votacao
+    status: missing
+    last_run: '2026-09-23'
+  returned_fields:
+    source: schema_tabela resource (curated subset)
+    table: votacao
+    complete: false
+    fields:
+    - name: ano_eleicao
+      type: VARCHAR
+      description: Ano eleitoral (string, parse para int)
+    - name: nr_turno
+      type: VARCHAR
+      description: 1 ou 2
+    - name: sg_uf
+      type: VARCHAR
+      description: UF
+    - name: cd_municipio
+      type: VARCHAR
+      description: Código IBGE do município
+    - name: nm_municipio
+      type: VARCHAR
+      description: Nome do município
+    - name: nr_zona
+      type: VARCHAR
+      description: Zona eleitoral
+    - name: ds_cargo
+      type: VARCHAR
+      description: Cargo disputado
+    - name: sq_candidato
+      type: VARCHAR
+      description: ID do candidato (join)
+    - name: nm_candidato
+      type: VARCHAR
+      description: Nome completo
+    - name: nm_urna_candidato
+      type: VARCHAR
+      description: Nome de urna
+    - name: sg_partido
+      type: VARCHAR
+      description: Sigla do partido
+    - name: qt_votos_nominais
+      type: VARCHAR
+      description: Votos nominais (parse para BIGINT)
+    - name: qt_votos_nominais_validos
+      type: VARCHAR
+      description: Votos nominais válidos (descarta brancos/nulos)
+    - name: ds_sit_tot_turno
+      type: VARCHAR
+      description: Resultado (ELEITO/NÃO ELEITO/…)
+    - name: st_voto_em_transito
+      type: VARCHAR
+      description: Flag de voto em trânsito
+    note: Todas as colunas são VARCHAR porque o CSV tem all_varchar=true (schema varia entre anos). Queries usam TRY_CAST/parse
+      on-the-fly.
+  notes: ~1,6 GB; maior dataset TSE.
+  repo_path: src/mcp_brasil/datasets/tse_votacao
