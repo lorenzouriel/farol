@@ -1,1 +1,32 @@
-company/
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Claude Code (local sessions, should not go into the repo)
+.claude/projects/
+.claude/sessions/
+.claude/shell-snapshots/
+.claude/telemetry/
+.claude/file-history/
+.claude/backups/
+
+# Dependencies
+node_modules/
+
+# Secrets
+.env
+*.env
+.mcp.json
+
+# Temporary files
+*.log
+*.tmp
+
+# PARA inbox (only the README is versioned)
+inbox/*
+!inbox/README.md
+.obsidian/
