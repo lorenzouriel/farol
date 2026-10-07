@@ -27,6 +27,7 @@ description: >
 
 ## Rules
 
+- Farol: save on the `dev` branch only. Never commit CompanyOS files to `main`, never merge dev into main, and never run `git branch -M main`. Publishing a study to main is done with `/publish-study`.
 - Never commit secrets from `.env`.
 - If push fails, show the error and suggest the next concrete fix.
 - Keep commit messages short and human.

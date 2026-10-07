@@ -9,6 +9,10 @@ rules.
 
 When a project ships or stalls, move its folder to `archive/`.
 
+**Exception: `projects/studies/`.** Farol studies in progress live here,
+created from `projects/studies/template/`. A finished study is not archived:
+it is published to `studies/` on the `main` branch with `/publish-study`.
+
 ```
 projects/
 └── acme-rebrand/

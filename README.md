@@ -1,3 +1,19 @@
+# Farol workshop (`dev` branch)
+
+This is the `dev` branch of Farol. The public study repository lives on
+`main` and contains only `README.md`, `AGENTS.md`, `studies/`, and `template/`.
+
+| Branch | Holds |
+| --- | --- |
+| `main` | Published studies and the study template. Nothing else. |
+| `dev` | Everything else: studies in progress (`projects/studies/`), data analysis, research, content, and the CompanyOS layer below. |
+
+Build studies in `projects/studies/<slug>/` from `projects/studies/template/`.
+When one is finished, run `/publish-study` to copy that folder into
+`studies/<slug>/` on main and update the index. Never merge dev into main.
+
+---
+
 # CompanyOS
 
 > Your business runs on this folder.

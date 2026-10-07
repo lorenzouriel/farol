@@ -126,8 +126,21 @@ When the user asks for a new skill:
 
 The operations side of Farol: producing and scheduling content about the
 studies, keeping supporters engaged, and running the creator's routines.
-The research itself lives in `../studies/` (one folder per study, created
-from `../template/`). This folder never stores study data or findings.
+It is also where studies are researched and built before publication.
+
+**Branches:**
+- `dev` - the workshop. This CompanyOS layer (memory, skills, marketing,
+  scripts) plus studies in progress under `projects/studies/<slug>/` or
+  `projects/studies/<topic>/<slug>/`, created from `projects/studies/template/`.
+  Data analysis, research, and everything else is controlled here.
+- `main` - the public study repository. Only `README.md`, `AGENTS.md`,
+  `studies/`, and `template/`. No CompanyOS files.
+
+**Publishing a study:** when a study is finished on dev, copy only its
+folder to main at `studies/<slug>/` (or `studies/<topic>/<slug>/`) and add
+it to `studies/README.md`. Use `/publish-study`. Never merge dev into main:
+it would delete `AGENTS.md`, overwrite `README.md`, and push the whole
+CompanyOS layer into the public repo.
 
 **Folder structure:**
 - `memory/` - who Farol is, how it speaks, what is in focus
@@ -136,6 +149,7 @@ from `../template/`). This folder never stores study data or findings.
 - `resources/documents/` - analyses, emails, one-off documents
 - `resources/scripts/` - utilities (generate image, post, render)
 - `projects/` - time-bound initiatives
+- `projects/studies/` - studies in progress (dev only; published to main's `studies/`)
 - `inbox/` - files to analyze (CSV, PDF, spreadsheet)
 
 ## Who I am
@@ -187,6 +201,7 @@ and limitations, so readers can inspect, challenge, reproduce, and extend it.
 ## Recommended skills
 
 **Core:**
+- `/publish-study` — copy a finished study from dev to main
 - `/system` — open, update, save, map-routines, new-project
 - `/content` — content-planner, copywriting, humanizer, seo
 - `/business` — approve-post, publish-topic, buffer

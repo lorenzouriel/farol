@@ -10,10 +10,11 @@
 **Serves clients:** No clients. Funded by supporters of the open-source project through Buy Me a Coffee.
 **Team:** One person, no team.
 **Tools:** Git/GitHub (public repository), Buy Me a Coffee
-**Main deliverables:** Studies in the repository (`../studies/`), each with a bounded question, sources, methodology, and a dated report (`ANALYSIS.md` + `ANALYSIS.html`)
+**Main deliverables:** Studies in the public repository (`studies/` on the `main` branch), each with a bounded question, sources, methodology, and a dated report (`ANALYSIS.md` + `ANALYSIS.html`)
 
 ## Additional context
 
 - The study is the unit of work. Each one starts from a bounded question and can cover one country or compare several.
 - The project starts with files and small scripts. New tools are added only when a real study needs them.
-- This `company/` folder handles operations: content, promotion, and the creator's routines. The research itself lives in `../studies/`.
+- Two branches. `main` is the public study repository (`README.md`, `AGENTS.md`, `studies/`, `template/`). `dev` is the workshop: content, promotion, the creator's routines, data analysis, research, and studies in progress under `projects/studies/`.
+- When a study is finished on dev, only its folder is copied to `studies/` on main and added to the index. Dev is never merged into main.
